@@ -46,11 +46,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CCLink\BackgroundMonitor.cs" />
     <Compile Include="CCLink\CCLinkConstants.cs" />
     <Compile Include="CCLink\ControllerSettings.cs" />
     <Compile Include="CCLink\ControllerStatus.cs" />
     <Compile Include="CCLink\ICCLinkController.cs" />
     <Compile Include="CCLink\IMelsecApiAdapter.cs" />
+    <Compile Include="CCLink\IPlcDriver.cs" />
     <Compile Include="CCLink\LinkDeviceAddress.cs" />
     <Compile Include="CCLink\MelsecApiAdapter.cs" />
     <Compile Include="CCLink\MelsecControlCard.cs" />

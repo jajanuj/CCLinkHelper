@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace WindowsFormsApp1.CCLink
 {
    /// <summary>
-   /// µLµwÅéÀô¹Ò¥Îªº¼ÒÀÀ±±¨î¾¹¡C¥i³]©w©T©w©µ¿ğ»P¦^¶Ç¸ê®Æ¼Ò¦¡¡C
+   /// ç„¡ç¡¬é«”ç’°å¢ƒç”¨çš„æ¨¡æ“¬æ§åˆ¶å™¨ã€‚å¯è¨­å®šå›ºå®šå»¶é²èˆ‡å›å‚³è³‡æ–™æ¨¡å¼ã€‚
    /// </summary>
    public sealed class MockCCLinkController : ICCLinkController
    {

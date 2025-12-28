@@ -1,43 +1,43 @@
-using System;
+ï»¿using System;
 
 namespace WindowsFormsApp1.CCLink
 {
    /// <summary>
-   /// ±±¨î¥d¥Ø«eª¬ºA»P¶EÂ_¸ê°T¡C
+   /// æ§åˆ¶å¡ç›®å‰ç‹€æ…‹èˆ‡è¨ºæ–·è³‡è¨Šã€‚
    /// </summary>
    public sealed class ControllerStatus
    {
       #region Properties
 
-      /// <summary>¬O§_¤w³s½u/³q°T¸ô®|´Nºü¡C</summary>
+      /// <summary>æ˜¯å¦å·²é€£ç·š/é€šè¨Šè·¯å¾‘å°±ç·’ã€‚</summary>
       public bool IsConnected { get; set; }
 
-      /// <summary>¥d«¬¸¹¡C</summary>
+      /// <summary>å¡å‹è™Ÿã€‚</summary>
       public string Model { get; set; }
 
-      /// <summary>ÅX°Êµ{¦¡ª©¥»¡C</summary>
+      /// <summary>é©…å‹•ç¨‹å¼ç‰ˆæœ¬ã€‚</summary>
       public string DriverVersion { get; set; }
 
-      /// <summary>¨Ï¥Î¤¤ªº³q°T³q¹D¡C</summary>
+      /// <summary>ä½¿ç”¨ä¸­çš„é€šè¨Šé€šé“ã€‚</summary>
       public int Channel { get; set; }
 
-      /// <summary>³Ìªñ¿ù»~½X©Îª¬ºA½X¡C</summary>
+      /// <summary>æœ€è¿‘éŒ¯èª¤ç¢¼æˆ–ç‹€æ…‹ç¢¼ã€‚</summary>
       public int LastErrorCode { get; set; }
 
-      /// <summary>¥­§¡©µ¿ğ¡]²@¬í¡^¡C</summary>
+      /// <summary>å¹³å‡å»¶é²ï¼ˆæ¯«ç§’ï¼‰ã€‚</summary>
       public double AvgLatencyMs { get; set; }
 
-      /// <summary>³Ì¤j©µ¿ğ¡]²@¬í¡^¡C</summary>
+      /// <summary>æœ€å¤§å»¶é²ï¼ˆæ¯«ç§’ï¼‰ã€‚</summary>
       public double MaxLatencyMs { get; set; }
 
-      /// <summary>³Ì«á§ó·s®É¶¡¡]UTC¡^¡C</summary>
+      /// <summary>æœ€å¾Œæ›´æ–°æ™‚é–“ï¼ˆUTCï¼‰ã€‚</summary>
       public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
 
       #endregion
    }
 
    /// <summary>
-   /// ª¬ºAÅÜ§ó¨Æ¥ó¤Ş¼Æ¡C
+   /// ç‹€æ…‹è®Šæ›´äº‹ä»¶å¼•æ•¸ã€‚
    /// </summary>
    public sealed class ControllerStatusChangedEventArgs : EventArgs
    {
@@ -49,7 +49,7 @@ namespace WindowsFormsApp1.CCLink
 
       #region Properties
 
-      /// <summary>³Ì·sª¬ºA¡C</summary>
+      /// <summary>æœ€æ–°ç‹€æ…‹ã€‚</summary>
       public ControllerStatus Status { get; }
 
       #endregion

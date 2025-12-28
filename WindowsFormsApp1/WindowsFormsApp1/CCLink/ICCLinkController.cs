@@ -1,50 +1,50 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace WindowsFormsApp1.CCLink
 {
    /// <summary>
-   /// CC-Link ±±¨î¾¹¤¶­±¡]«D¦P¨B¡^¡C
-   /// ´£¨Ñ¶}±Ò/Ãö³¬³q°T¸ô®|»P§å¶qÅª¼g Link Bit/Word ªº¼Ğ·Ç¤èªk¡A
-   /// UI ¶È©I¥s¦¹¤¶­±¡A¤£ª½±µ±µÄ²©³¼h MELSEC API¡C
+   /// CC-Link æ§åˆ¶å™¨ä»‹é¢ï¼ˆéåŒæ­¥ï¼‰ã€‚
+   /// æä¾›é–‹å•Ÿ/é—œé–‰é€šè¨Šè·¯å¾‘èˆ‡æ‰¹é‡è®€å¯« Link Bit/Word çš„æ¨™æº–æ–¹æ³•ï¼Œ
+   /// UI åƒ…å‘¼å«æ­¤ä»‹é¢ï¼Œä¸ç›´æ¥æ¥è§¸åº•å±¤ MELSEC APIã€‚
    /// </summary>
    public interface ICCLinkController
    {
       #region Public Methods
 
       /// <summary>
-      /// ¶}±Ò³q°T¸ô®|¡]«D¦P¨B¡^¡C¶Ç¦^¨Ò¥~®É½Ğ°Ñ¦Ò <see cref="MelsecException"/>¡C
+      /// é–‹å•Ÿé€šè¨Šè·¯å¾‘ï¼ˆéåŒæ­¥ï¼‰ã€‚å‚³å›ä¾‹å¤–æ™‚è«‹åƒè€ƒ <see cref="MelsecException"/>ã€‚
       /// </summary>
       Task OpenAsync(CancellationToken ct = default);
 
       /// <summary>
-      /// Ãö³¬³q°T¸ô®|¨ÃÄÀ©ñ¸ê·½¡]«D¦P¨B¡^¡C
+      /// é—œé–‰é€šè¨Šè·¯å¾‘ä¸¦é‡‹æ”¾è³‡æºï¼ˆéåŒæ­¥ï¼‰ã€‚
       /// </summary>
       Task CloseAsync(CancellationToken ct = default);
 
       /// <summary>
-      /// Åª¨ú¦ì¤¸¡]LB/LX/LY¡^¡C
+      /// è®€å–ä½å…ƒï¼ˆLB/LX/LYï¼‰ã€‚
       /// </summary>
       Task<IReadOnlyList<bool>> ReadBitsAsync(string address, int count, CancellationToken ct = default);
 
       /// <summary>
-      /// ¼g¤J¦ì¤¸¡]LB/LY¡^¡C
+      /// å¯«å…¥ä½å…ƒï¼ˆLB/LYï¼‰ã€‚
       /// </summary>
       Task WriteBitsAsync(string address, IEnumerable<bool> values, CancellationToken ct = default);
 
       /// <summary>
-      /// Åª¨ú¦r¡]LW¡^¡C
+      /// è®€å–å­—ï¼ˆLWï¼‰ã€‚
       /// </summary>
       Task<IReadOnlyList<short>> ReadWordsAsync(string address, int count, CancellationToken ct = default);
 
       /// <summary>
-      /// ¼g¤J¦r¡]LW/LY¡^¡C
+      /// å¯«å…¥å­—ï¼ˆLW/LYï¼‰ã€‚
       /// </summary>
       Task WriteWordsAsync(string address, IEnumerable<short> values, CancellationToken ct = default);
 
       /// <summary>
-      /// ¨ú±o¥Ø«e±±¨î¥dª¬ºA»P³Ìªñ¿ù»~½X¡C
+      /// å–å¾—ç›®å‰æ§åˆ¶å¡ç‹€æ…‹èˆ‡æœ€è¿‘éŒ¯èª¤ç¢¼ã€‚
       /// </summary>
       Task<ControllerStatus> GetStatusAsync(CancellationToken ct = default);
 

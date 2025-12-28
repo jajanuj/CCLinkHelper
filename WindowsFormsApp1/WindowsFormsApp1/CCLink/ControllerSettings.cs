@@ -1,41 +1,41 @@
-namespace WindowsFormsApp1.CCLink
+ï»¿namespace WindowsFormsApp1.CCLink
 {
    /// <summary>
-   /// ±±¨î¾¹³s½u»P¦æ¬°³]©w¡C
-   /// ±q app.config ©Î JSON ª`¤J¡A¨Ñ±±¨î¥dªì©l¤Æ»P¹O®É/­«¸Õµ¦²¤¨Ï¥Î¡C
+   /// æ§åˆ¶å™¨é€£ç·šèˆ‡è¡Œç‚ºè¨­å®šã€‚
+   /// å¾ app.config æˆ– JSON æ³¨å…¥ï¼Œä¾›æ§åˆ¶å¡åˆå§‹åŒ–èˆ‡é€¾æ™‚/é‡è©¦ç­–ç•¥ä½¿ç”¨ã€‚
    /// </summary>
    public sealed class ControllerSettings
    {
       #region Properties
 
-      /// <summary>PLC/±±¨î¥dªº IP ¦ì§}¡C</summary>
+      /// <summary>PLC/æ§åˆ¶å¡çš„ IP ä½å€ã€‚</summary>
       public string Ip { get; set; }
 
-      /// <summary>³q°T°ğ©Î³q¹D½s¸¹¡C</summary>
+      /// <summary>é€šè¨ŠåŸ æˆ–é€šé“ç·¨è™Ÿã€‚</summary>
       public int Port { get; set; }
 
-      /// <summary>Network ½s¸¹¡]¨Ì²{³õ³]©w¡^¡C</summary>
+      /// <summary>Network ç·¨è™Ÿï¼ˆä¾ç¾å ´è¨­å®šï¼‰ã€‚</summary>
       public int Network { get; set; }
 
-      /// <summary>Station ½s¸¹¡]¨Ì²{³õ³]©w¡^¡C</summary>
+      /// <summary>Station ç·¨è™Ÿï¼ˆä¾ç¾å ´è¨­å®šï¼‰ã€‚</summary>
       public int Station { get; set; }
 
-      /// <summary>¹O®É²@¬í¼Æ¡]mdSetTimeout¡^¡C</summary>
+      /// <summary>é€¾æ™‚æ¯«ç§’æ•¸ï¼ˆmdSetTimeoutï¼‰ã€‚</summary>
       public int TimeoutMs { get; set; } = 3000;
 
-      /// <summary>­«¸Õ¦¸¼Æ¡]¼È®É©Ê¿ù»~¡^¡C</summary>
+      /// <summary>é‡è©¦æ¬¡æ•¸ï¼ˆæš«æ™‚æ€§éŒ¯èª¤ï¼‰ã€‚</summary>
       public int RetryCount { get; set; } = 3;
 
-      /// <summary>­«¸Õ°hÁ×²@¬í¡C</summary>
+      /// <summary>é‡è©¦é€€é¿æ¯«ç§’ã€‚</summary>
       public int RetryBackoffMs { get; set; } = 50;
 
-      /// <summary>¤ß¸õ¶¡¹j²@¬í¡]ª¬ºAºÊ´ú¡^¡C</summary>
+      /// <summary>å¿ƒè·³é–“éš”æ¯«ç§’ï¼ˆç‹€æ…‹ç›£æ¸¬ï¼‰ã€‚</summary>
       public int HeartbeatIntervalMs { get; set; } = 1000;
 
-      /// <summary>¦ì¤¸§Ç³]©w¡]Big/Little¡^¡C</summary>
+      /// <summary>ä½å…ƒåºè¨­å®šï¼ˆBig/Littleï¼‰ã€‚</summary>
       public string Endian { get; set; } = "Big";
 
-      /// <summary>¬O§_¨Ï¥Î 64 ¦ì¤¸ DLL¡]MDFUNC64¡^¡C</summary>
+      /// <summary>æ˜¯å¦ä½¿ç”¨ 64 ä½å…ƒ DLLï¼ˆMDFUNC64ï¼‰ã€‚</summary>
       public bool Isx64 { get; set; } = true;
 
       #endregion

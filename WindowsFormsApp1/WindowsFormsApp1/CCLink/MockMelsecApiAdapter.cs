@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace WindowsFormsApp1.CCLink
@@ -12,7 +12,7 @@ namespace WindowsFormsApp1.CCLink
    {
       #region Fields
 
-      // ·í¦¬¨ì¬Y­Ó request bit ³Q set ®É¡A¦Û°Ê±N¥¦¹ïÀ³ªº response bit ³]¬° 1
+      // ç•¶æ”¶åˆ°æŸå€‹ request bit è¢« set æ™‚ï¼Œè‡ªå‹•å°‡å®ƒå°æ‡‰çš„ response bit è¨­ç‚º 1
       private readonly Dictionary<int, int> _autoRespondMap = new Dictionary<int, int>();
       private readonly Dictionary<int, short> _bits = new Dictionary<int, short>();
       private readonly object _lock = new object();
@@ -25,7 +25,7 @@ namespace WindowsFormsApp1.CCLink
 
       public MockMelsecApiAdapter()
       {
-         // ¹w³]¡G·í LB0300 ³Q³]¸m®É¡A¦^À³ LB0100
+         // é è¨­ï¼šç•¶ LB0300 è¢«è¨­ç½®æ™‚ï¼Œå›æ‡‰ LB0100
          _autoRespondMap[CCLinkConstants.DefaultRequestFlagAddress] = CCLinkConstants.DefaultResponseFlagAddress;
       }
 
@@ -151,7 +151,7 @@ namespace WindowsFormsApp1.CCLink
          lock (_lock)
          {
             _bits[devno] = 0;
-            // ­Y request cleared¡A«h²M°£¹ïÀ³ response¡]¼ÒÀÀ¦æ¬°¡^
+            // è‹¥ request clearedï¼Œå‰‡æ¸…é™¤å°æ‡‰ responseï¼ˆæ¨¡æ“¬è¡Œç‚ºï¼‰
             if (devtyp == CCLinkConstants.DEV_LB && _autoRespondMap.TryGetValue(devno, out var resp))
             {
                _bits[resp] = 0;

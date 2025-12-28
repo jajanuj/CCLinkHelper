@@ -1,15 +1,20 @@
-namespace WindowsFormsApp1.CCLink
+ï»¿namespace WindowsFormsApp1.CCLink
 {
     /// <summary>
-    /// ±`¼Æ©w¸q¡G¸Ë¸m¥N½X»P¹w³]¦ì§}µ¥¡C
+    /// å¸¸æ•¸å®šç¾©ï¼šè£ç½®ä»£ç¢¼èˆ‡é è¨­ä½å€ç­‰ã€‚
     /// </summary>
     internal static class CCLinkConstants
     {
-        // ¸Ë¸m¥N½X¡A¹ïÀ³ MELSEC API (¤â¥U)
+        // è£ç½®ä»£ç¢¼ï¼Œå°æ‡‰ MELSEC API (æ‰‹å†Š)
         public const int DEV_LB = 23;
         public const int DEV_LW = 24;
         public const int DEV_LX = 21;
         public const int DEV_LY = 22;
 
-        // ¹w³]¦ì§}¡]¥i¥Ñ¤W¼hÂĞ¼g¡^        public const int DefaultRequestFlagAddress = 300; // LB0300        public const int DefaultResponseFlagAddress = 100; // LB0100        public const int DefaultRequestDataAddress = 400; // LW0400        public const int DefaultRequestDataLength = 7;    // Year..Week ¦@ 7 ­Ó UINT16    }
+        // é è¨­ä½å€ï¼ˆå¯ç”±ä¸Šå±¤è¦†å¯«ï¼‰
+        public const int DefaultRequestFlagAddress = 300; // LB0300
+        public const int DefaultResponseFlagAddress = 100; // LB0100
+        public const int DefaultRequestDataAddress = 400; // LW0400
+        public const int DefaultRequestDataLength = 7;    // Year..Week å…± 7 å€‹ UINT16
+    }
 }

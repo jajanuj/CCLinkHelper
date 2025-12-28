@@ -1,9 +1,9 @@
-using System;
+ï»¿using System;
 
 namespace WindowsFormsApp1.CCLink
 {
    /// <summary>
-   /// CC-Link ¦ì§}«Ê¸Ë¡C¤ä´© LB/LW/LX/LY °_©l»Pªø«×¡A¨Ã´£¨Ñ¦r¦ê¸ÑªR¡C
+   /// CC-Link ä½å€å°è£ã€‚æ”¯æ´ LB/LW/LX/LY èµ·å§‹èˆ‡é•·åº¦ï¼Œä¸¦æä¾›å­—ä¸²è§£æã€‚
    /// </summary>
    public sealed class LinkDeviceAddress
    {
@@ -37,19 +37,19 @@ namespace WindowsFormsApp1.CCLink
 
       #region Properties
 
-      /// <summary>¸Ë¸mºØÃş¡]LB/LW/LX/LY¡^¡C</summary>
+      /// <summary>è£ç½®ç¨®é¡ï¼ˆLB/LW/LX/LYï¼‰ã€‚</summary>
       public string Kind { get; }
 
-      /// <summary>°_©l¦ì§}¡]«D­t¾ã¼Æ¡^¡C</summary>
+      /// <summary>èµ·å§‹ä½å€ï¼ˆéè² æ•´æ•¸ï¼‰ã€‚</summary>
       public int Start { get; }
 
-      /// <summary>§å¶qªø«×¡]¥²¶· > 0¡^¡C</summary>
+      /// <summary>æ‰¹é‡é•·åº¦ï¼ˆå¿…é ˆ > 0ï¼‰ã€‚</summary>
       public int Length { get; }
 
-      /// <summary>¦ì¼e¡]¹w³] 16¡^¡C</summary>
+      /// <summary>ä½å¯¬ï¼ˆé è¨­ 16ï¼‰ã€‚</summary>
       public int BitWidth { get; }
 
-      /// <summary>¦ì¤¸§Ç³]©w¡]Big/Little¡^¡C</summary>
+      /// <summary>ä½å…ƒåºè¨­å®šï¼ˆBig/Littleï¼‰ã€‚</summary>
       public string Endian { get; }
 
       #endregion
@@ -57,7 +57,7 @@ namespace WindowsFormsApp1.CCLink
       #region Public Methods
 
       /// <summary>
-      /// ¸ÑªR¦ì§}¦r¦ê¡A¦p "LW100"¡CµL®Ä®æ¦¡·|ÂY¥X <see cref="ArgumentException"/>¡C
+      /// è§£æä½å€å­—ä¸²ï¼Œå¦‚ "LW100"ã€‚ç„¡æ•ˆæ ¼å¼æœƒæ“²å‡º <see cref="ArgumentException"/>ã€‚
       /// </summary>
       public static LinkDeviceAddress Parse(string address, int length)
       {

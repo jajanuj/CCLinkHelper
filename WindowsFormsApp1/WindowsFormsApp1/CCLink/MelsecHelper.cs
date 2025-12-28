@@ -1,4 +1,5 @@
-using System;
+ï»¿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -10,37 +11,43 @@ namespace WindowsFormsApp1.CCLink
    {
       #region Fields
 
-      // ®Ö¤ß¬Û¨Ì
+      // æ ¸å¿ƒç›¸ä¾
       private readonly IMelsecApiAdapter _api;
 
-      // ¦P¨B / ¤u§@ºü
+      // åŒæ­¥ / å·¥ä½œç·’
       private readonly object _apiLock = new object();
-      private readonly Dictionary<string, short[]> _cache = new Dictionary<string, short[]>();
+      private readonly ConcurrentDictionary<string, short[]> _cache = new ConcurrentDictionary<string, short[]>();
 
       private readonly Action<string> _logger;
-      private readonly object _pollLock = new object();
+
+      // _pollLock å·²ä¸å†éœ€è¦ï¼Œcache èˆ‡ registered æ¡ç”¨ thread-safe collection
+      // private readonly object _pollLock = new object();
       private readonly Func<Task<bool>> _reconnectAsync;
+
       private readonly Func<bool> _reconnectSync;
-      private readonly Dictionary<string, LinkDeviceAddress> _registered = new Dictionary<string, LinkDeviceAddress>();
+
+      // ä½¿ç”¨ ConcurrentDictionary ä»¥ç¸®çŸ­ lock ç¯„åœä¸¦è®“è¨»å†Š/å–æ¶ˆè¨»å†Šä¸éœ€é˜»å¡è¼ªè©¢å·¥ä½œ
+      // æ³¨æ„ï¼šPollAddresses ä»æœƒå–å¾—ä¸€æ¬¡ snapshot (Values.ToList) ä¸¦åœ¨é–å¤–è™•ç†
+      private readonly ConcurrentDictionary<string, LinkDeviceAddress> _registered = new ConcurrentDictionary<string, LinkDeviceAddress>();
       private readonly SynchronizationContext _syncContext;
 
-      // ª¬ºA
+      // ç‹€æ…‹
       private bool _disposed;
 
-      // ¤ß¸õ³]©w / ª¬ºA
+      // å¿ƒè·³è¨­å®š / ç‹€æ…‹
       private bool _heartbeatEnabled;
       private int _heartbeatFailThreshold = 3;
       private TimeSpan _heartbeatInterval = TimeSpan.FromSeconds(5);
       private LinkDeviceAddress _heartbeatRequestFlagAddr;
       private LinkDeviceAddress _heartbeatResponseFlagAddr;
 
-      // ½ü¸ßµù¥U / §Ö¨ú
+      // è¼ªè©¢è¨»å†Š / å¿«å–
       private TimeSpan _pollInterval = TimeSpan.FromMilliseconds(200);
 
-      // ¤w¸ÑªRªº¸ô®|¡]Start ®É©I¥s¤@¦¸ getPath¡^
+      // å·²è§£æçš„è·¯å¾‘ï¼ˆStart æ™‚å‘¼å«ä¸€æ¬¡ getPathï¼‰
       private int _resolvedPath = -1;
 
-      // ®É¶¡¦P¨B¥\¯à¤w²¾°£¡]¥Ø«e¥¼¨Ï¥Î¡^
+      // æ™‚é–“åŒæ­¥åŠŸèƒ½å·²ç§»é™¤ï¼ˆç›®å‰æœªä½¿ç”¨ï¼‰
       private CancellationTokenSource _workerCts;
       private Task _workerTask;
 
@@ -80,7 +87,7 @@ namespace WindowsFormsApp1.CCLink
       public bool IsHeartbeatRunning => _heartbeatEnabled && !_disposed;
 
       /// <summary>
-      /// ¥ş°ìªº½ü¸ß¶¡¹j¡A¥Ñ¤¤¥¡½ü¸ß¤u§@¨Ï¥Î¡C
+      /// å…¨åŸŸçš„è¼ªè©¢é–“éš”ï¼Œç”±ä¸­å¤®è¼ªè©¢å·¥ä½œä½¿ç”¨ã€‚
       /// </summary>
       public TimeSpan PollInterval
       {
@@ -115,12 +122,12 @@ namespace WindowsFormsApp1.CCLink
             }
             catch (Exception ex)
             {
-               _logger?.Invoke($"Dispose µ¥«İ¤u§@ºü®Éµo¥Í¨Ò¥~: {ex.Message}");
+               _logger?.Invoke($"Dispose ç­‰å¾…å·¥ä½œç·’æ™‚ç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
             }
          }
          catch (Exception ex)
          {
-            _logger?.Invoke($"Dispose ¨ú®ø¤u§@ºü®Éµo¥Í¨Ò¥~: {ex.Message}");
+            _logger?.Invoke($"Dispose å–æ¶ˆå·¥ä½œç·’æ™‚ç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
          }
 
          _heartbeatEnabled = false;
@@ -181,13 +188,13 @@ namespace WindowsFormsApp1.CCLink
 
       public event Action Disconnected;
       public event Action<Exception> ExceptionOccurred;
-      public event Action<int> HeartbeatFailed; // ³sÄò¥¢±Ñ­p¼Æ
+      public event Action<int> HeartbeatFailed; // é€£çºŒå¤±æ•—è¨ˆæ•¸
       public event Action HeartbeatSucceeded;
       public event Action<int> ReconnectAttemptFailed;
       public event Action Reconnected;
 
       /// <summary>
-      /// ·í¤¤¥¡½ü¸ß¤u§@Åª¨ì¤wµù¥Uªº¦a§}¸ê®Æ®ÉÄ²µo¡A·|¶Ç¦^¸Ó¦a§}¤Î¨ä¸ê®Æ°}¦C¡]short[]¡^¡C
+      /// ç•¶ä¸­å¤®è¼ªè©¢å·¥ä½œè®€åˆ°å·²è¨»å†Šçš„åœ°å€è³‡æ–™æ™‚è§¸ç™¼ï¼Œæœƒå‚³å›è©²åœ°å€åŠå…¶è³‡æ–™é™£åˆ—ï¼ˆshort[]ï¼‰ã€‚
       /// </summary>
       public event Action<LinkDeviceAddress, short[]> ValuesUpdated;
 
@@ -230,6 +237,22 @@ namespace WindowsFormsApp1.CCLink
 
          _heartbeatEnabled = true;
          EnsureWorkerStarted();
+
+         // start background monitor if path already resolved
+         try
+         {
+            var path = _resolvedPath;
+            if (path >= 0)
+            {
+               _backgroundMonitor = new BackgroundMonitor(new MelsecPlcDriver(_api, path));
+               _backgroundCts = new CancellationTokenSource();
+               _backgroundTask = Task.Run(() => _backgroundMonitor.RunLoopAsync());
+            }
+         }
+         catch (Exception ex)
+         {
+            _logger?.Invoke($"èƒŒæ™¯ç›£æ§å•Ÿå‹•å¤±æ•—: {ex.Message}");
+         }
       }
 
       private void AssignResolvedPath(int p)
@@ -257,7 +280,39 @@ namespace WindowsFormsApp1.CCLink
          }
          catch (Exception ex)
          {
-            _logger?.Invoke($"°±¤î¤ß¸õ®É¨ú®øµù¥Uµo¥Í¨Ò¥~: {ex.Message}");
+            _logger?.Invoke($"åœæ­¢å¿ƒè·³æ™‚å–æ¶ˆè¨»å†Šç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
+         }
+
+         // stop background monitor if running
+         try
+         {
+            if (_backgroundMonitor != null)
+            {
+               _backgroundMonitor.Stop();
+               try
+               {
+                  _backgroundTask?.Wait(200);
+               }
+               catch
+               {
+               }
+
+               try
+               {
+                  _backgroundCts?.Cancel();
+               }
+               catch
+               {
+               }
+
+               _backgroundTask = null;
+               _backgroundCts = null;
+               _backgroundMonitor = null;
+            }
+         }
+         catch (Exception ex)
+         {
+            _logger?.Invoke($"åœæ­¢èƒŒæ™¯ç›£æ§æ™‚ç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
          }
       }
 
@@ -276,7 +331,7 @@ namespace WindowsFormsApp1.CCLink
       public bool ForceTimeSync(DateTime dt, LinkDeviceAddress a, LinkDeviceAddress b, LinkDeviceAddress c, Func<int> gp) => false;
 
       /// <summary>
-      /// µù¥U¤@­Ó¦a§}¦Ü¤¤¥¡½ü¸ß¤u§@¡A¸Ó¦a§}±N³Q©w´ÁÅª¨ú¨Ã§Ö¨ú¨ä³Ì·s­È¡C
+      /// è¨»å†Šä¸€å€‹åœ°å€è‡³ä¸­å¤®è¼ªè©¢å·¥ä½œï¼Œè©²åœ°å€å°‡è¢«å®šæœŸè®€å–ä¸¦å¿«å–å…¶æœ€æ–°å€¼ã€‚
       /// </summary>
       public void RegisterPollingAddress(LinkDeviceAddress addr)
       {
@@ -286,17 +341,13 @@ namespace WindowsFormsApp1.CCLink
          }
 
          var k = KeyFor(addr);
-         lock (_pollLock)
-         {
-            if (!_registered.ContainsKey(k))
-            {
-               _registered[k] = addr;
-            }
-         }
+         // ä½¿ç”¨ ConcurrentDictionary å˜—è©¦åŠ å…¥ï¼ˆè‹¥å·²å­˜åœ¨å‰‡å¿½ç•¥ï¼‰
+         // é€™æ¨£å¯ä»¥è¿…é€Ÿå®Œæˆè¨»å†Šè€Œä¸æœƒé•·æ™‚é–“æŒæœ‰é–ï¼Œè¼ªè©¢å·¥ä½œæœƒåœ¨ä¸‹ä¸€å€‹é€±æœŸå–å¾— snapshot
+         _registered.TryAdd(k, addr);
       }
 
       /// <summary>
-      /// ¨ú®øµù¥U¤@­Ó¥ı«eµù¥Uªº½ü¸ß¦a§}¡C
+      /// å–æ¶ˆè¨»å†Šä¸€å€‹å…ˆå‰è¨»å†Šçš„è¼ªè©¢åœ°å€ã€‚
       /// </summary>
       public void UnregisterPollingAddress(LinkDeviceAddress addr)
       {
@@ -306,15 +357,14 @@ namespace WindowsFormsApp1.CCLink
          }
 
          var k = KeyFor(addr);
-         lock (_pollLock)
-         {
-            _registered.Remove(k);
-            _cache.Remove(k);
-         }
+         // ç§»é™¤è¨»å†Šé …ï¼ˆConcurrentDictionary æä¾› thread-safe ç§»é™¤ï¼‰
+         _registered.TryRemove(k, out _);
+         // cache ç¾åœ¨ç‚º ConcurrentDictionaryï¼Œå¯ä»¥ thread-safe ç§»é™¤
+         _cache.TryRemove(k, out _);
       }
 
       /// <summary>
-      /// ¨ú±o¤wµù¥U¦a§}ªº³Ì·s§Ö¨ú­È¡C¦^¶Ç°}¦C¬°½Æ¥»¥HÁ×§K¥~³¡§ïÅÜ¤º³¡§Ö¨ú¡F­YµL¸ê®Æ«h¦^¶Ç null¡C
+      /// å–å¾—å·²è¨»å†Šåœ°å€çš„æœ€æ–°å¿«å–å€¼ã€‚å›å‚³é™£åˆ—ç‚ºè¤‡æœ¬ä»¥é¿å…å¤–éƒ¨æ”¹è®Šå…§éƒ¨å¿«å–ï¼›è‹¥ç„¡è³‡æ–™å‰‡å›å‚³ nullã€‚
       /// </summary>
       public short[] GetLatest(LinkDeviceAddress addr)
       {
@@ -324,14 +374,12 @@ namespace WindowsFormsApp1.CCLink
          }
 
          var k = KeyFor(addr);
-         lock (_pollLock)
+         // ConcurrentDictionary provides thread-safe reads
+         if (_cache.TryGetValue(k, out var v))
          {
-            if (_cache.TryGetValue(k, out var v))
-            {
-               var copy = new short[v.Length];
-               Array.Copy(v, copy, v.Length);
-               return copy;
-            }
+            var copy = new short[v.Length];
+            Array.Copy(v, copy, v.Length);
+            return copy;
          }
 
          return null;
@@ -365,7 +413,7 @@ namespace WindowsFormsApp1.CCLink
                }
                catch (Exception ex)
                {
-                  _logger?.Invoke($"°±¤î¤u§@ºü®É¨ú®ø®Éµo¥Í¨Ò¥~: {ex.Message}");
+                  _logger?.Invoke($"åœæ­¢å·¥ä½œç·’æ™‚å–æ¶ˆæ™‚ç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
                }
 
                try
@@ -374,7 +422,7 @@ namespace WindowsFormsApp1.CCLink
                }
                catch (Exception ex)
                {
-                  _logger?.Invoke($"°±¤î¤u§@ºü®Éµ¥«İ®Éµo¥Í¨Ò¥~: {ex.Message}");
+                  _logger?.Invoke($"åœæ­¢å·¥ä½œç·’æ™‚ç­‰å¾…æ™‚ç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
                }
             }
          }
@@ -387,9 +435,9 @@ namespace WindowsFormsApp1.CCLink
 
       private async Task WorkerLoopAsync(CancellationToken ct)
       {
-         // ±Æµ{¤U¤@¦¸¤ß¸õ°õ¦æ®É¶¡
+         // æ’ç¨‹ä¸‹ä¸€æ¬¡å¿ƒè·³åŸ·è¡Œæ™‚é–“
          DateTime nextHeartbeat = DateTime.UtcNow + _heartbeatInterval;
-         // ±Æµ{¤U¤@¦¸½ü¸ß°õ¦æ®É¶¡
+         // æ’ç¨‹ä¸‹ä¸€æ¬¡è¼ªè©¢åŸ·è¡Œæ™‚é–“
          DateTime nextPoll = DateTime.UtcNow + _pollInterval;
 
          while (!ct.IsCancellationRequested && !_disposed)
@@ -403,7 +451,7 @@ namespace WindowsFormsApp1.CCLink
                   next = Min(next, nextHeartbeat);
                }
 
-               // ½ü¸ß¤]¦C¤J¦Ò¶q
+               // è¼ªè©¢ä¹Ÿåˆ—å…¥è€ƒé‡
                next = Min(next, nextPoll);
 
                TimeSpan delay = next == DateTime.MaxValue ? TimeSpan.FromMilliseconds(200) : next - now;
@@ -413,7 +461,7 @@ namespace WindowsFormsApp1.CCLink
                   continue;
                }
 
-               // ¨ì®É¶¡°õ¦æ½ü¸ß
+               // åˆ°æ™‚é–“åŸ·è¡Œè¼ªè©¢
                if (DateTime.UtcNow >= nextPoll)
                {
                   try
@@ -423,13 +471,13 @@ namespace WindowsFormsApp1.CCLink
                   catch (Exception ex)
                   {
                      TryRaiseException(ex);
-                     _logger?.Invoke($"½ü¸ß®Éµo¥Í¨Ò¥~: {ex.Message}");
+                     _logger?.Invoke($"è¼ªè©¢æ™‚ç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
                   }
 
                   nextPoll = DateTime.UtcNow + _pollInterval;
                }
 
-               // Àu¥ı³B²z¤ß¸õ
+               // å„ªå…ˆè™•ç†å¿ƒè·³
                if (_heartbeatEnabled && DateTime.UtcNow >= nextHeartbeat)
                {
                   await RunHeartbeatAsync(ct).ConfigureAwait(false);
@@ -443,14 +491,14 @@ namespace WindowsFormsApp1.CCLink
             catch (Exception ex)
             {
                TryRaiseException(ex);
-               _logger?.Invoke($"¤u§@°j°é¨Ò¥~: {ex.Message}");
+               _logger?.Invoke($"å·¥ä½œè¿´åœˆä¾‹å¤–: {ex.Message}");
                try
                {
                   await Task.Delay(500, ct).ConfigureAwait(false);
                }
                catch (Exception ex2)
                {
-                  _logger?.Invoke($"¦b¤u§@°j°é©µ¿ğ®Éµo¥Í¨Ò¥~: {ex2.Message}");
+                  _logger?.Invoke($"åœ¨å·¥ä½œè¿´åœˆå»¶é²æ™‚ç™¼ç”Ÿä¾‹å¤–: {ex2.Message}");
                }
             }
          }
@@ -460,19 +508,16 @@ namespace WindowsFormsApp1.CCLink
 
       private void PollAddresses()
       {
-         // ½Æ»sµù¥U²M³æ¥H¦bÂê¥~¾Ş§@
-         List<LinkDeviceAddress> regs;
-         lock (_pollLock)
-         {
-            regs = _registered.Values.ToList();
-         }
+         // å–å¾—è¨»å†Šæ¸…å–® snapshot ä¸¦åœ¨é–å¤–æ“ä½œï¼Œæ¸›å°‘é–ç«¶çˆ­èˆ‡é¿å…åœ¨é–å…§åŸ·è¡Œ I/Oã€‚
+         // trade-off: snapshot ä¸€è‡´æ€§ç‚º "eventual" â€” æ–°è¨»å†Š/å–æ¶ˆå¯èƒ½ä¸æœƒç«‹å³åæ˜ æ–¼æ­¤è¼ªè©¢ï¼Œä½†å¯æ¸›å°‘é˜»å¡ã€‚
+         List<LinkDeviceAddress> regs = _registered.Values.ToList();
 
          if (regs.Count == 0)
          {
             return;
          }
 
-         // ¨Ì Kind ¤À²Õ¨Ã¦X¨Ö³sÄò°Ï¬q
+         // ä¾ Kind åˆ†çµ„ä¸¦åˆä½µé€£çºŒå€æ®µ
          var groups = regs.GroupBy(r => r.Kind, StringComparer.OrdinalIgnoreCase);
 
          lock (_apiLock)
@@ -490,7 +535,7 @@ namespace WindowsFormsApp1.CCLink
                   while (j < list.Count)
                   {
                      var next = list[j];
-                     // ­Y­«Å|©Î¬Û¾F«h¦X¨Ö
+                     // è‹¥é‡ç–Šæˆ–ç›¸é„°å‰‡åˆä½µ
                      if (next.Start <= mergedEnd + 1)
                      {
                         mergedEnd = Math.Max(mergedEnd, next.Start + next.Length - 1);
@@ -510,10 +555,10 @@ namespace WindowsFormsApp1.CCLink
                      int devCode = MapDeviceCode(g.Key);
                      short rc = _api.mdDevRead(path, devCode, mergedStart, mergedLength, dest);
 
-                     // ­pºâ¦¹¦X¨Ö°Ï¶¡¤¤¨ü¼vÅTªº¤wµù¥U¦a§}
+                     // è¨ˆç®—æ­¤åˆä½µå€é–“ä¸­å—å½±éŸ¿çš„å·²è¨»å†Šåœ°å€
                      var affected = list.Where(r => r.Start <= mergedEnd && r.Start + r.Length - 1 >= mergedStart).ToList();
 
-                     // ÀË¬d¬O§_¦³¥ô¦ó¤ù¬q»P§Ö¨ú¤£¦P
+                     // æª¢æŸ¥æ˜¯å¦æœ‰ä»»ä½•ç‰‡æ®µèˆ‡å¿«å–ä¸åŒ
                      bool anyChanged = false;
                      foreach (var a in affected)
                      {
@@ -530,48 +575,46 @@ namespace WindowsFormsApp1.CCLink
 
                      if (anyChanged)
                      {
-                        // ¥u¦³·íÅª¨ìªº¤ù¬q»P§Ö¨ú¤£¦P®É¤~°O¿ı»P§ó·s§Ö¨ú
-                        _logger?.Invoke($"½ü¸ß: mdDevRead {g.Key}{mergedStart}..{mergedEnd} => {rc}");
+                        // åªæœ‰ç•¶è®€åˆ°çš„ç‰‡æ®µèˆ‡å¿«å–ä¸åŒæ™‚æ‰è¨˜éŒ„èˆ‡æ›´æ–°å¿«å–
+                        _logger?.Invoke($"è¼ªè©¢: mdDevRead {g.Key}{mergedStart}..{mergedEnd} => {rc}");
 
-                        // ¤À°t¤ù¬q¨ì§Ö¨ú¨Ã¹ïÅÜ§óªº¤ù¬qÄ²µo¨Æ¥ó
-                        lock (_pollLock)
+                        // åˆ†é…ç‰‡æ®µåˆ°å¿«å–ä¸¦å°è®Šæ›´çš„ç‰‡æ®µè§¸ç™¼äº‹ä»¶
+                        foreach (var a in affected)
                         {
-                           foreach (var a in affected)
-                           {
-                              int off = a.Start - mergedStart;
-                              var slice = new short[a.Length];
-                              Array.Copy(dest, off, slice, 0, a.Length);
-                              var k = KeyFor(a);
+                           int off = a.Start - mergedStart;
+                           var slice = new short[a.Length];
+                           Array.Copy(dest, off, slice, 0, a.Length);
+                           var k = KeyFor(a);
 
-                              if (_cache.TryGetValue(k, out var prev) && ArraysEqual(prev, slice))
+                           if (_cache.TryGetValue(k, out var prev) && ArraysEqual(prev, slice))
+                           {
+                              // æœªè®Šæ›´ï¼Œè·³é
+                           }
+                           else
+                           {
+                              var stored = (short[])slice.Clone();
+                              // ä½¿ç”¨ AddOrUpdate ä¿è­‰ thread-safe æ›´æ–°
+                              _cache.AddOrUpdate(k, stored, (key, old) => stored);
+                              try
                               {
-                                 // ¥¼ÅÜ§ó¡A¸õ¹L
+                                 ValuesUpdated?.Invoke(a, (short[])stored.Clone());
                               }
-                              else
+                              catch (Exception ex)
                               {
-                                 var stored = (short[])slice.Clone();
-                                 _cache[k] = stored;
-                                 try
-                                 {
-                                    ValuesUpdated?.Invoke(a, (short[])stored.Clone());
-                                 }
-                                 catch (Exception ex)
-                                 {
-                                    _logger?.Invoke($"ValuesUpdated ¨Æ¥ó³B²zµ{§Çµo¥Í¨Ò¥~: {ex.Message}");
-                                 }
+                                 _logger?.Invoke($"ValuesUpdated äº‹ä»¶è™•ç†ç¨‹åºç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
                               }
                            }
                         }
                      }
                      else
                      {
-                        // Äæ¦ì¥¼ÅÜ§ó¡A«h¤£°O¿ı¤é»x
+                        // æ¬„ä½æœªè®Šæ›´ï¼Œå‰‡ä¸è¨˜éŒ„æ—¥èªŒ
                      }
                   }
                   catch (Exception ex)
                   {
                      TryRaiseException(ex);
-                     _logger?.Invoke($"½ü¸ßÅª¨úµo¥Í¨Ò¥~: {ex.Message}");
+                     _logger?.Invoke($"è¼ªè©¢è®€å–ç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
                   }
 
                   idx = j;
@@ -580,12 +623,17 @@ namespace WindowsFormsApp1.CCLink
          }
       }
 
-      // ¤ß¸õÆ[¹î§Ö¨ú¡AÁ×§K¦bµLÅÜ¤Æ®É­«½Æ«Å§i¦¨¥\
+      // å¿ƒè·³è§€å¯Ÿå¿«å–ï¼Œé¿å…åœ¨ç„¡è®ŠåŒ–æ™‚é‡è¤‡å®£å‘ŠæˆåŠŸ
       private bool? _lastObservedRequest;
 
       private bool? _lastObservedResponse;
 
-      // «İ½T»{ªº¼g¤J´Á«İ¡G·í§Ú­Ìµo¥X mdDevSet/mdDevRst ®É³]¬° true¡Aµ¥«İ¤U¤@¦¸½ü¸ß½T»{
+      // Background monitor to respond to PLC requests (e.g. time sync / clock)
+      private BackgroundMonitor _backgroundMonitor;
+      private Task _backgroundTask;
+      private CancellationTokenSource _backgroundCts;
+
+      // å¾…ç¢ºèªçš„å¯«å…¥æœŸå¾…ï¼šç•¶æˆ‘å€‘ç™¼å‡º mdDevSet/mdDevRst æ™‚è¨­ç‚º trueï¼Œç­‰å¾…ä¸‹ä¸€æ¬¡è¼ªè©¢ç¢ºèª
       private bool _pendingSet;
       private bool _pendingRst;
 
@@ -611,7 +659,7 @@ namespace WindowsFormsApp1.CCLink
                bool requestOn = reqVal != 0;
                bool responseOn = respVal != 0;
 
-               // ¦pªG¤§«e¦³µo¥X¼g¤J©R¥O¡A¥ıÀË¬d¬O§_¤w³Q½ü¸ß½T»{
+               // å¦‚æœä¹‹å‰æœ‰ç™¼å‡ºå¯«å…¥å‘½ä»¤ï¼Œå…ˆæª¢æŸ¥æ˜¯å¦å·²è¢«è¼ªè©¢ç¢ºèª
                if (_pendingSet && responseOn)
                {
                   ok = true;
@@ -627,10 +675,10 @@ namespace WindowsFormsApp1.CCLink
                   _lastObservedResponse = responseOn;
                }
 
-               // ¤¤©Êª¬ºA¡]request ¸ò response ³£¬° 0¡^: ­Y¨S¦³«İ½T»{ªº¼g¤J¡Aµø¬°µL¶·³B²z
+               // ä¸­æ€§ç‹€æ…‹ï¼ˆrequest è·Ÿ response éƒ½ç‚º 0ï¼‰: è‹¥æ²’æœ‰å¾…ç¢ºèªçš„å¯«å…¥ï¼Œè¦–ç‚ºç„¡é ˆè™•ç†
                if (!requestOn && !responseOn)
                {
-                  // ­Y¨S¦³«İ½T»{¼g¤J¡A§ó·s³Ì«áÆ[¹îª¬ºA¨ÃÂ÷¶}
+                  // è‹¥æ²’æœ‰å¾…ç¢ºèªå¯«å…¥ï¼Œæ›´æ–°æœ€å¾Œè§€å¯Ÿç‹€æ…‹ä¸¦é›¢é–‹
                   if (!_pendingSet && !_pendingRst)
                   {
                      _lastObservedRequest = requestOn;
@@ -657,7 +705,7 @@ namespace WindowsFormsApp1.CCLink
                      {
                         int devCode = MapDeviceCode(_heartbeatResponseFlagAddr.Kind);
                         short r = _api.mdDevSet(_resolvedPath, 0, devCode, _heartbeatResponseFlagAddr.Start);
-                        _logger?.Invoke($"¤ß¸õ¡G°õ¦æ mdDevSet {_heartbeatResponseFlagAddr.Kind}{_heartbeatResponseFlagAddr.Start} => {r}");
+                        _logger?.Invoke($"å¿ƒè·³ï¼šåŸ·è¡Œ mdDevSet {_heartbeatResponseFlagAddr.Kind}{_heartbeatResponseFlagAddr.Start} => {r}");
                         if (r == 0)
                         {
                            // mark expectation and wait for poll to confirm
@@ -668,7 +716,7 @@ namespace WindowsFormsApp1.CCLink
                   catch (Exception ex)
                   {
                      TryRaiseException(ex);
-                     _logger?.Invoke($"¤ß¸õ³]©w response ®Éµo¥Í¨Ò¥~: {ex.Message}");
+                     _logger?.Invoke($"å¿ƒè·³è¨­å®š response æ™‚ç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
                      ok = false;
                   }
                }
@@ -680,7 +728,7 @@ namespace WindowsFormsApp1.CCLink
                      {
                         int devCode = MapDeviceCode(_heartbeatResponseFlagAddr.Kind);
                         short r = _api.mdDevRst(_resolvedPath, 0, devCode, _heartbeatResponseFlagAddr.Start);
-                        _logger?.Invoke($"¤ß¸õ¡G°õ¦æ mdDevRst {_heartbeatResponseFlagAddr.Kind}{_heartbeatResponseFlagAddr.Start} => {r}");
+                        _logger?.Invoke($"å¿ƒè·³ï¼šåŸ·è¡Œ mdDevRst {_heartbeatResponseFlagAddr.Kind}{_heartbeatResponseFlagAddr.Start} => {r}");
                         if (r == 0)
                         {
                            // mark expectation and wait for poll to confirm
@@ -691,7 +739,7 @@ namespace WindowsFormsApp1.CCLink
                   catch (Exception ex)
                   {
                      TryRaiseException(ex);
-                     _logger?.Invoke($"¤ß¸õ²M°£ response ®Éµo¥Í¨Ò¥~: {ex.Message}");
+                     _logger?.Invoke($"å¿ƒè·³æ¸…é™¤ response æ™‚ç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
                      ok = false;
                   }
                }
@@ -717,7 +765,7 @@ namespace WindowsFormsApp1.CCLink
             catch (Exception ex)
             {
                TryRaiseException(ex);
-               _logger?.Invoke($"¤ß¸õ³B²z¨Ò¥~: {ex.Message}");
+               _logger?.Invoke($"å¿ƒè·³è™•ç†ä¾‹å¤–: {ex.Message}");
                ok = false;
             }
 
@@ -730,12 +778,12 @@ namespace WindowsFormsApp1.CCLink
             {
                ConsecutiveHeartbeatFailures++;
                PostEvent(() => HeartbeatFailed?.Invoke(ConsecutiveHeartbeatFailures));
-               _logger?.Invoke($"¤ß¸õ¥¢±Ñ¡]³sÄò {ConsecutiveHeartbeatFailures} ¦¸¡^");
+               _logger?.Invoke($"å¿ƒè·³å¤±æ•—ï¼ˆé€£çºŒ {ConsecutiveHeartbeatFailures} æ¬¡ï¼‰");
                if (ConsecutiveHeartbeatFailures >= _heartbeatFailThreshold)
                {
                   // stop worker and attempt reconnect loop
                   PostEvent(() => Disconnected?.Invoke());
-                  _logger?.Invoke("°»´ú¨ì¤ß¸õ¤¤Â_¡F°±¤î¤u§@¨Ã±Ò°Ê­«·s³s½u´`Àô¡C");
+                  _logger?.Invoke("åµæ¸¬åˆ°å¿ƒè·³ä¸­æ–·ï¼›åœæ­¢å·¥ä½œä¸¦å•Ÿå‹•é‡æ–°é€£ç·šå¾ªç’°ã€‚");
                   StopWorkerInternal();
                   // run reconnect loop on background thread and when succeeded restart worker/heartbeat
                   _ = Task.Run(async () =>
@@ -773,27 +821,27 @@ namespace WindowsFormsApp1.CCLink
                }
                else
                {
-                  _logger?.Invoke("¥¼´£¨Ñ­«·s³s½u©e¬£¡C");
+                  _logger?.Invoke("æœªæä¾›é‡æ–°é€£ç·šå§”æ´¾ã€‚");
                   break;
                }
             }
             catch (Exception ex)
             {
                TryRaiseException(ex);
-               _logger?.Invoke($"­«·s³s½u¹Á¸Õ®Éµo¥Í¨Ò¥~: {ex.Message}");
+               _logger?.Invoke($"é‡æ–°é€£ç·šå˜—è©¦æ™‚ç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
                ok = false;
             }
 
             if (ok)
             {
-               _logger?.Invoke($"­«·s³s½u¦b {attempt} ¦¸¹Á¸Õ«á¦¨¥\");
+               _logger?.Invoke($"é‡æ–°é€£ç·šåœ¨ {attempt} æ¬¡å˜—è©¦å¾ŒæˆåŠŸ");
                PostEvent(() => Reconnected?.Invoke());
                return;
             }
             else
             {
                PostEvent(() => ReconnectAttemptFailed?.Invoke(attempt));
-               _logger?.Invoke($"­«·s³s½u¹Á¸Õ {attempt} ¥¢±Ñ¡C");
+               _logger?.Invoke($"é‡æ–°é€£ç·šå˜—è©¦ {attempt} å¤±æ•—ã€‚");
             }
 
             try
@@ -807,7 +855,7 @@ namespace WindowsFormsApp1.CCLink
             }
          }
 
-         _logger?.Invoke("­«·s³s½u´`Àôµ²§ô¦ı¥¼¦¨¥\¡C");
+         _logger?.Invoke("é‡æ–°é€£ç·šå¾ªç’°çµæŸä½†æœªæˆåŠŸã€‚");
       }
 
       private void PostEvent(Action action)
@@ -825,14 +873,14 @@ namespace WindowsFormsApp1.CCLink
             }
             catch (Exception ex)
             {
-               _logger?.Invoke($"¦b PostEvent ¨Ï¥Î SynchronizationContext.Post ®Éµo¥Í¨Ò¥~: {ex.Message}");
+               _logger?.Invoke($"åœ¨ PostEvent ä½¿ç”¨ SynchronizationContext.Post æ™‚ç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
                try
                {
                   action();
                }
                catch (Exception ex2)
                {
-                  _logger?.Invoke($"¦b PostEvent ¤¤³Æ´©°õ¦æ action ®Éµo¥Í¨Ò¥~: {ex2.Message}");
+                  _logger?.Invoke($"åœ¨ PostEvent ä¸­å‚™æ´åŸ·è¡Œ action æ™‚ç™¼ç”Ÿä¾‹å¤–: {ex2.Message}");
                }
             }
          }
@@ -844,7 +892,7 @@ namespace WindowsFormsApp1.CCLink
             }
             catch (Exception ex)
             {
-               _logger?.Invoke($"¦b PostEvent ª½±µ°õ¦æ action ®Éµo¥Í¨Ò¥~: {ex.Message}");
+               _logger?.Invoke($"åœ¨ PostEvent ç›´æ¥åŸ·è¡Œ action æ™‚ç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
             }
          }
       }
@@ -857,7 +905,7 @@ namespace WindowsFormsApp1.CCLink
          }
          catch (Exception ex2)
          {
-            _logger?.Invoke($"ExceptionOccurred ¨Æ¥ó³B²zµ{§Ç¤Şµo¨Ò¥~: {ex2.Message}");
+            _logger?.Invoke($"ExceptionOccurred äº‹ä»¶è™•ç†ç¨‹åºå¼•ç™¼ä¾‹å¤–: {ex2.Message}");
          }
       }
 

@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -42,8 +42,8 @@ namespace WindowsFormsApp1.CCLink
          {
             case "LB": return 23;
             case "LW": return 24;
-            case "LX": return 21; // ¨Ì¤â¥U½T»{
-            case "LY": return 22; // ¨Ì¤â¥U½T»{
+            case "LX": return 21; // ä¾æ‰‹å†Šç¢ºèª
+            case "LY": return 22; // ä¾æ‰‹å†Šç¢ºèª
             default: throw new ArgumentException("Unknown device kind: " + kind);
          }
       }
@@ -55,8 +55,8 @@ namespace WindowsFormsApp1.CCLink
          await _lock.WaitAsync(ct).ConfigureAwait(false);
          try
          {
-            short chan = (short)_settings.Port; // ¨Ì²{³õ³]©w¹ïÀ³³q¹D
-            short mode = 1;                     // ¨Ì¤â¥U©w¸q¡]¥Ü¨Ò¡G1=¶}±Ò¡^
+            short chan = (short)_settings.Port; // ä¾ç¾å ´è¨­å®šå°æ‡‰é€šé“
+            short mode = 1;                     // ä¾æ‰‹å†Šå®šç¾©ï¼ˆç¤ºä¾‹ï¼š1=é–‹å•Ÿï¼‰
             int path;
             var rc = _api.mdOpen(chan, mode, out path);
             if (rc != 0)

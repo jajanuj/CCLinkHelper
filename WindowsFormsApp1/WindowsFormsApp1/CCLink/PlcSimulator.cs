@@ -1,12 +1,12 @@
-using System;
+ï»¿using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace WindowsFormsApp1.CCLink
 {
    /// <summary>
-   /// Â²©ö PLC ¼ÒÀÀ¾¹¡G¥i©w´Á©Î¤â°Ê¦b«ü©w request flag ¤W²£¥Í pulse/toggle¡A¨ÃºÊ±± response flag ªºÅÜ¤Æ¡C
-   /// ¦¹¼ÒÀÀ¾¹ª½±µ¨Ï¥Î IMelsecApiAdapter ¼g¤J/Åª¨ú¦ì¤¸¡]LB/LW µ¥¡^¡A»P MelsecHelper ¥i¤@°_·f°t´ú¸Õ¤ß¸õ¬yµ{¡C
+   /// ç°¡æ˜“ PLC æ¨¡æ“¬å™¨ï¼šå¯å®šæœŸæˆ–æ‰‹å‹•åœ¨æŒ‡å®š request flag ä¸Šç”¢ç”Ÿ pulse/toggleï¼Œä¸¦ç›£æ§ response flag çš„è®ŠåŒ–ã€‚
+   /// æ­¤æ¨¡æ“¬å™¨ç›´æ¥ä½¿ç”¨ IMelsecApiAdapter å¯«å…¥/è®€å–ä½å…ƒï¼ˆLB/LW ç­‰ï¼‰ï¼Œèˆ‡ MelsecHelper å¯ä¸€èµ·æ­é…æ¸¬è©¦å¿ƒè·³æµç¨‹ã€‚
    /// </summary>
    public sealed class PlcSimulator : IDisposable
    {
@@ -69,7 +69,7 @@ namespace WindowsFormsApp1.CCLink
       #region Public Methods
 
       /// <summary>
-      /// ¤â°Ê³]©w request flag¡]true ³]¬° 1¡Afalse ³]¬° 0¡^¡C
+      /// æ‰‹å‹•è¨­å®š request flagï¼ˆtrue è¨­ç‚º 1ï¼Œfalse è¨­ç‚º 0ï¼‰ã€‚
       /// </summary>
       public void SetRequest(bool on)
       {
@@ -85,17 +85,17 @@ namespace WindowsFormsApp1.CCLink
                _api.mdDevRst(_path, 0, devCode, _requestAddr.Start);
             }
 
-            _logger?.Invoke($"¼ÒÀÀ PLC¡G³]©w Request {_requestAddr.Kind}{_requestAddr.Start} = {(on ? 1 : 0)}");
+            _logger?.Invoke($"æ¨¡æ“¬ PLCï¼šè¨­å®š Request {_requestAddr.Kind}{_requestAddr.Start} = {(on ? 1 : 0)}");
             RequestChanged?.Invoke(on);
          }
          catch (Exception ex)
          {
-            _logger?.Invoke($"¼ÒÀÀ PLC ³]©w Request µo¥Í¨Ò¥~: {ex.Message}");
+            _logger?.Invoke($"æ¨¡æ“¬ PLC è¨­å®š Request ç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
          }
       }
 
       /// <summary>
-      /// ±Ò°Ê¶g´Á©Ê pulse ¼Ò¦¡¡G¨C­Ó¶g´Á¥ı±N request ³]¬° 1¡Aºû«ù pulseMs¡AµM«á²M¬° 0¡A¶g´Á¬° period¡C
+      /// å•Ÿå‹•é€±æœŸæ€§ pulse æ¨¡å¼ï¼šæ¯å€‹é€±æœŸå…ˆå°‡ request è¨­ç‚º 1ï¼Œç¶­æŒ pulseMsï¼Œç„¶å¾Œæ¸…ç‚º 0ï¼Œé€±æœŸç‚º periodã€‚
       /// </summary>
       public void StartPulse(TimeSpan period, int pulseMs)
       {
@@ -131,7 +131,7 @@ namespace WindowsFormsApp1.CCLink
                }
                catch (Exception ex)
                {
-                  _logger?.Invoke($"¼ÒÀÀ PLC pulse °õ¦æ¨Ò¥~: {ex.Message}");
+                  _logger?.Invoke($"æ¨¡æ“¬ PLC pulse åŸ·è¡Œä¾‹å¤–: {ex.Message}");
                }
             }
          }, ct);
@@ -141,7 +141,7 @@ namespace WindowsFormsApp1.CCLink
       }
 
       /// <summary>
-      /// ±Ò°Ê¤Á´«¼Ò¦¡¡G¨C interval ¤Á´« request bit¡]0->1 ©Î 1->0¡^¡C
+      /// å•Ÿå‹•åˆ‡æ›æ¨¡å¼ï¼šæ¯ interval åˆ‡æ› request bitï¼ˆ0->1 æˆ– 1->0ï¼‰ã€‚
       /// </summary>
       public void StartToggle(TimeSpan interval)
       {
@@ -171,7 +171,7 @@ namespace WindowsFormsApp1.CCLink
                }
                catch (Exception ex)
                {
-                  _logger?.Invoke($"¼ÒÀÀ PLC toggle °õ¦æ¨Ò¥~: {ex.Message}");
+                  _logger?.Invoke($"æ¨¡æ“¬ PLC toggle åŸ·è¡Œä¾‹å¤–: {ex.Message}");
                }
             }
          }, ct);
@@ -180,7 +180,7 @@ namespace WindowsFormsApp1.CCLink
       }
 
       /// <summary>
-      /// °±¤î¥ô¦ó¼ÒÀÀ¦æ¬°»PºÊ±±¡C
+      /// åœæ­¢ä»»ä½•æ¨¡æ“¬è¡Œç‚ºèˆ‡ç›£æ§ã€‚
       /// </summary>
       public void Stop()
       {
@@ -194,7 +194,7 @@ namespace WindowsFormsApp1.CCLink
                }
                catch (Exception ex)
                {
-                  _logger?.Invoke($"¼ÒÀÀ PLC Stop ¨ú®ø¥OµP®Éµo¥Í¨Ò¥~: {ex.Message}");
+                  _logger?.Invoke($"æ¨¡æ“¬ PLC Stop å–æ¶ˆä»¤ç‰Œæ™‚ç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
                }
 
                try
@@ -203,7 +203,7 @@ namespace WindowsFormsApp1.CCLink
                }
                catch (Exception ex)
                {
-                  _logger?.Invoke($"µ¥«İ¼ÒÀÀ PLC ¤u§@ºü°±¤î®Éµo¥Í¨Ò¥~: {ex.Message}");
+                  _logger?.Invoke($"ç­‰å¾…æ¨¡æ“¬ PLC å·¥ä½œç·’åœæ­¢æ™‚ç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
                }
 
                _cts.Dispose();
@@ -244,13 +244,13 @@ namespace WindowsFormsApp1.CCLink
                   if (!last.HasValue || last.Value != on)
                   {
                      last = on;
-                     _logger?.Invoke($"¼ÒÀÀ PLC ºÊ±±¨ì Response {_responseAddr.Kind}{_responseAddr.Start} = {(on ? 1 : 0)}");
+                     _logger?.Invoke($"æ¨¡æ“¬ PLC ç›£æ§åˆ° Response {_responseAddr.Kind}{_responseAddr.Start} = {(on ? 1 : 0)}");
                      ResponseChanged?.Invoke(on);
                   }
                }
                catch (Exception ex)
                {
-                  _logger?.Invoke($"¼ÒÀÀ PLC ºÊ±± Response ®Éµo¥Í¨Ò¥~: {ex.Message}");
+                  _logger?.Invoke($"æ¨¡æ“¬ PLC ç›£æ§ Response æ™‚ç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
                }
 
                try
@@ -280,7 +280,7 @@ namespace WindowsFormsApp1.CCLink
          }
          catch (Exception ex)
          {
-            _logger?.Invoke($"°±¤î¼ÒÀÀ PLC ºÊ±±®Éµo¥Í¨Ò¥~: {ex.Message}");
+            _logger?.Invoke($"åœæ­¢æ¨¡æ“¬ PLC ç›£æ§æ™‚ç™¼ç”Ÿä¾‹å¤–: {ex.Message}");
          }
       }
 

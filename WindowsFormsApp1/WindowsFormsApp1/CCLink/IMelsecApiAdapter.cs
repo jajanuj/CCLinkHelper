@@ -1,7 +1,7 @@
-namespace WindowsFormsApp1.CCLink
+ï»¿namespace WindowsFormsApp1.CCLink
 {
    /// <summary>
-   /// MELSEC API ¤¶­±¥]¸Ë¡CÃ±³¹¨Ì¤â¥U¡]p.53~55, p.113~117¡^©w¸q¡C
+   /// MELSEC API ä»‹é¢åŒ…è£ã€‚ç°½ç« ä¾æ‰‹å†Šï¼ˆp.53~55, p.113~117ï¼‰å®šç¾©ã€‚
    /// </summary>
    public interface IMelsecApiAdapter
    {
@@ -18,29 +18,29 @@ namespace WindowsFormsApp1.CCLink
       short mdGetLastError(int path, out int code);
 
       /// <summary>
-      /// ÂX®i¸Ë¤¸¥ó§å¶q¼g¤J¡]mdSendEx¡^¡C
+      /// æ“´å±•è£å…ƒä»¶æ‰¹é‡å¯«å…¥ï¼ˆmdSendExï¼‰ã€‚
       /// </summary>
       int mdSendEx(int path, int netno, int stno, int devtyp, int devno, ref int size, short[] data);
 
       /// <summary>
-      /// ÀH¾÷Åª¨ú¡]mdRandR¡^¡G«ü©w¤£¦P¸Ë¸m/¦ì§}¶°¦XªºÅª¨ú¡C
-      /// dev[] ¬°¸Ë¸m¥N½X°}¦C¡Abuf[] ¬°¦^¶Ç¸ê®Æ¡Abufsize ¬°ªğ¦^¤¸¯À¼Æ¡C
+      /// éš¨æ©Ÿè®€å–ï¼ˆmdRandRï¼‰ï¼šæŒ‡å®šä¸åŒè£ç½®/ä½å€é›†åˆçš„è®€å–ã€‚
+      /// dev[] ç‚ºè£ç½®ä»£ç¢¼é™£åˆ—ï¼Œbuf[] ç‚ºå›å‚³è³‡æ–™ï¼Œbufsize ç‚ºè¿”å›å…ƒç´ æ•¸ã€‚
       /// </summary>
       int mdRandR(int path, int stno, int[] dev, short[] buf, int bufsize);
 
       /// <summary>
-      /// ¦ì¤¸¥ó³]¸m¡]mdDevSet¡^¡G±N«ü©w¦ì¤¸¥ó¸m¬° ON¡C
+      /// ä½å…ƒä»¶è¨­ç½®ï¼ˆmdDevSetï¼‰ï¼šå°‡æŒ‡å®šä½å…ƒä»¶ç½®ç‚º ONã€‚
       /// </summary>
       short mdDevSet(int path, int stno, int devtyp, int devno);
 
       /// <summary>
-      /// ¦ì¤¸¥ó´_¦ì¡]mdDevRst¡^¡G±N«ü©w¦ì¤¸¥ó¸m¬° OFF¡C
+      /// ä½å…ƒä»¶å¾©ä½ï¼ˆmdDevRstï¼‰ï¼šå°‡æŒ‡å®šä½å…ƒä»¶ç½®ç‚º OFFã€‚
       /// </summary>
       short mdDevRst(int path, int stno, int devtyp, int devno);
 
       /// <summary>
-      /// ¦ì¤¸¥óÀH¾÷¼g¤J¡]mdRandW¡^¡G±N¸ê®Æ¼g¤J¨ìÀH¾÷«ü©wªº¸Ë¤¸¥ó¶°¦X¡C
-      /// dev[] ¬°¥Ø¼Ğ¸Ë¸m¥N½X°}¦C¡Abuf[] ¬°­n¼g¤Jªº¸ê®Æ¡Abufsize ¬°¤¸¯À¼Æ¡C
+      /// ä½å…ƒä»¶éš¨æ©Ÿå¯«å…¥ï¼ˆmdRandWï¼‰ï¼šå°‡è³‡æ–™å¯«å…¥åˆ°éš¨æ©ŸæŒ‡å®šçš„è£å…ƒä»¶é›†åˆã€‚
+      /// dev[] ç‚ºç›®æ¨™è£ç½®ä»£ç¢¼é™£åˆ—ï¼Œbuf[] ç‚ºè¦å¯«å…¥çš„è³‡æ–™ï¼Œbufsize ç‚ºå…ƒç´ æ•¸ã€‚
       /// </summary>
       int mdRandW(int path, int stno, int[] dev, short[] buf, int bufsize);
 

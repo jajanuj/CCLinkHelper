@@ -1,24 +1,24 @@
-using System;
+ï»¿using System;
 
 namespace WindowsFormsApp1.CCLink
 {
     /// <summary>
-    /// MELSEC ¿ù»~¨Ò¥~«Ê¸Ë¡C²Î¤@ÄdºI Return Code ¨Ã¤ÀÃş¡C
+    /// MELSEC éŒ¯èª¤ä¾‹å¤–å°è£ã€‚çµ±ä¸€æ””æˆª Return Code ä¸¦åˆ†é¡ã€‚
     /// </summary>
     public enum MelsecErrorCategory { Transient, Permanent, Configuration, Hardware }
 
     /// <summary>
-    /// ¥H¿ù»~½X«Ø¥ß¤HÃş¥iÅªªº¨Ò¥~¡A§t«ØÄ³°Ê§@»P¨Ó·½ API ¦WºÙ¡C
+    /// ä»¥éŒ¯èª¤ç¢¼å»ºç«‹äººé¡å¯è®€çš„ä¾‹å¤–ï¼Œå«å»ºè­°å‹•ä½œèˆ‡ä¾†æº API åç¨±ã€‚
     /// </summary>
     public sealed class MelsecException : Exception
     {
-        /// <summary>­ì©l Return Code¡C</summary>
+        /// <summary>åŸå§‹ Return Codeã€‚</summary>
         public int ReturnCode { get; }
-        /// <summary>¿ù»~¤ÀÃş¡]¼È®É©Ê/¥Ã¤[/³]©w/µwÅé¡^¡C</summary>
+        /// <summary>éŒ¯èª¤åˆ†é¡ï¼ˆæš«æ™‚æ€§/æ°¸ä¹…/è¨­å®š/ç¡¬é«”ï¼‰ã€‚</summary>
         public MelsecErrorCategory Category { get; }
-        /// <summary>«ØÄ³°Ê§@¡C</summary>
+        /// <summary>å»ºè­°å‹•ä½œã€‚</summary>
         public string Advice { get; }
-        /// <summary>¨Ó·½ API ¦WºÙ¡C</summary>
+        /// <summary>ä¾†æº API åç¨±ã€‚</summary>
         public string ApiName { get; }
 
         public MelsecException(int code, string api, MelsecErrorCategory category, string advice, string message)
@@ -28,7 +28,7 @@ namespace WindowsFormsApp1.CCLink
         }
 
         /// <summary>
-        /// ¥Ñ Return Code ²£¥Í¨Ò¥~¡C0x4000 ¨t¦Cµø¬°³]©w/Àô¹Ò°İÃD¡C
+        /// ç”± Return Code ç”¢ç”Ÿä¾‹å¤–ã€‚0x4000 ç³»åˆ—è¦–ç‚ºè¨­å®š/ç’°å¢ƒå•é¡Œã€‚
         /// </summary>
         public static MelsecException FromCode(int code, string api)
         {
