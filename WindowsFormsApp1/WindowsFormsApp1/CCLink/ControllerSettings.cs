@@ -35,7 +35,7 @@
       /// <summary>位元序設定（Big/Little）。</summary>
       public string Endian { get; set; } = "Big";
 
-      /// <summary>是否使用 64 位元 DLL（MDFUNC64）。</summary>
+      /// <summary>是否為 64 位元環境。</summary>
       public bool Isx64 { get; set; } = true;
 
       #endregion

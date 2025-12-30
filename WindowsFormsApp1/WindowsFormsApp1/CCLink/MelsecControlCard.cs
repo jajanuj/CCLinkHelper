@@ -23,7 +23,7 @@ namespace WindowsFormsApp1.CCLink
       public MelsecControlCard(ControllerSettings settings)
       {
          _settings = settings ?? throw new ArgumentNullException(nameof(settings));
-         _api = new MelsecApiAdapter(settings.Isx64);
+         _api = new MelsecApiAdapter();
       }
 
       #endregion
