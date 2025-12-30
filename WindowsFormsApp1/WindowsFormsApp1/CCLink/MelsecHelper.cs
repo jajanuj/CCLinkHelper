@@ -33,6 +33,7 @@ namespace WindowsFormsApp1.CCLink
 
       // 狀態
       private bool _disposed;
+      private CancellationTokenSource _heartbeatCts;
 
       // 心跳設定 / 狀態
       private bool _heartbeatEnabled;
@@ -40,6 +41,9 @@ namespace WindowsFormsApp1.CCLink
       private TimeSpan _heartbeatInterval = TimeSpan.FromSeconds(5);
       private LinkDeviceAddress _heartbeatRequestFlagAddr;
       private LinkDeviceAddress _heartbeatResponseFlagAddr;
+
+      // 心跳專用的 Task 和 CancellationTokenSource
+      private Task _heartbeatTask;
 
       // 輪詢註冊 / 快取
       private TimeSpan _pollInterval = TimeSpan.FromMilliseconds(200);
@@ -55,9 +59,10 @@ namespace WindowsFormsApp1.CCLink
 
       #region Constructors
 
-      public MelsecHelper(IMelsecApiAdapter api, Func<Task<bool>> reconnectAsync = null, Func<bool> reconnectSync = null, Action<string> logger = null)
+      public MelsecHelper(IMelsecApiAdapter api, TimeSpan? pollInterval = null, Func<Task<bool>> reconnectAsync = null, Func<bool> reconnectSync = null, Action<string> logger = null)
       {
          _api = api ?? throw new ArgumentNullException(nameof(api));
+         _pollInterval = pollInterval ?? TimeSpan.FromMilliseconds(200);
          _reconnectAsync = reconnectAsync;
          _reconnectSync = reconnectSync;
          _logger = logger;
@@ -99,7 +104,9 @@ namespace WindowsFormsApp1.CCLink
                throw new ArgumentOutOfRangeException(nameof(value));
             }
 
+            var oldValue = _pollInterval;
             _pollInterval = value;
+            _logger?.Invoke($"輪詢間隔已從 {oldValue.TotalMilliseconds:F0}ms 變更為 {value.TotalMilliseconds:F0}ms");
          }
       }
 
@@ -113,24 +120,19 @@ namespace WindowsFormsApp1.CCLink
          }
 
          _disposed = true;
+
+         // 停止心跳
+         StopHeartbeat();
+
+         // 停止輪詢工作
          try
          {
-            _workerCts?.Cancel();
-            try
-            {
-               _workerTask?.Wait(500);
-            }
-            catch (Exception ex)
-            {
-               _logger?.Invoke($"Dispose 等待工作緒時發生例外: {ex.Message}");
-            }
+            StopPollingWorker();
          }
          catch (Exception ex)
          {
-            _logger?.Invoke($"Dispose 取消工作緒時發生例外: {ex.Message}");
+            _logger?.Invoke($"Dispose 停止輪詢工作時發生例外: {ex.Message}");
          }
-
-         _heartbeatEnabled = false;
       }
 
       #region Utilities
@@ -232,11 +234,14 @@ namespace WindowsFormsApp1.CCLink
          _heartbeatFailThreshold = HeartbeatFailThreshold;
 
          // register addresses to be polled by central polling worker
+         // 註冊地址時會自動啟動輪詢工作（如果尚未啟動）
          RegisterPollingAddress(_heartbeatRequestFlagAddr);
          RegisterPollingAddress(_heartbeatResponseFlagAddr);
 
+         // 啟動獨立的心跳 Task
          _heartbeatEnabled = true;
-         EnsureWorkerStarted();
+         _heartbeatCts = new CancellationTokenSource();
+         _heartbeatTask = Task.Run(() => HeartbeatLoopAsync(_heartbeatCts.Token));
 
          // start background monitor if path already resolved
          try
@@ -264,6 +269,31 @@ namespace WindowsFormsApp1.CCLink
       {
          _heartbeatEnabled = false;
          ConsecutiveHeartbeatFailures = 0;
+
+         // 停止心跳 Task
+         try
+         {
+            if (_heartbeatCts != null)
+            {
+               _heartbeatCts.Cancel();
+               try
+               {
+                  _heartbeatTask?.Wait(500);
+               }
+               catch (Exception ex)
+               {
+                  _logger?.Invoke($"停止心跳 Task 時等待發生例外: {ex.Message}");
+               }
+
+               _heartbeatCts.Dispose();
+               _heartbeatCts = null;
+               _heartbeatTask = null;
+            }
+         }
+         catch (Exception ex)
+         {
+            _logger?.Invoke($"停止心跳時發生例外: {ex.Message}");
+         }
 
          // unregister heartbeat addresses from polling (optional)
          try
@@ -332,6 +362,7 @@ namespace WindowsFormsApp1.CCLink
 
       /// <summary>
       /// 註冊一個地址至中央輪詢工作，該地址將被定期讀取並快取其最新值。
+      /// 如果是第一個註冊的地址，會自動啟動輪詢工作。
       /// </summary>
       public void RegisterPollingAddress(LinkDeviceAddress addr)
       {
@@ -341,9 +372,19 @@ namespace WindowsFormsApp1.CCLink
          }
 
          var k = KeyFor(addr);
+         // 檢查註冊前是否為空（用於判斷是否為第一個註冊）
+         bool wasEmpty = _registered.IsEmpty;
+
          // 使用 ConcurrentDictionary 嘗試加入（若已存在則忽略）
          // 這樣可以迅速完成註冊而不會長時間持有鎖，輪詢工作會在下一個週期取得 snapshot
-         _registered.TryAdd(k, addr);
+         if (_registered.TryAdd(k, addr))
+         {
+            // 如果是第一個註冊的地址，自動啟動輪詢工作
+            if (wasEmpty)
+            {
+               EnsurePollingWorkerStarted();
+            }
+         }
       }
 
       /// <summary>
@@ -389,7 +430,10 @@ namespace WindowsFormsApp1.CCLink
 
       #region Worker and operations
 
-      private void EnsureWorkerStarted()
+      /// <summary>
+      /// 確保輪詢工作正在運行。輪詢是基礎功能，只要有任何註冊的地址就應該運行。
+      /// </summary>
+      private void EnsurePollingWorkerStarted()
       {
          if (_workerTask != null)
          {
@@ -397,10 +441,13 @@ namespace WindowsFormsApp1.CCLink
          }
 
          _workerCts = new CancellationTokenSource();
-         _workerTask = Task.Run(() => WorkerLoopAsync(_workerCts.Token));
+         _workerTask = Task.Run(() => PollingWorkerLoopAsync(_workerCts.Token));
       }
 
-      private void StopWorkerInternal()
+      /// <summary>
+      /// 停止輪詢工作。
+      /// </summary>
+      private void StopPollingWorker()
       {
          try
          {
@@ -413,7 +460,7 @@ namespace WindowsFormsApp1.CCLink
                }
                catch (Exception ex)
                {
-                  _logger?.Invoke($"停止工作緒時取消時發生例外: {ex.Message}");
+                  _logger?.Invoke($"停止輪詢工作緒時取消時發生例外: {ex.Message}");
                }
 
                try
@@ -422,7 +469,7 @@ namespace WindowsFormsApp1.CCLink
                }
                catch (Exception ex)
                {
-                  _logger?.Invoke($"停止工作緒時等待時發生例外: {ex.Message}");
+                  _logger?.Invoke($"停止輪詢工作緒時等待時發生例外: {ex.Message}");
                }
             }
          }
@@ -433,55 +480,66 @@ namespace WindowsFormsApp1.CCLink
          }
       }
 
-      private async Task WorkerLoopAsync(CancellationToken ct)
+      /// <summary>
+      /// 輪詢工作迴圈：只負責定期輪詢已註冊的地址。
+      /// 使用固定間隔模式，補償執行時間以維持穩定的輪詢頻率。
+      /// </summary>
+      private async Task PollingWorkerLoopAsync(CancellationToken ct)
       {
-         // 排程下一次心跳執行時間
-         DateTime nextHeartbeat = DateTime.UtcNow + _heartbeatInterval;
-         // 排程下一次輪詢執行時間
          DateTime nextPoll = DateTime.UtcNow + _pollInterval;
 
          while (!ct.IsCancellationRequested && !_disposed)
          {
             try
             {
-               DateTime now = DateTime.UtcNow;
-               DateTime next = DateTime.MaxValue;
-               if (_heartbeatEnabled)
-               {
-                  next = Min(next, nextHeartbeat);
-               }
+               DateTime loopStart = DateTime.UtcNow;
 
-               // 輪詢也列入考量
-               next = Min(next, nextPoll);
-
-               TimeSpan delay = next == DateTime.MaxValue ? TimeSpan.FromMilliseconds(200) : next - now;
-               if (delay > TimeSpan.Zero)
+               // 檢查是否有註冊的地址，如果沒有則延長等待時間
+               if (_registered.IsEmpty)
                {
-                  await Task.Delay(delay, ct).ConfigureAwait(false);
+                  // 沒有地址時，使用較長的等待時間以節省資源
+                  await Task.Delay(TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
+                  nextPoll = DateTime.UtcNow + _pollInterval;
                   continue;
                }
 
-               // 到時間執行輪詢
-               if (DateTime.UtcNow >= nextPoll)
-               {
-                  try
-                  {
-                     PollAddresses();
-                  }
-                  catch (Exception ex)
-                  {
-                     TryRaiseException(ex);
-                     _logger?.Invoke($"輪詢時發生例外: {ex.Message}");
-                  }
+               // 計算延遲時間
+               TimeSpan delay = nextPoll - loopStart;
 
-                  nextPoll = DateTime.UtcNow + _pollInterval;
+               if (delay > TimeSpan.Zero)
+               {
+                  await Task.Delay(delay, ct).ConfigureAwait(false);
+               }
+               else if (delay < -TimeSpan.FromMilliseconds(100))
+               {
+                  // 如果延遲超過 100ms，記錄警告（表示執行時間過長）
+                  _logger?.Invoke($"輪詢執行時間過長，延遲 {Math.Abs(delay.TotalMilliseconds):F0}ms");
                }
 
-               // 優先處理心跳
-               if (_heartbeatEnabled && DateTime.UtcNow >= nextHeartbeat)
+               // 執行輪詢
+               DateTime pollStart = DateTime.UtcNow;
+               try
                {
-                  await RunHeartbeatAsync(ct).ConfigureAwait(false);
-                  nextHeartbeat = DateTime.UtcNow + _heartbeatInterval;
+                  PollAddresses();
+               }
+               catch (Exception ex)
+               {
+                  TryRaiseException(ex);
+                  _logger?.Invoke($"輪詢時發生例外: {ex.Message}");
+               }
+
+               // 計算實際執行時間
+               TimeSpan pollDuration = DateTime.UtcNow - pollStart;
+
+               // 使用固定間隔模式：基於預期時間而非實際時間
+               // 這樣可以補償執行時間，維持穩定的輪詢頻率
+               nextPoll = nextPoll + _pollInterval;
+
+               // 如果執行時間超過間隔，立即進行下一次輪詢
+               if (nextPoll < DateTime.UtcNow)
+               {
+                  nextPoll = DateTime.UtcNow + _pollInterval;
+                  _logger?.Invoke($"輪詢執行時間 ({pollDuration.TotalMilliseconds:F0}ms) 超過輪詢間隔 ({_pollInterval.TotalMilliseconds:F0}ms)");
                }
             }
             catch (OperationCanceledException)
@@ -491,20 +549,67 @@ namespace WindowsFormsApp1.CCLink
             catch (Exception ex)
             {
                TryRaiseException(ex);
-               _logger?.Invoke($"工作迴圈例外: {ex.Message}");
+               _logger?.Invoke($"輪詢工作迴圈例外: {ex.Message}");
+
+               // 異常後使用輪詢間隔作為延遲，而非固定 500ms
+               try
+               {
+                  await Task.Delay(_pollInterval, ct).ConfigureAwait(false);
+               }
+               catch (Exception ex2)
+               {
+                  _logger?.Invoke($"在輪詢工作迴圈延遲時發生例外: {ex2.Message}");
+               }
+
+               // 重置下次輪詢時間
+               nextPoll = DateTime.UtcNow + _pollInterval;
+            }
+         }
+      }
+
+      /// <summary>
+      /// 心跳迴圈：獨立處理心跳邏輯，依賴輪詢工作的 cache。
+      /// </summary>
+      private async Task HeartbeatLoopAsync(CancellationToken ct)
+      {
+         DateTime nextHeartbeat = DateTime.UtcNow + _heartbeatInterval;
+
+         while (!ct.IsCancellationRequested && !_disposed && _heartbeatEnabled)
+         {
+            try
+            {
+               DateTime now = DateTime.UtcNow;
+               TimeSpan delay = nextHeartbeat - now;
+
+               if (delay > TimeSpan.Zero)
+               {
+                  await Task.Delay(delay, ct).ConfigureAwait(false);
+                  continue;
+               }
+
+               // 執行心跳
+               await RunHeartbeatAsync(ct).ConfigureAwait(false);
+               nextHeartbeat = DateTime.UtcNow + _heartbeatInterval;
+            }
+            catch (OperationCanceledException)
+            {
+               break;
+            }
+            catch (Exception ex)
+            {
+               TryRaiseException(ex);
+               _logger?.Invoke($"心跳迴圈例外: {ex.Message}");
                try
                {
                   await Task.Delay(500, ct).ConfigureAwait(false);
                }
                catch (Exception ex2)
                {
-                  _logger?.Invoke($"在工作迴圈延遲時發生例外: {ex2.Message}");
+                  _logger?.Invoke($"在心跳迴圈延遲時發生例外: {ex2.Message}");
                }
             }
          }
       }
-
-      private static DateTime Min(DateTime a, DateTime b) => a < b ? a : b;
 
       private void PollAddresses()
       {
@@ -781,20 +886,19 @@ namespace WindowsFormsApp1.CCLink
                _logger?.Invoke($"心跳失敗（連續 {ConsecutiveHeartbeatFailures} 次）");
                if (ConsecutiveHeartbeatFailures >= _heartbeatFailThreshold)
                {
-                  // stop worker and attempt reconnect loop
+                  // 心跳失敗時觸發斷線事件，但不停止輪詢工作
                   PostEvent(() => Disconnected?.Invoke());
-                  _logger?.Invoke("偵測到心跳中斷；停止工作並啟動重新連線循環。");
-                  StopWorkerInternal();
-                  // run reconnect loop on background thread and when succeeded restart worker/heartbeat
+                  _logger?.Invoke("偵測到心跳中斷；啟動重新連線循環。");
+
+                  // 在背景執行重新連線循環，成功後重新啟動心跳
                   _ = Task.Run(async () =>
                   {
                      await AttemptReconnectLoop().ConfigureAwait(false);
-                     // if not disposed, restart heartbeat and worker
-                     if (!_disposed)
+                     // 如果重新連線成功且未被釋放，重新啟動心跳
+                     if (!_disposed && _heartbeatEnabled)
                      {
                         ConsecutiveHeartbeatFailures = 0;
-                        _heartbeatEnabled = true;
-                        EnsureWorkerStarted();
+                        // 心跳迴圈會自動繼續（如果還在運行）
                      }
                   });
                }
