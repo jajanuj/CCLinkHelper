@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace WindowsFormsApp1.CCLink
+namespace WindowsFormsApp1.CCLink.Models
 {
     /// <summary>
     /// MELSEC 錯誤例外封裝。統一攔截 Return Code 並分類。

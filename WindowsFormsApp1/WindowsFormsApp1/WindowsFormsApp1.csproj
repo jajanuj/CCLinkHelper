@@ -46,21 +46,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CCLink\BackgroundMonitor.cs" />
-    <Compile Include="CCLink\CCLinkConstants.cs" />
-    <Compile Include="CCLink\ControllerSettings.cs" />
-    <Compile Include="CCLink\ControllerStatus.cs" />
-    <Compile Include="CCLink\ICCLinkController.cs" />
-    <Compile Include="CCLink\IMelsecApiAdapter.cs" />
-    <Compile Include="CCLink\IPlcDriver.cs" />
-    <Compile Include="CCLink\LinkDeviceAddress.cs" />
-    <Compile Include="CCLink\MelsecApiAdapter.cs" />
-    <Compile Include="CCLink\MelsecControlCard.cs" />
-    <Compile Include="CCLink\MelsecException.cs" />
-    <Compile Include="CCLink\MelsecHelper.cs" />
-    <Compile Include="CCLink\MockCCLinkController.cs" />
-    <Compile Include="CCLink\MockMelsecApiAdapter.cs" />
-    <Compile Include="CCLink\PlcSimulator.cs" />
+    <Compile Include="CCLink\Services\BackgroundMonitor.cs" />
+    <Compile Include="CCLink\Models\CCLinkConstants.cs" />
+    <Compile Include="CCLink\Models\ControllerSettings.cs" />
+    <Compile Include="CCLink\Models\ControllerStatus.cs" />
+    <Compile Include="CCLink\Interfaces\ICCLinkController.cs" />
+    <Compile Include="CCLink\Interfaces\IMelsecApiAdapter.cs" />
+    <Compile Include="CCLink\Interfaces\IPlcDriver.cs" />
+    <Compile Include="CCLink\Drivers\MelsecPlcDriver.cs" />
+    <Compile Include="CCLink\Models\LinkDeviceAddress.cs" />
+    <Compile Include="CCLink\Adapters\MelsecApiAdapter.cs" />
+    <Compile Include="CCLink\Controllers\MelsecControlCard.cs" />
+    <Compile Include="CCLink\Models\MelsecException.cs" />
+    <Compile Include="CCLink\Services\MelsecHelper.cs" />
+    <Compile Include="CCLink\Controllers\MockCCLinkController.cs" />
+    <Compile Include="CCLink\Adapters\MockMelsecApiAdapter.cs" />
+    <Compile Include="CCLink\Services\PlcSimulator.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

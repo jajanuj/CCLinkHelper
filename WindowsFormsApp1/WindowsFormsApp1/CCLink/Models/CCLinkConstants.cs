@@ -1,4 +1,4 @@
-﻿namespace WindowsFormsApp1.CCLink
+﻿namespace WindowsFormsApp1.CCLink.Models
 {
     /// <summary>
     /// 常數定義：裝置代碼與預設位址等。

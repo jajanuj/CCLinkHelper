@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using WindowsFormsApp1.CCLink.Models;
 
-namespace WindowsFormsApp1.CCLink
+namespace WindowsFormsApp1.CCLink.Interfaces
 {
    /// <summary>
    /// CC-Link 控制器介面（非同步）。

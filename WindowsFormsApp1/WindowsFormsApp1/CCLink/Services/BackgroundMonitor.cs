@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace WindowsFormsApp1.CCLink
+using WindowsFormsApp1.CCLink.Interfaces;
+using WindowsFormsApp1.CCLink.Models;
+
+namespace WindowsFormsApp1.CCLink.Services
 {
    public class BackgroundMonitor
    {

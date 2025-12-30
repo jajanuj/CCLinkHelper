@@ -1,17 +1,8 @@
-﻿namespace WindowsFormsApp1.CCLink
+using WindowsFormsApp1.CCLink.Interfaces;
+using WindowsFormsApp1.CCLink.Models;
+
+namespace WindowsFormsApp1.CCLink.Drivers
 {
-   public interface IPlcDriver
-   {
-      #region Public Methods
-
-      bool ReadBit(LinkDeviceAddress addr);
-      void WriteBit(LinkDeviceAddress addr, bool value);
-      short[] ReadWords(LinkDeviceAddress addr);
-      void WriteWords(LinkDeviceAddress addr, short[] data);
-
-      #endregion
-   }
-
    // Simple adapter that wraps IMelsecApiAdapter for common operations
    public class MelsecPlcDriver : IPlcDriver
    {
@@ -57,7 +48,8 @@
       {
          var dest = new short[addr.Length];
          int devCode = MapDeviceCode(addr.Kind);
-         short rc = _api.mdDevRead(_path, devCode, addr.Start, addr.Length, dest);
+         int size = addr.Length * 2;
+         int rc = _api.ReceiveEx(_path, 0, 0, devCode, addr.Start, ref size, dest);
          // treat non-zero as true for first bit/word
          return dest.Length > 0 && dest[0] != 0;
       }
@@ -67,11 +59,11 @@
          int devCode = MapDeviceCode(addr.Kind);
          if (value)
          {
-            _api.mdDevSet(_path, 0, devCode, addr.Start);
+            _api.DevSetEx(_path, 0, 0, devCode, addr.Start);
          }
          else
          {
-            _api.mdDevRst(_path, 0, devCode, addr.Start);
+            _api.DevRstEx(_path, 0, 0, devCode, addr.Start);
          }
       }
 
@@ -79,15 +71,16 @@
       {
          var dest = new short[addr.Length];
          int devCode = MapDeviceCode(addr.Kind);
-         _api.mdDevRead(_path, devCode, addr.Start, addr.Length, dest);
+         int size = addr.Length * 2;
+         _api.ReceiveEx(_path, 0, 0, devCode, addr.Start, ref size, dest);
          return dest;
       }
 
       public void WriteWords(LinkDeviceAddress addr, short[] data)
       {
          int devCode = MapDeviceCode(addr.Kind);
-         // IMelsecApiAdapter.mdDevWrite signature: mdDevWrite(int path, int deviceCode, int startAddr, int count, short[] src)
-         _api.mdDevWrite(_path, devCode, addr.Start, data.Length, data);
+         int size = data.Length * 2;
+         _api.SendEx(_path, 0, 0, devCode, addr.Start, ref size, data);
       }
    }
 }

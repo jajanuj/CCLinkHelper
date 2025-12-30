@@ -4,7 +4,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace WindowsFormsApp1.CCLink
+using WindowsFormsApp1.CCLink.Interfaces;
+using WindowsFormsApp1.CCLink.Models;
+
+namespace WindowsFormsApp1.CCLink.Controllers
 {
    /// <summary>
    /// 無硬體環境用的模擬控制器。可設定固定延遲與回傳資料模式。
@@ -15,7 +18,6 @@ namespace WindowsFormsApp1.CCLink
 
       private readonly Random _rand = new Random();
       private readonly ControllerSettings _settings;
-      private bool _connected;
       private ControllerStatus _status = new ControllerStatus();
 
       #endregion
@@ -28,7 +30,6 @@ namespace WindowsFormsApp1.CCLink
 
       public Task OpenAsync(CancellationToken ct = default)
       {
-         _connected = true;
          _status.IsConnected = true;
          _status.LastUpdated = DateTime.UtcNow;
          return Task.CompletedTask;
@@ -36,7 +37,6 @@ namespace WindowsFormsApp1.CCLink
 
       public Task CloseAsync(CancellationToken ct = default)
       {
-         _connected = false;
          _status.IsConnected = false;
          _status.LastUpdated = DateTime.UtcNow;
          return Task.CompletedTask;

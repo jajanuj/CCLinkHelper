@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace WindowsFormsApp1.CCLink
+namespace WindowsFormsApp1.CCLink.Models
 {
    /// <summary>
    /// CC-Link 位址封裝。支援 LB/LW/LX/LY 起始與長度，並提供字串解析。

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace WindowsFormsApp1.CCLink
+namespace WindowsFormsApp1.CCLink.Models
 {
    /// <summary>
    /// 控制卡目前狀態與診斷資訊。

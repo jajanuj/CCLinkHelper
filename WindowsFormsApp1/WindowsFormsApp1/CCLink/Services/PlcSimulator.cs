@@ -2,7 +2,10 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace WindowsFormsApp1.CCLink
+using WindowsFormsApp1.CCLink.Interfaces;
+using WindowsFormsApp1.CCLink.Models;
+
+namespace WindowsFormsApp1.CCLink.Services
 {
    /// <summary>
    /// 簡易 PLC 模擬器：可定期或手動在指定 request flag 上產生 pulse/toggle，並監控 response flag 的變化。
@@ -78,11 +81,11 @@ namespace WindowsFormsApp1.CCLink
             int devCode = MapDeviceCode(_requestAddr.Kind);
             if (on)
             {
-               _api.mdDevSet(_path, 0, devCode, _requestAddr.Start);
+               _api.DevSetEx(_path, 0, 0, devCode, _requestAddr.Start);
             }
             else
             {
-               _api.mdDevRst(_path, 0, devCode, _requestAddr.Start);
+               _api.DevRstEx(_path, 0, 0, devCode, _requestAddr.Start);
             }
 
             _logger?.Invoke($"模擬 PLC：設定 Request {_requestAddr.Kind}{_requestAddr.Start} = {(on ? 1 : 0)}");
@@ -239,7 +242,8 @@ namespace WindowsFormsApp1.CCLink
                {
                   var dest = new short[1];
                   int devCode = MapDeviceCode(_responseAddr.Kind);
-                  _api.mdDevRead(_path, devCode, _responseAddr.Start, 1, dest);
+                  int size = 1 * 2;
+                  _api.ReceiveEx(_path, 0, 0, devCode, _responseAddr.Start, ref size, dest);
                   bool on = dest[0] != 0;
                   if (!last.HasValue || last.Value != on)
                   {

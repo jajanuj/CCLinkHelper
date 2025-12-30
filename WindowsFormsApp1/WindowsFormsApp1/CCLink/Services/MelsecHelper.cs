@@ -4,8 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using WindowsFormsApp1.CCLink.Interfaces;
+using WindowsFormsApp1.CCLink.Models;
+using WindowsFormsApp1.CCLink.Drivers;
 
-namespace WindowsFormsApp1.CCLink
+namespace WindowsFormsApp1.CCLink.Services
 {
    public sealed class MelsecHelper : IDisposable
    {
@@ -30,6 +33,11 @@ namespace WindowsFormsApp1.CCLink
       // 注意：PollAddresses 仍會取得一次 snapshot (Values.ToList) 並在鎖外處理
       private readonly ConcurrentDictionary<string, LinkDeviceAddress> _registered = new ConcurrentDictionary<string, LinkDeviceAddress>();
       private readonly SynchronizationContext _syncContext;
+      private CancellationTokenSource _backgroundCts;
+
+      // 背景監控 (用於自動回應 PLC 請求)
+      private BackgroundMonitor _backgroundMonitor;
+      private Task _backgroundTask;
 
       // 狀態
       private bool _disposed;
@@ -45,13 +53,17 @@ namespace WindowsFormsApp1.CCLink
       // 心跳專用的 Task 和 CancellationTokenSource
       private Task _heartbeatTask;
 
+      // 心跳觀察快取，避免在無變化時重複宣告成功
+      private bool? _lastObservedRequest;
+      private bool? _lastObservedResponse;
+
       // 輪詢註冊 / 快取
       private TimeSpan _pollInterval = TimeSpan.FromMilliseconds(200);
 
       // 已解析的路徑（Start 時呼叫一次 getPath）
       private int _resolvedPath = -1;
 
-      // 時間同步功能已移除（目前未使用）
+      // 工作緒控制
       private CancellationTokenSource _workerCts;
       private Task _workerTask;
 
@@ -59,7 +71,8 @@ namespace WindowsFormsApp1.CCLink
 
       #region Constructors
 
-      public MelsecHelper(IMelsecApiAdapter api, TimeSpan? pollInterval = null, Func<Task<bool>> reconnectAsync = null, Func<bool> reconnectSync = null, Action<string> logger = null)
+      public MelsecHelper(IMelsecApiAdapter api, TimeSpan? pollInterval = null, Func<Task<bool>> reconnectAsync = null, Func<bool> reconnectSync = null,
+         Action<string> logger = null)
       {
          _api = api ?? throw new ArgumentNullException(nameof(api));
          _pollInterval = pollInterval ?? TimeSpan.FromMilliseconds(200);
@@ -614,7 +627,6 @@ namespace WindowsFormsApp1.CCLink
       private void PollAddresses()
       {
          // 取得註冊清單 snapshot 並在鎖外操作，減少鎖競爭與避免在鎖內執行 I/O。
-         // trade-off: snapshot 一致性為 "eventual" — 新註冊/取消可能不會立即反映於此輪詢，但可減少阻塞。
          List<LinkDeviceAddress> regs = _registered.Values.ToList();
 
          if (regs.Count == 0)
@@ -658,7 +670,8 @@ namespace WindowsFormsApp1.CCLink
                   {
                      int path = _resolvedPath;
                      int devCode = MapDeviceCode(g.Key);
-                     short rc = _api.mdDevRead(path, devCode, mergedStart, mergedLength, dest);
+                     int size = mergedLength * 2;
+                     int rc = _api.ReceiveEx(path, 0, 0, devCode, mergedStart, ref size, dest);
 
                      // 計算此合併區間中受影響的已註冊地址
                      var affected = list.Where(r => r.Start <= mergedEnd && r.Start + r.Length - 1 >= mergedStart).ToList();
@@ -727,16 +740,6 @@ namespace WindowsFormsApp1.CCLink
             }
          }
       }
-
-      // 心跳觀察快取，避免在無變化時重複宣告成功
-      private bool? _lastObservedRequest;
-
-      private bool? _lastObservedResponse;
-
-      // Background monitor to respond to PLC requests (e.g. time sync / clock)
-      private BackgroundMonitor _backgroundMonitor;
-      private Task _backgroundTask;
-      private CancellationTokenSource _backgroundCts;
 
       // 待確認的寫入期待：當我們發出 mdDevSet/mdDevRst 時設為 true，等待下一次輪詢確認
       private bool _pendingSet;
@@ -809,8 +812,8 @@ namespace WindowsFormsApp1.CCLink
                      lock (_apiLock)
                      {
                         int devCode = MapDeviceCode(_heartbeatResponseFlagAddr.Kind);
-                        short r = _api.mdDevSet(_resolvedPath, 0, devCode, _heartbeatResponseFlagAddr.Start);
-                        _logger?.Invoke($"心跳：執行 mdDevSet {_heartbeatResponseFlagAddr.Kind}{_heartbeatResponseFlagAddr.Start} => {r}");
+                        int r = _api.DevSetEx(_resolvedPath, 0, 0, devCode, _heartbeatResponseFlagAddr.Start);
+                        _logger?.Invoke($"心跳：執行 DevSetEx {_heartbeatResponseFlagAddr.Kind}{_heartbeatResponseFlagAddr.Start} => {r}");
                         if (r == 0)
                         {
                            // mark expectation and wait for poll to confirm
@@ -832,8 +835,8 @@ namespace WindowsFormsApp1.CCLink
                      lock (_apiLock)
                      {
                         int devCode = MapDeviceCode(_heartbeatResponseFlagAddr.Kind);
-                        short r = _api.mdDevRst(_resolvedPath, 0, devCode, _heartbeatResponseFlagAddr.Start);
-                        _logger?.Invoke($"心跳：執行 mdDevRst {_heartbeatResponseFlagAddr.Kind}{_heartbeatResponseFlagAddr.Start} => {r}");
+                        int r = _api.DevRstEx(_resolvedPath, 0, 0, devCode, _heartbeatResponseFlagAddr.Start);
+                        _logger?.Invoke($"心跳：執行 DevRstEx {_heartbeatResponseFlagAddr.Kind}{_heartbeatResponseFlagAddr.Start} => {r}");
                         if (r == 0)
                         {
                            // mark expectation and wait for poll to confirm

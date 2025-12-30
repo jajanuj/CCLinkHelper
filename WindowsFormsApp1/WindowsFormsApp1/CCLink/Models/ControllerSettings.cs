@@ -1,4 +1,4 @@
-﻿namespace WindowsFormsApp1.CCLink
+﻿namespace WindowsFormsApp1.CCLink.Models
 {
    /// <summary>
    /// 控制器連線與行為設定。

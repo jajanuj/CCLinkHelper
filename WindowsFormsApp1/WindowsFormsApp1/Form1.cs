@@ -3,7 +3,11 @@ using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using WindowsFormsApp1.CCLink;
+using WindowsFormsApp1.CCLink.Interfaces;
+using WindowsFormsApp1.CCLink.Models;
+using WindowsFormsApp1.CCLink.Adapters;
+using WindowsFormsApp1.CCLink.Services;
+using WindowsFormsApp1.CCLink.Controllers;
 
 namespace WindowsFormsApp1
 {
@@ -36,12 +40,12 @@ namespace WindowsFormsApp1
 
          // prepare mock adapter and open path immediately for demo
          _mockAdapter = new MockMelsecApiAdapter();
-         short r = _mockAdapter.mdOpen(0, 0, out _path);
+         short r = _mockAdapter.Open(0, 0, out _path);
          _helper = new MelsecHelper(_mockAdapter, reconnectAsync: async () =>
          {
             // simple reconnect simulation: attempt to open and return true
             await Task.Delay(200).ConfigureAwait(false);
-            short rr = _mockAdapter.mdOpen(0, 0, out _path);
+            short rr = _mockAdapter.Open(0, 0, out _path);
             return rr == 0;
          }, logger: s => Log(s));
 

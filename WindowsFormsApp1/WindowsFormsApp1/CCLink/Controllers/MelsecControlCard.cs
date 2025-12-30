@@ -4,7 +4,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace WindowsFormsApp1.CCLink
+using WindowsFormsApp1.CCLink.Interfaces;
+using WindowsFormsApp1.CCLink.Models;
+using WindowsFormsApp1.CCLink.Adapters;
+
+namespace WindowsFormsApp1.CCLink.Controllers
 {
    public sealed class MelsecControlCard : ICCLinkController, IDisposable
    {
@@ -58,21 +62,13 @@ namespace WindowsFormsApp1.CCLink
             short chan = (short)_settings.Port; // 依現場設定對應通道
             short mode = 1;                     // 依手冊定義（示例：1=開啟）
             int path;
-            var rc = _api.mdOpen(chan, mode, out path);
+            var rc = _api.Open(chan, mode, out path);
             if (rc != 0)
             {
-               throw MelsecException.FromCode(rc, nameof(_api.mdOpen));
+               throw MelsecException.FromCode(rc, nameof(_api.Open));
             }
 
             _pathHandle = path;
-            if (_settings.TimeoutMs > 0)
-            {
-               rc = _api.mdSetTimeout(_pathHandle, _settings.TimeoutMs);
-               if (rc != 0)
-               {
-                  throw MelsecException.FromCode(rc, nameof(_api.mdSetTimeout));
-               }
-            }
 
             _status.IsConnected = true;
             _status.LastUpdated = DateTime.UtcNow;
@@ -91,10 +87,10 @@ namespace WindowsFormsApp1.CCLink
          {
             if (_pathHandle != 0)
             {
-               var rc = _api.mdClose(_pathHandle);
+               var rc = _api.Close(_pathHandle);
                if (rc != 0)
                {
-                  throw MelsecException.FromCode(rc, nameof(_api.mdClose));
+                  throw MelsecException.FromCode(rc, nameof(_api.Close));
                }
 
                _pathHandle = 0;
@@ -118,10 +114,11 @@ namespace WindowsFormsApp1.CCLink
          {
             short[] buffer = new short[count];
             int deviceCode = MapDevice(parsed.Kind);
-            var rc = _api.mdDevRead(_pathHandle, deviceCode, parsed.Start, count, buffer);
+            int size = count * 2;
+            var rc = _api.ReceiveEx(_pathHandle, 0, 0, deviceCode, parsed.Start, ref size, buffer);
             if (rc != 0)
             {
-               throw MelsecException.FromCode(rc, nameof(_api.mdDevRead));
+               throw MelsecException.FromCode(rc, nameof(_api.ReceiveEx));
             }
 
             var bits = buffer.Select(x => x != 0).ToArray();
@@ -142,10 +139,11 @@ namespace WindowsFormsApp1.CCLink
          {
             short[] src = vals.Select(v => (short)(v ? 1 : 0)).ToArray();
             int deviceCode = MapDevice(parsed.Kind);
-            var rc = _api.mdDevWrite(_pathHandle, deviceCode, parsed.Start, parsed.Length, src);
+            int size = src.Length * 2;
+            var rc = _api.SendEx(_pathHandle, 0, 0, deviceCode, parsed.Start, ref size, src);
             if (rc != 0)
             {
-               throw MelsecException.FromCode(rc, nameof(_api.mdDevWrite));
+               throw MelsecException.FromCode(rc, nameof(_api.SendEx));
             }
          }
          finally
@@ -162,10 +160,11 @@ namespace WindowsFormsApp1.CCLink
          {
             short[] buffer = new short[count];
             int deviceCode = MapDevice(parsed.Kind);
-            var rc = _api.mdDevRead(_pathHandle, deviceCode, parsed.Start, count, buffer);
+            int size = count * 2;
+            var rc = _api.ReceiveEx(_pathHandle, 0, 0, deviceCode, parsed.Start, ref size, buffer);
             if (rc != 0)
             {
-               throw MelsecException.FromCode(rc, nameof(_api.mdDevRead));
+               throw MelsecException.FromCode(rc, nameof(_api.ReceiveEx));
             }
 
             return buffer;
@@ -184,10 +183,11 @@ namespace WindowsFormsApp1.CCLink
          try
          {
             int deviceCode = MapDevice(parsed.Kind);
-            var rc = _api.mdDevWrite(_pathHandle, deviceCode, parsed.Start, parsed.Length, src);
+            int size = src.Length * 2;
+            var rc = _api.SendEx(_pathHandle, 0, 0, deviceCode, parsed.Start, ref size, src);
             if (rc != 0)
             {
-               throw MelsecException.FromCode(rc, nameof(_api.mdDevWrite));
+               throw MelsecException.FromCode(rc, nameof(_api.SendEx));
             }
          }
          finally
@@ -201,16 +201,9 @@ namespace WindowsFormsApp1.CCLink
          await _lock.WaitAsync(ct).ConfigureAwait(false);
          try
          {
-            int statusCode;
-            var rc = _api.mdGetStatus(_pathHandle, out statusCode);
-            if (rc != 0)
-            {
-               throw MelsecException.FromCode(rc, nameof(_api.mdGetStatus));
-            }
-
-            _status.LastErrorCode = statusCode;
+            _status.LastErrorCode = 0;
             _status.LastUpdated = DateTime.UtcNow;
-            return _status;
+            return await Task.FromResult(_status).ConfigureAwait(false);
          }
          finally
          {
@@ -224,7 +217,7 @@ namespace WindowsFormsApp1.CCLink
          {
             try
             {
-               _api.mdClose(_pathHandle);
+               _api.Close(_pathHandle);
             }
             catch
             {
