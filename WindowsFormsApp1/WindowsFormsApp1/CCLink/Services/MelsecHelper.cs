@@ -19,20 +19,20 @@ namespace WindowsFormsApp1.CCLink.Services
 
       // 同步 / 工作緒
       private readonly object _apiLock = new object();
-      private readonly ConcurrentDictionary<string, short[]> _cache = new ConcurrentDictionary<string, short[]>();
+
+      // 設備記憶體快取 (Key: Kind, Value: short[] array representing the device memory)
+      private readonly ConcurrentDictionary<string, short[]> _deviceMemory = new ConcurrentDictionary<string, short[]>(StringComparer.OrdinalIgnoreCase);
 
       private readonly Action<string> _logger;
+      private readonly object _planLock = new object();
 
       // _pollLock 已不再需要，cache 與 registered 採用 thread-safe collection
       // private readonly object _pollLock = new object();
       private readonly Func<Task<bool>> _reconnectAsync;
 
       private readonly Func<bool> _reconnectSync;
-
-      // 使用 ConcurrentDictionary 以縮短 lock 範圍並讓註冊/取消註冊不需阻塞輪詢工作
-      // 注意：PollAddresses 仍會取得一次 snapshot (Values.ToList) 並在鎖外處理
-      private readonly ConcurrentDictionary<string, LinkDeviceAddress> _registered = new ConcurrentDictionary<string, LinkDeviceAddress>();
       private readonly SynchronizationContext _syncContext;
+      private readonly List<ScanRange> _userScanRanges = new List<ScanRange>();
       private CancellationTokenSource _backgroundCts;
 
       // 背景監控 (用於自動回應 PLC 請求)
@@ -56,9 +56,12 @@ namespace WindowsFormsApp1.CCLink.Services
       // 心跳觀察快取，避免在無變化時重複宣告成功
       private bool? _lastObservedRequest;
       private bool? _lastObservedResponse;
+      private int _maxWordsPerRead = 900;
+      private int _mergeGapTolerance = 32;
+      private List<BatchRead> _pollingPlan = new List<BatchRead>();
 
-      // 輪詢註冊 / 快取
-      private TimeSpan _pollInterval = TimeSpan.FromMilliseconds(200);
+      // 輪詢設定
+      private TimeSpan _pollInterval;
 
       // 已解析的路徑（Start 時呼叫一次 getPath）
       private int _resolvedPath = -1;
@@ -107,6 +110,18 @@ namespace WindowsFormsApp1.CCLink.Services
       /// <summary>
       /// 全域的輪詢間隔，由中央輪詢工作使用。
       /// </summary>
+      public int MaxWordsPerRead
+      {
+         get => _maxWordsPerRead;
+         set => _maxWordsPerRead = Math.Max(1, value);
+      }
+
+      public int MergeGapTolerance
+      {
+         get => _mergeGapTolerance;
+         set => _mergeGapTolerance = Math.Max(0, value);
+      }
+
       public TimeSpan PollInterval
       {
          get => _pollInterval;
@@ -122,6 +137,31 @@ namespace WindowsFormsApp1.CCLink.Services
             _logger?.Invoke($"輪詢間隔已從 {oldValue.TotalMilliseconds:F0}ms 變更為 {value.TotalMilliseconds:F0}ms");
          }
       }
+
+      #endregion
+
+      #region Private Methods
+
+      #region Utilities
+
+      private static int MapDeviceCode(string kind)
+      {
+         if (string.IsNullOrWhiteSpace(kind))
+         {
+            throw new ArgumentException(nameof(kind));
+         }
+
+         switch (kind.ToUpperInvariant())
+         {
+            case "LB": return CCLinkConstants.DEV_LB;
+            case "LW": return CCLinkConstants.DEV_LW;
+            case "LX": return CCLinkConstants.DEV_LX;
+            case "LY": return CCLinkConstants.DEV_LY;
+            default: throw new ArgumentException($"Unsupported device kind: {kind}");
+         }
+      }
+
+      #endregion
 
       #endregion
 
@@ -148,53 +188,29 @@ namespace WindowsFormsApp1.CCLink.Services
          }
       }
 
-      #region Utilities
+      #region Internal Models
 
-      private static int MapDeviceCode(string kind)
+      public sealed class ScanRange
       {
-         if (string.IsNullOrWhiteSpace(kind))
-         {
-            throw new ArgumentException(nameof(kind));
-         }
+         #region Properties
 
-         switch (kind.ToUpperInvariant())
-         {
-            case "LB": return CCLinkConstants.DEV_LB;
-            case "LW": return CCLinkConstants.DEV_LW;
-            case "LX": return CCLinkConstants.DEV_LX;
-            case "LY": return CCLinkConstants.DEV_LY;
-            default: throw new ArgumentException($"Unsupported device kind: {kind}");
-         }
+         public string Kind { get; set; }
+         public int Start { get; set; }
+         public int End { get; set; }
+         public int Length => End - Start + 1;
+
+         #endregion
       }
 
-      private static string KeyFor(LinkDeviceAddress a) => $"{a.Kind}:{a.Start}:{a.Length}";
-
-      private static bool ArraysEqual(short[] a, short[] b)
+      private sealed class BatchRead
       {
-         if (ReferenceEquals(a, b))
-         {
-            return true;
-         }
+         #region Properties
 
-         if (a == null || b == null)
-         {
-            return false;
-         }
+         public string Kind { get; set; }
+         public int Start { get; set; }
+         public int Words { get; set; }
 
-         if (a.Length != b.Length)
-         {
-            return false;
-         }
-
-         for (int i = 0; i < a.Length; i++)
-         {
-            if (a[i] != b[i])
-            {
-               return false;
-            }
-         }
-
-         return true;
+         #endregion
       }
 
       #endregion
@@ -247,9 +263,21 @@ namespace WindowsFormsApp1.CCLink.Services
          _heartbeatFailThreshold = HeartbeatFailThreshold;
 
          // register addresses to be polled by central polling worker
-         // 註冊地址時會自動啟動輪詢工作（如果尚未啟動）
-         RegisterPollingAddress(_heartbeatRequestFlagAddr);
-         RegisterPollingAddress(_heartbeatResponseFlagAddr);
+         // 將心跳所需的位元位址加入掃描區間
+         lock (_planLock)
+         {
+            _userScanRanges.Add(new ScanRange
+            {
+               Kind = _heartbeatRequestFlagAddr.Kind, Start = _heartbeatRequestFlagAddr.Start,
+               End = _heartbeatRequestFlagAddr.Start + _heartbeatRequestFlagAddr.Length - 1
+            });
+            _userScanRanges.Add(new ScanRange
+            {
+               Kind = _heartbeatResponseFlagAddr.Kind, Start = _heartbeatResponseFlagAddr.Start,
+               End = _heartbeatResponseFlagAddr.Start + _heartbeatResponseFlagAddr.Length - 1
+            });
+            UpdatePollingPlan();
+         }
 
          // 啟動獨立的心跳 Task
          _heartbeatEnabled = true;
@@ -308,23 +336,8 @@ namespace WindowsFormsApp1.CCLink.Services
             _logger?.Invoke($"停止心跳時發生例外: {ex.Message}");
          }
 
-         // unregister heartbeat addresses from polling (optional)
-         try
-         {
-            if (_heartbeatRequestFlagAddr != null)
-            {
-               UnregisterPollingAddress(_heartbeatRequestFlagAddr);
-            }
-
-            if (_heartbeatResponseFlagAddr != null)
-            {
-               UnregisterPollingAddress(_heartbeatResponseFlagAddr);
-            }
-         }
-         catch (Exception ex)
-         {
-            _logger?.Invoke($"停止心跳時取消註冊發生例外: {ex.Message}");
-         }
+         // heartbeat addresses are part of scan ranges, but since we don't have a specific RemoveScanRange per address yet, 
+         // we'll leave it for now or user can call SetScanRanges to clear.
 
          // stop background monitor if running
          try
@@ -374,51 +387,115 @@ namespace WindowsFormsApp1.CCLink.Services
       public bool ForceTimeSync(DateTime dt, LinkDeviceAddress a, LinkDeviceAddress b, LinkDeviceAddress c, Func<int> gp) => false;
 
       /// <summary>
-      /// 註冊一個地址至中央輪詢工作，該地址將被定期讀取並快取其最新值。
-      /// 如果是第一個註冊的地址，會自動啟動輪詢工作。
+      /// 設定要掃描的區塊範圍。這會替換先前的所有掃描設定。
       /// </summary>
-      public void RegisterPollingAddress(LinkDeviceAddress addr)
+      public void SetScanRanges(IEnumerable<ScanRange> ranges)
       {
-         if (addr == null)
+         if (ranges == null)
          {
-            throw new ArgumentNullException(nameof(addr));
+            throw new ArgumentNullException(nameof(ranges));
          }
 
-         var k = KeyFor(addr);
-         // 檢查註冊前是否為空（用於判斷是否為第一個註冊）
-         bool wasEmpty = _registered.IsEmpty;
-
-         // 使用 ConcurrentDictionary 嘗試加入（若已存在則忽略）
-         // 這樣可以迅速完成註冊而不會長時間持有鎖，輪詢工作會在下一個週期取得 snapshot
-         if (_registered.TryAdd(k, addr))
+         lock (_planLock)
          {
-            // 如果是第一個註冊的地址，自動啟動輪詢工作
-            if (wasEmpty)
+            _userScanRanges.Clear();
+            _userScanRanges.AddRange(ranges);
+            UpdatePollingPlan();
+         }
+
+         // 確保輪詢工作已啟動
+         EnsurePollingWorkerStarted();
+      }
+
+      private void UpdatePollingPlan()
+      {
+         var newPlan = new List<BatchRead>();
+
+         // 按 Kind 分組
+         var groups = _userScanRanges.GroupBy(r => r.Kind, StringComparer.OrdinalIgnoreCase);
+
+         foreach (var g in groups)
+         {
+            string kind = g.Key;
+            // 確保該 Kind 的快取已初始化 (假設最大 65536)
+            if (!_deviceMemory.ContainsKey(kind))
             {
-               EnsurePollingWorkerStarted();
+               int size = kind.ToUpperInvariant() == "LW" ? 65536 : 4096;
+               _deviceMemory.TryAdd(kind, new short[size]);
+            }
+
+            // 步驟 1 & 2: 排序、合併重疊與相近區間 (Gap Tolerance)
+            var sorted = g.OrderBy(r => r.Start).ToList();
+            if (sorted.Count == 0)
+            {
+               continue;
+            }
+
+            var merged = new List<(int Start, int End)>();
+            int currentStart = sorted[0].Start;
+            int currentEnd = sorted[0].End;
+
+            for (int i = 1; i < sorted.Count; i++)
+            {
+               var next = sorted[i];
+               // 若兩區間重疊、相鄰，或間隙在容許範圍內則合併
+               if (next.Start <= currentEnd + 1 + _mergeGapTolerance)
+               {
+                  currentEnd = Math.Max(currentEnd, next.End);
+               }
+               else
+               {
+                  merged.Add((currentStart, currentEnd));
+                  currentStart = next.Start;
+                  currentEnd = next.End;
+               }
+            }
+
+            merged.Add((currentStart, currentEnd));
+
+            // 步驟 3: 依 MaxWordsPerRead 將合併後的區間切割為 Batch
+            foreach (var m in merged)
+            {
+               int totalLen = m.End - m.Start + 1;
+               int offset = 0;
+               while (offset < totalLen)
+               {
+                  int words = Math.Min(_maxWordsPerRead, totalLen - offset);
+                  newPlan.Add(new BatchRead
+                  {
+                     Kind = kind,
+                     Start = m.Start + offset,
+                     Words = words
+                  });
+                  offset += words;
+               }
             }
          }
+
+         _pollingPlan = newPlan;
+         _logger?.Invoke($"輪詢編譯完成：總計 {newPlan.Count} 個通訊批次");
       }
 
       /// <summary>
-      /// 取消註冊一個先前註冊的輪詢地址。
+      /// 註冊一個地址至中央輪詢工作 (已棄用，請改用 SetScanRanges)。
       /// </summary>
+      [Obsolete("請改用 SetScanRanges 提供明確的掃描區間。")]
+      public void RegisterPollingAddress(LinkDeviceAddress addr)
+      {
+         throw new NotSupportedException("RegisterPollingAddress 已棄用，請改用 SetScanRanges。");
+      }
+
+      /// <summary>
+      /// 取消註冊一個先前註冊的輪詢地址 (已棄用)。
+      /// </summary>
+      [Obsolete("請改用 SetScanRanges。")]
       public void UnregisterPollingAddress(LinkDeviceAddress addr)
       {
-         if (addr == null)
-         {
-            return;
-         }
-
-         var k = KeyFor(addr);
-         // 移除註冊項（ConcurrentDictionary 提供 thread-safe 移除）
-         _registered.TryRemove(k, out _);
-         // cache 現在為 ConcurrentDictionary，可以 thread-safe 移除
-         _cache.TryRemove(k, out _);
+         // No-op or throw
       }
 
       /// <summary>
-      /// 取得已註冊地址的最新快取值。回傳陣列為複本以避免外部改變內部快取；若無資料則回傳 null。
+      /// 取得最新快取值。
       /// </summary>
       public short[] GetLatest(LinkDeviceAddress addr)
       {
@@ -427,13 +504,16 @@ namespace WindowsFormsApp1.CCLink.Services
             return null;
          }
 
-         var k = KeyFor(addr);
-         // ConcurrentDictionary provides thread-safe reads
-         if (_cache.TryGetValue(k, out var v))
+         if (_deviceMemory.TryGetValue(addr.Kind, out var memory))
          {
-            var copy = new short[v.Length];
-            Array.Copy(v, copy, v.Length);
-            return copy;
+            // 讀取位元裝置與字組裝置的邏輯略有不同 (若 LinkDeviceAddress 已處理好 offset 則直接使用)
+            // 這裡假設 addr.Start 與 addr.Length 是基於該裝置 Kind 的索引
+            if (addr.Start + addr.Length <= memory.Length)
+            {
+               var copy = new short[addr.Length];
+               Array.Copy(memory, addr.Start, copy, 0, addr.Length);
+               return copy;
+            }
          }
 
          return null;
@@ -508,7 +588,13 @@ namespace WindowsFormsApp1.CCLink.Services
                DateTime loopStart = DateTime.UtcNow;
 
                // 檢查是否有註冊的地址，如果沒有則延長等待時間
-               if (_registered.IsEmpty)
+               bool hasPlan;
+               lock (_planLock)
+               {
+                  hasPlan = _pollingPlan.Count > 0;
+               }
+
+               if (!hasPlan)
                {
                   // 沒有地址時，使用較長的等待時間以節省資源
                   await Task.Delay(TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
@@ -546,7 +632,7 @@ namespace WindowsFormsApp1.CCLink.Services
 
                // 使用固定間隔模式：基於預期時間而非實際時間
                // 這樣可以補償執行時間，維持穩定的輪詢頻率
-               nextPoll = nextPoll + _pollInterval;
+               nextPoll += _pollInterval;
 
                // 如果執行時間超過間隔，立即進行下一次輪詢
                if (nextPoll < DateTime.UtcNow)
@@ -626,116 +712,52 @@ namespace WindowsFormsApp1.CCLink.Services
 
       private void PollAddresses()
       {
-         // 取得註冊清單 snapshot 並在鎖外操作，減少鎖競爭與避免在鎖內執行 I/O。
-         List<LinkDeviceAddress> regs = _registered.Values.ToList();
+         List<BatchRead> batches;
+         lock (_planLock)
+         {
+            batches = _pollingPlan.ToList();
+         }
 
-         if (regs.Count == 0)
+         if (batches.Count == 0)
          {
             return;
          }
 
-         // 依 Kind 分組並合併連續區段
-         var groups = regs.GroupBy(r => r.Kind, StringComparer.OrdinalIgnoreCase);
-
          lock (_apiLock)
          {
-            foreach (var g in groups)
+            foreach (var batch in batches)
             {
-               var list = g.OrderBy(r => r.Start).ToList();
-               int idx = 0;
-               while (idx < list.Count)
+               try
                {
-                  var current = list[idx];
-                  int mergedStart = current.Start;
-                  int mergedEnd = current.Start + current.Length - 1;
-                  int j = idx + 1;
-                  while (j < list.Count)
+                  int path = _resolvedPath;
+                  int devCode = MapDeviceCode(batch.Kind);
+                  int sizeInBytes = batch.Words * 2;
+                  var dest = new short[batch.Words];
+
+                  int rc = _api.ReceiveEx(path, 0, 0, devCode, batch.Start, ref sizeInBytes, dest);
+
+                  if (rc == 0)
                   {
-                     var next = list[j];
-                     // 若重疊或相鄰則合併
-                     if (next.Start <= mergedEnd + 1)
+                     if (_deviceMemory.TryGetValue(batch.Kind, out var memory))
                      {
-                        mergedEnd = Math.Max(mergedEnd, next.Start + next.Length - 1);
-                        j++;
-                     }
-                     else
-                     {
-                        break;
+                        // 更新全域快取
+                        Array.Copy(dest, 0, memory, batch.Start, batch.Words);
+
+                        // 觸發事件 (可選：這裡可以比對舊值決定是否觸發，但現在改為區間後，
+                        // ValuesUpdated 事件可能需要調整為針對 ScanRange 觸發，或保持相容)
+                        // 基於相容性，這裡可以廣播該批次的更新，或由使用者自行調用 GetLatest 檢查
+                        // ValuesUpdated?.Invoke(new LinkDeviceAddress(batch.Kind, batch.Start, batch.Words), dest);
                      }
                   }
-
-                  int mergedLength = mergedEnd - mergedStart + 1;
-                  var dest = new short[mergedLength];
-                  try
+                  else
                   {
-                     int path = _resolvedPath;
-                     int devCode = MapDeviceCode(g.Key);
-                     int size = mergedLength * 2;
-                     int rc = _api.ReceiveEx(path, 0, 0, devCode, mergedStart, ref size, dest);
-
-                     // 計算此合併區間中受影響的已註冊地址
-                     var affected = list.Where(r => r.Start <= mergedEnd && r.Start + r.Length - 1 >= mergedStart).ToList();
-
-                     // 檢查是否有任何片段與快取不同
-                     bool anyChanged = false;
-                     foreach (var a in affected)
-                     {
-                        int off = a.Start - mergedStart;
-                        var slice = new short[a.Length];
-                        Array.Copy(dest, off, slice, 0, a.Length);
-                        var k = KeyFor(a);
-                        if (!_cache.TryGetValue(k, out var prev) || !ArraysEqual(prev, slice))
-                        {
-                           anyChanged = true;
-                           break;
-                        }
-                     }
-
-                     if (anyChanged)
-                     {
-                        // 只有當讀到的片段與快取不同時才記錄與更新快取
-                        _logger?.Invoke($"輪詢: mdDevRead {g.Key}{mergedStart}..{mergedEnd} => {rc}");
-
-                        // 分配片段到快取並對變更的片段觸發事件
-                        foreach (var a in affected)
-                        {
-                           int off = a.Start - mergedStart;
-                           var slice = new short[a.Length];
-                           Array.Copy(dest, off, slice, 0, a.Length);
-                           var k = KeyFor(a);
-
-                           if (_cache.TryGetValue(k, out var prev) && ArraysEqual(prev, slice))
-                           {
-                              // 未變更，跳過
-                           }
-                           else
-                           {
-                              var stored = (short[])slice.Clone();
-                              // 使用 AddOrUpdate 保證 thread-safe 更新
-                              _cache.AddOrUpdate(k, stored, (key, old) => stored);
-                              try
-                              {
-                                 ValuesUpdated?.Invoke(a, (short[])stored.Clone());
-                              }
-                              catch (Exception ex)
-                              {
-                                 _logger?.Invoke($"ValuesUpdated 事件處理程序發生例外: {ex.Message}");
-                              }
-                           }
-                        }
-                     }
-                     else
-                     {
-                        // 欄位未變更，則不記錄日誌
-                     }
+                     _logger?.Invoke($"讀取失敗: {batch.Kind}{batch.Start} (Words:{batch.Words}), RC={rc}");
                   }
-                  catch (Exception ex)
-                  {
-                     TryRaiseException(ex);
-                     _logger?.Invoke($"輪詢讀取發生例外: {ex.Message}");
-                  }
-
-                  idx = j;
+               }
+               catch (Exception ex)
+               {
+                  TryRaiseException(ex);
+                  _logger?.Invoke($"輪詢讀取計畫批次發生例外: {ex.Message}");
                }
             }
          }
