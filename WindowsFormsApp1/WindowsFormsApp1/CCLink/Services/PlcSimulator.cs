@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-
 using WindowsFormsApp1.CCLink.Interfaces;
 using WindowsFormsApp1.CCLink.Models;
 
@@ -88,7 +87,7 @@ namespace WindowsFormsApp1.CCLink.Services
                _api.DevRstEx(_path, 0, 0, devCode, _requestAddr.Start);
             }
 
-            _logger?.Invoke($"模擬 PLC：設定 Request {_requestAddr.Kind}{_requestAddr.Start} = {(on ? 1 : 0)}");
+            _logger?.Invoke($"模擬 PLC：設定 Request {_requestAddr.Kind} 0x{_requestAddr.Start:X} = {(on ? 1 : 0)}");
             RequestChanged?.Invoke(on);
          }
          catch (Exception ex)
@@ -119,14 +118,65 @@ namespace WindowsFormsApp1.CCLink.Services
 
          _task = Task.Run(async () =>
          {
+            // 初始化：確保 request 為 0
+            try
+            {
+               bool requestOn = GetBit(_requestAddr);
+               if (requestOn)
+               {
+                  _logger?.Invoke($"模擬 PLC：初始化中，清除殘留的 request");
+                  SetRequest(false);
+                  await Task.Delay(100, ct).ConfigureAwait(false);
+               }
+
+               _logger?.Invoke($"模擬 PLC：初始化完成，開始心跳週期");
+            }
+            catch (Exception ex)
+            {
+               _logger?.Invoke($"模擬 PLC：初始化時發生例外: {ex.Message}");
+            }
+
+            var count = 0;
+
+            // 主要心跳循環
+            //while (!ct.IsCancellationRequested && count <= 2)
             while (!ct.IsCancellationRequested)
             {
                try
                {
+                  DateTime cycleStart = DateTime.UtcNow;
+
+                  // 步驟 1: 確認 request 為 0（等待上一次的 request 被清除）
+                  bool requestOn = GetBit(_requestAddr);
+                  if (requestOn)
+                  {
+                     _logger?.Invoke($"模擬 PLC：⚠️ request 仍為 ON，等待清除");
+                     await Task.Delay(100, ct).ConfigureAwait(false);
+                     continue;
+                  }
+
+                  // 步驟 2: 設定 request ON (模擬 PLC 發出心跳請求)
                   SetRequest(true);
+
+                  // 步驟 3: 維持 request ON 一段時間
                   await Task.Delay(pulseMs, ct).ConfigureAwait(false);
+
+                  // 步驟 4: 清除 request (模擬 PLC 清除請求)
                   SetRequest(false);
-                  await Task.Delay(period - TimeSpan.FromMilliseconds(pulseMs), ct).ConfigureAwait(false);
+
+                  count++;
+
+                  // 步驟 5: 等待剩餘的週期時間
+                  TimeSpan elapsed = DateTime.UtcNow - cycleStart;
+                  TimeSpan remaining = period - elapsed;
+                  if (remaining > TimeSpan.Zero)
+                  {
+                     await Task.Delay(remaining, ct).ConfigureAwait(false);
+                  }
+                  else if (remaining < TimeSpan.Zero)
+                  {
+                     _logger?.Invoke($"模擬 PLC：⚠️ 週期時間過長，實際 {elapsed.TotalMilliseconds:F0}ms，設定 {period.TotalMilliseconds:F0}ms");
+                  }
                }
                catch (TaskCanceledException)
                {
@@ -135,51 +185,20 @@ namespace WindowsFormsApp1.CCLink.Services
                catch (Exception ex)
                {
                   _logger?.Invoke($"模擬 PLC pulse 執行例外: {ex.Message}");
+                  // 發生錯誤時等待一下再繼續
+                  try
+                  {
+                     await Task.Delay(500, ct).ConfigureAwait(false);
+                  }
+                  catch
+                  {
+                     break;
+                  }
                }
             }
+
+            _logger?.Invoke($"模擬 PLC：心跳循環已停止");
          }, ct);
-
-         // start monitor for response
-         StartMonitor();
-      }
-
-      /// <summary>
-      /// 啟動切換模式：每 interval 切換 request bit（0->1 或 1->0）。
-      /// </summary>
-      public void StartToggle(TimeSpan interval)
-      {
-         if (interval.TotalMilliseconds <= 0)
-         {
-            throw new ArgumentOutOfRangeException(nameof(interval));
-         }
-
-         Stop();
-         _cts = new CancellationTokenSource();
-         var ct = _cts.Token;
-
-         _task = Task.Run(async () =>
-         {
-            bool state = false;
-            while (!ct.IsCancellationRequested)
-            {
-               try
-               {
-                  state = !state;
-                  SetRequest(state);
-                  await Task.Delay(interval, ct).ConfigureAwait(false);
-               }
-               catch (TaskCanceledException)
-               {
-                  break;
-               }
-               catch (Exception ex)
-               {
-                  _logger?.Invoke($"模擬 PLC toggle 執行例外: {ex.Message}");
-               }
-            }
-         }, ct);
-
-         StartMonitor();
       }
 
       /// <summary>
@@ -225,6 +244,25 @@ namespace WindowsFormsApp1.CCLink.Services
 
       #region Private Methods
 
+      /// <summary>
+      /// 讀取指定位址的 bit 狀態
+      /// </summary>
+      private bool GetBit(LinkDeviceAddress addr)
+      {
+         try
+         {
+            int devCode = MapDeviceCode(addr.Kind);
+            int size = 2;
+            var buf = new short[1];
+            int rc = _api.ReceiveEx(_path, 0, 0, devCode, addr.Start, ref size, buf);
+            return rc == 0 && buf[0] != 0;
+         }
+         catch
+         {
+            return false;
+         }
+      }
+
       private void StartMonitor()
       {
          if (_monitorTask != null)
@@ -248,7 +286,7 @@ namespace WindowsFormsApp1.CCLink.Services
                   if (!last.HasValue || last.Value != on)
                   {
                      last = on;
-                     _logger?.Invoke($"模擬 PLC 監控到 Response {_responseAddr.Kind}{_responseAddr.Start} = {(on ? 1 : 0)}");
+                     _logger?.Invoke($"模擬 PLC 監控到 Response {_responseAddr.Kind} 0x{_responseAddr.Start:X} = {(on ? 1 : 0)}");
                      ResponseChanged?.Invoke(on);
                   }
                }

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-
 using WindowsFormsApp1.CCLink.Interfaces;
 using WindowsFormsApp1.CCLink.Models;
 
@@ -15,7 +14,6 @@ namespace WindowsFormsApp1.CCLink.Adapters
    {
       #region Fields
 
-      private readonly Dictionary<int, int> _autoRespondMap = new Dictionary<int, int>();
       private readonly Dictionary<int, short> _bits = new Dictionary<int, short>();
       private readonly object _lock = new object();
       private readonly Dictionary<int, short> _words = new Dictionary<int, short>();
@@ -26,12 +24,9 @@ namespace WindowsFormsApp1.CCLink.Adapters
 
       public MockMelsecApiAdapter()
       {
-         _autoRespondMap[CCLinkConstants.DefaultRequestFlagAddress] = CCLinkConstants.DefaultResponseFlagAddress;
       }
 
       #endregion
-
-      #region Public Methods
 
       public short Open(short chan, short mode, out int path)
       {
@@ -66,6 +61,7 @@ namespace WindowsFormsApp1.CCLink.Adapters
                   _words[devNo + i] = data[i];
                }
             }
+
             return 0;
          }
       }
@@ -87,6 +83,7 @@ namespace WindowsFormsApp1.CCLink.Adapters
                   data[i] = _words.ContainsKey(key) ? _words[key] : (short)0;
                }
             }
+
             return 0;
          }
       }
@@ -96,18 +93,7 @@ namespace WindowsFormsApp1.CCLink.Adapters
          lock (_lock)
          {
             _bits[devNo] = 1;
-            if (devType == CCLinkConstants.DEV_LB && _autoRespondMap.TryGetValue(devNo, out var resp))
-            {
-               _bits[resp] = 1;
-               Task.Run(async () =>
-               {
-                  await Task.Delay(500).ConfigureAwait(false);
-                  lock (_lock)
-                  {
-                     _bits[resp] = 0;
-                  }
-               });
-            }
+
             return 0;
          }
       }
@@ -117,10 +103,7 @@ namespace WindowsFormsApp1.CCLink.Adapters
          lock (_lock)
          {
             _bits[devNo] = 0;
-            if (devType == CCLinkConstants.DEV_LB && _autoRespondMap.TryGetValue(devNo, out var resp))
-            {
-               _bits[resp] = 0;
-            }
+
             return 0;
          }
       }
@@ -162,7 +145,5 @@ namespace WindowsFormsApp1.CCLink.Adapters
       public short BoardVerRead(int path, short[] buf) => 0;
 
       public short Init(int path) => 0;
-
-      #endregion
    }
 }

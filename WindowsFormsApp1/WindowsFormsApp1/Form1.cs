@@ -41,13 +41,13 @@ namespace WindowsFormsApp1
          // prepare mock adapter and open path immediately for demo
          _mockAdapter = new MockMelsecApiAdapter();
          short r = _mockAdapter.Open(0, 0, out _path);
-         _helper = new MelsecHelper(_mockAdapter, reconnectAsync: async () =>
+         _helper = new MelsecHelper(_mockAdapter, _settings, reconnectAsync: async () =>
          {
             // simple reconnect simulation: attempt to open and return true
             await Task.Delay(200).ConfigureAwait(false);
             short rr = _mockAdapter.Open(0, 0, out _path);
             return rr == 0;
-         }, logger: s => Log(s));
+         }, logger: s => Log($"[Helper] {s}"));
 
          // 監聽事件更新狀態燈
          _helper.Reconnected += () => UpdateStatus(true);
@@ -55,6 +55,9 @@ namespace WindowsFormsApp1
 
          // 初始顯示為已連線（mock 已 open）
          UpdateStatus(true);
+
+         // 設定 lstLog 右鍵選單
+         SetupLogContextMenu();
 
          // 動態建立模擬器相關按鈕（放在 UI 上，不需改 Designer）
          CreateSimulatorButtons();
@@ -100,6 +103,23 @@ namespace WindowsFormsApp1
       #endregion
 
       #region Private Methods
+
+      private void SetupLogContextMenu()
+      {
+         var contextMenu = new ContextMenuStrip();
+         var copyItem = new ToolStripMenuItem("複製文字");
+         copyItem.Click += (s, e) =>
+         {
+            if (lstLog.Items.Count > 0)
+            {
+               var allText = string.Join(Environment.NewLine, System.Linq.Enumerable.Cast<object>(lstLog.Items));
+               Clipboard.SetText(allText);
+               MessageBox.Show("已將所有 Log 複製到剪貼簿。");
+            }
+         };
+         contextMenu.Items.Add(copyItem);
+         lstLog.ContextMenuStrip = contextMenu;
+      }
 
       private void Log(string message)
       {
@@ -155,23 +175,6 @@ namespace WindowsFormsApp1
          }
       }
 
-      private void btnStartHeartbeat_Click(object sender, EventArgs e)
-      {
-         // start heartbeat using LB0300 (request flag) and LB0100 (response flag)
-         var reqFlag = new LinkDeviceAddress("LB", CCLinkConstants.DefaultRequestFlagAddress, 1);
-         var respFlag = new LinkDeviceAddress("LB", CCLinkConstants.DefaultResponseFlagAddress, 1);
-
-         _helper.HeartbeatFailed += count => Log($"Heartbeat failed count={count}");
-         _helper.HeartbeatSucceeded += () => Log("Heartbeat success");
-         _helper.Disconnected += () => Log("Disconnected");
-         _helper.Reconnected += () => Log("Reconnected");
-
-         // 呼叫新的 StartHeartbeat: 不包含 RequestData
-         _helper.StartHeartbeat(TimeSpan.FromSeconds(5), reqFlag, respFlag, () => _path, failThreshold: 3);
-
-         Log("Heartbeat started");
-      }
-
       private void btnStopHeartbeat_Click(object sender, EventArgs e)
       {
          _helper?.StopHeartbeat();
@@ -187,7 +190,7 @@ namespace WindowsFormsApp1
          //_helper.TimeSyncSucceeded += () => Log("TimeSync success");
          //_helper.TimeSyncFailed += () => Log("TimeSync failed");
 
-         _helper.StartTimeSync(TimeSpan.FromMinutes(5), reqFlag, reqData, respFlag, () => _path);
+         _helper.StartTimeSync(TimeSpan.FromMinutes(5), reqFlag, reqData, respFlag);
          Log("TimeSync started");
       }
 
@@ -196,7 +199,7 @@ namespace WindowsFormsApp1
          var reqFlag = new LinkDeviceAddress("LB", CCLinkConstants.DefaultRequestFlagAddress, 1);
          var reqData = new LinkDeviceAddress("LW", CCLinkConstants.DefaultRequestDataAddress, CCLinkConstants.DefaultRequestDataLength);
          LinkDeviceAddress respFlag = null;
-         bool ok = _helper.ForceTimeSync(DateTime.Now, reqFlag, reqData, respFlag, () => _path);
+         bool ok = _helper.ForceTimeSync(DateTime.Now, reqFlag, reqData, respFlag);
          Log($"ForceTimeSync returned {ok}");
       }
 
@@ -287,6 +290,58 @@ namespace WindowsFormsApp1
             btnStartSim.Enabled = true;
             btnStopSim.Enabled = false;
          }
+      }
+
+      private async void btnStartHeartbeat_Click(object sender, EventArgs e)
+      {
+         try
+         {
+            // 使用表單欄位中的 mock & helper（在 ctor 已建立）
+            // 開啟 helper（若還沒開）並用表單的 CancellationToken
+            await _helper.OpenAsync(_cts.Token).ConfigureAwait(false);
+
+            var reqAddr = new LinkDeviceAddress("LB", CCLinkConstants.DefaultRequestFlagAddress, 1);
+            var respAddr = new LinkDeviceAddress("LB", CCLinkConstants.DefaultResponseFlagAddress, 1);
+
+            // 確保輪詢計畫包含 request 與 response 位址（否則 PollAddresses 不會更新這些快取）
+            int start = Math.Min(reqAddr.Start, respAddr.Start);
+            int end = Math.Max(reqAddr.Start, respAddr.Start);
+            _helper.SetScanRanges(new[]
+            {
+               new MelsecHelper.ScanRange { Kind = "LB", Start = start, End = end }
+            });
+
+            // 註冊心跳事件以便診斷
+            _helper.HeartbeatFailed += count => Log($"[Helper] Heartbeat failed count={count}");
+            _helper.HeartbeatSucceeded += () => Log("[Helper] Heartbeat success");
+
+            // 啟動心跳（間隔改為 1 秒，與模擬器週期同步）
+            _helper.StartHeartbeat(TimeSpan.FromSeconds(0.5), reqAddr, respAddr);
+
+            // 建立並保留模擬器實例（使用表單上的 mock 與 path）
+            _simulator?.Stop();
+            _simulator?.Dispose();
+            _simulator = new PlcSimulator(_mockAdapter, _path >= 0 ? _path : 1, reqAddr, respAddr, s => Log($"[PLC] {s}"));
+
+            // 使用 StartPulse 實現心跳週期
+            // period = 2 秒（完整週期），pulseMs = 1000 毫秒（ON 時間）
+            // 實際行為：每個週期內，ON 維持 1 秒，然後 OFF 維持 1 秒（period - pulseMs）
+            // 時序：ON (1s) -> OFF (1s) -> [下一週期] ON (1s) -> OFF (1s) ...
+            _simulator.StartPulse(TimeSpan.FromSeconds(2), 1000);
+
+            Log("測試環境已啟動（helper + plc simulator）");
+            Log("模擬器設定：週期 2 秒，ON 1 秒 / OFF 1 秒");
+         }
+         catch (Exception ex)
+         {
+            Log("button1_Click 初始化失敗: " + ex.Message);
+         }
+      }
+
+      private void btnStopSimulator_Click(object sender, EventArgs e)
+      {
+         _simulator?.Stop();
+         Log("模擬器已停止");
       }
 
       #endregion
