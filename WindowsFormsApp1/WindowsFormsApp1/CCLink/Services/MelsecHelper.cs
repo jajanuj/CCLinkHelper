@@ -34,11 +34,6 @@ namespace WindowsFormsApp1.CCLink.Services
       private readonly ControllerStatus _status = new ControllerStatus();
       private readonly SynchronizationContext _syncContext;
       private readonly List<ScanRange> _userScanRanges = new List<ScanRange>();
-      private CancellationTokenSource _backgroundCts;
-
-      // 背景監控 (用於自動回應 PLC 請求)
-      private BackgroundMonitor _backgroundMonitor;
-      private Task _backgroundTask;
 
       // 狀態
       private bool _disposed;
@@ -46,7 +41,6 @@ namespace WindowsFormsApp1.CCLink.Services
       private CancellationTokenSource _heartbeatCts;
 
       // 心跳設定 / 狀態
-      private bool _heartbeatEnabled;
       private int _heartbeatFailThreshold = 3;
       private TimeSpan _heartbeatInterval = TimeSpan.FromSeconds(5);
       private LinkDeviceAddress _heartbeatRequestFlagAddr;
@@ -59,10 +53,6 @@ namespace WindowsFormsApp1.CCLink.Services
       private bool? _lastObservedRequest;
       private bool? _lastObservedResponse;
       private int _mergeGapTolerance = 32;
-      private bool _pendingRst;
-
-      // 待確認的寫入期待：當我們發出 mdDevSet/mdDevRst 時設為 true，等待下一次輪詢確認
-      private bool _pendingSet;
       private List<BatchRead> _pollingPlan = new List<BatchRead>();
 
       // 輪詢設定
@@ -114,7 +104,7 @@ namespace WindowsFormsApp1.CCLink.Services
       public int ReconnectBackoffMultiplier { get; set; } = 2;
       public int ReconnectMaxAttempts { get; set; } = 8;
       public int ConsecutiveHeartbeatFailures { get; private set; }
-      public bool IsHeartbeatRunning => _heartbeatEnabled && !_disposed;
+      public bool IsHeartbeatRunning => _heartbeatCts != null && !_heartbeatCts.IsCancellationRequested && !_disposed;
 
       public int MergeGapTolerance
       {
@@ -311,7 +301,7 @@ namespace WindowsFormsApp1.CCLink.Services
       /// </summary>
       private async Task HeartbeatLoopAsync(CancellationToken ct)
       {
-         while (!ct.IsCancellationRequested && !_disposed && _heartbeatEnabled)
+         while (!ct.IsCancellationRequested && !_disposed)
          {
             try
             {
@@ -375,11 +365,6 @@ namespace WindowsFormsApp1.CCLink.Services
                      {
                         // 更新全域快取
                         Array.Copy(dest, 0, memory, batch.Start, batch.Words);
-
-                        // 觸發事件 (可選：這裡可以比對舊值決定是否觸發，但現在改為區間後，
-                        // ValuesUpdated 事件可能需要調整為針對 ScanRange 觸發，或保持相容)
-                        // 基於相容性，這裡可以廣播該批次的更新，或由使用者自行調用 GetLatest 檢查
-                        // ValuesUpdated?.Invoke(new LinkDeviceAddress(batch.Kind, batch.Start, batch.Words), dest);
                      }
                   }
                   else
@@ -400,7 +385,7 @@ namespace WindowsFormsApp1.CCLink.Services
       {
          return Task.Run(() =>
          {
-            if (_disposed || !_heartbeatEnabled)
+            if (_disposed)
             {
                return;
             }
@@ -409,42 +394,9 @@ namespace WindowsFormsApp1.CCLink.Services
             bool handshakeCompleted = false;
             try
             {
-               bool requestOn = false;
-               bool responseOn = false;
-
-               // 為了即時性，心跳狀態直接從 API 讀取，而不完全依賴可能延遲 200ms+ 的輪詢快取
-               lock (_apiLock)
-               {
-                  int size = 2;
-                  var buf = new short[1];
-
-                  // 讀取 Request Flag
-                  int rc1 = _api.ReceiveEx(_resolvedPath, 0, 0, MapDeviceCode(_heartbeatRequestFlagAddr.Kind), _heartbeatRequestFlagAddr.Start, ref size, buf);
-                  if (rc1 == 0)
-                  {
-                     requestOn = buf[0] != 0;
-                  }
-
-                  // 讀取 Response Flag
-                  size = 2;
-                  int rc2 = _api.ReceiveEx(_resolvedPath, 0, 0, MapDeviceCode(_heartbeatResponseFlagAddr.Kind), _heartbeatResponseFlagAddr.Start, ref size,
-                     buf);
-                  if (rc2 == 0)
-                  {
-                     responseOn = buf[0] != 0;
-                  }
-
-                  // 同時同步更新一下快取，維持一致性
-                  if (rc1 == 0)
-                  {
-                     UpdateCache(_heartbeatRequestFlagAddr.Kind, _heartbeatRequestFlagAddr.Start, (short)(requestOn ? 1 : 0));
-                  }
-
-                  if (rc2 == 0)
-                  {
-                     UpdateCache(_heartbeatResponseFlagAddr.Kind, _heartbeatResponseFlagAddr.Start, (short)(responseOn ? 1 : 0));
-                  }
-               }
+               // 使用快取讀取狀態
+               bool requestOn = GetBit(_heartbeatRequestFlagAddr);
+               bool responseOn = GetBit(_heartbeatResponseFlagAddr);
 
                // 使用 bit mask: request bit << 1 | response bit
                int state = (requestOn ? 2 : 0) | (responseOn ? 1 : 0);
@@ -452,6 +404,7 @@ namespace WindowsFormsApp1.CCLink.Services
                // 追蹤上一個狀態
                int lastState = (_lastObservedRequest ?? false ? 2 : 0) | (_lastObservedResponse ?? false ? 1 : 0);
 
+               // 第一次進來時條件 || 後續狀態變更條件
                bool stateChanged = !(_lastObservedRequest.HasValue && _lastObservedResponse.HasValue) || state != lastState;
 
                // 心跳進展邏輯：只要狀態有變化，或是處於 (0,0) 閒置狀態，就更新 Watchdog
@@ -490,15 +443,7 @@ namespace WindowsFormsApp1.CCLink.Services
                      {
                         // 從 (0,1) 轉換到 (0,0) - 心跳循環完成！
                         handshakeCompleted = true;
-                        if (_pendingRst)
-                        {
-                           _pendingRst = false;
-                           _logger?.Invoke("心跳：✅ 完成一次心跳循環 (0,1) -> (0,0)");
-                        }
-                        else
-                        {
-                           _logger?.Invoke("心跳：✅ 心跳循環由監測確認完成 (0,0)");
-                        }
+                        _logger?.Invoke("心跳：✅ 完成一次心跳循環 (0,0)");
                      }
 
                      _lastObservedRequest = false;
@@ -518,21 +463,10 @@ namespace WindowsFormsApp1.CCLink.Services
                               int r = _api.DevSetEx(_resolvedPath, 0, 0, devCode, _heartbeatResponseFlagAddr.Start);
                               _logger?.Invoke($"心跳：執行 DevSetEx {_heartbeatResponseFlagAddr.Kind} 0x{_heartbeatResponseFlagAddr.Start:X} => 1");
 
-                              if (r == 0)
+                              if (r != 0)
                               {
-                                 _pendingSet = true;
-
-                                 // 嘗試同步確認
-                                 int sizeConfirm = 2;
-                                 var confirmBuf = new short[1];
-                                 int rc = _api.ReceiveEx(_resolvedPath, 0, 0, devCode, _heartbeatResponseFlagAddr.Start, ref sizeConfirm, confirmBuf);
-                                 if (rc == 0 && confirmBuf[0] != 0)
-                                 {
-                                    UpdateCache(_heartbeatResponseFlagAddr.Kind, _heartbeatResponseFlagAddr.Start, confirmBuf[0]);
-                                    _pendingSet = false;
-                                    state = 3; // 直接進入 (1,1)
-                                    _logger?.Invoke("心跳：response set 立即確認成功 (1,0) -> (1,1)");
-                                 }
+                                 ok = false;
+                                 _logger?.Invoke($"心跳：DevSetEx 失敗 (RC: {r})，無法回應 PLC 請求");
                               }
                            }
                         }
@@ -544,7 +478,7 @@ namespace WindowsFormsApp1.CCLink.Services
                         }
 
                         _lastObservedRequest = true;
-                        _lastObservedResponse = (state & 1) != 0;
+                        _lastObservedResponse = false;
                      }
 
                      break;
@@ -567,22 +501,10 @@ namespace WindowsFormsApp1.CCLink.Services
                               int r = _api.DevRstEx(_resolvedPath, 0, 0, devCode, _heartbeatResponseFlagAddr.Start);
                               _logger?.Invoke($"心跳：執行 DevRstEx {_heartbeatResponseFlagAddr.Kind} 0x{_heartbeatResponseFlagAddr.Start:X} => 0");
 
-                              if (r == 0)
+                              if (r != 0)
                               {
-                                 _pendingRst = true;
-
-                                 // 嘗試同步確認
-                                 int sizeConfirm = 2;
-                                 var confirmBuf = new short[1];
-                                 int rc = _api.ReceiveEx(_resolvedPath, 0, 0, devCode, _heartbeatResponseFlagAddr.Start, ref sizeConfirm, confirmBuf);
-                                 if (rc == 0 && confirmBuf[0] == 0)
-                                 {
-                                    UpdateCache(_heartbeatResponseFlagAddr.Kind, _heartbeatResponseFlagAddr.Start, 0);
-                                    _pendingRst = false;
-                                    state = 0; // 直接進入 (0,0)
-                                    handshakeCompleted = true;
-                                    _logger?.Invoke("心跳：✅ response reset 立即確認，心跳完成 (0,1) -> (0,0)");
-                                 }
+                                 ok = false;
+                                 _logger?.Invoke($"心跳：DevRstEx 失敗 (RC: {r})，無法清除回應旗號");
                               }
                            }
                         }
@@ -594,12 +516,9 @@ namespace WindowsFormsApp1.CCLink.Services
                         }
 
                         _lastObservedRequest = false;
-                        _lastObservedResponse = (state & 1) != 0;
+                        _lastObservedResponse = true;
                      }
 
-                     break;
-
-                  default:
                      break;
                }
             }
@@ -634,7 +553,7 @@ namespace WindowsFormsApp1.CCLink.Services
                   _ = Task.Run(async () =>
                   {
                      await AttemptReconnectLoop().ConfigureAwait(false);
-                     if (!_disposed && _heartbeatEnabled)
+                     if (!_disposed)
                      {
                         ConsecutiveHeartbeatFailures = 0;
                         _handshakeWatchdog = DateTime.UtcNow;
@@ -644,15 +563,6 @@ namespace WindowsFormsApp1.CCLink.Services
             }
          }, ct);
       }
-
-      private void UpdateCache(string kind, int address, short value)
-      {
-         if (_deviceMemory.TryGetValue(kind, out var mem) && address >= 0 && address < mem.Length)
-         {
-            mem[address] = value;
-         }
-      }
-
 
       private async Task AttemptReconnectLoop()
       {
@@ -690,11 +600,10 @@ namespace WindowsFormsApp1.CCLink.Services
                PostEvent(() => Reconnected?.Invoke());
                return;
             }
-            else
-            {
-               PostEvent(() => ReconnectAttemptFailed?.Invoke(attempt));
-               _logger?.Invoke($"重新連線嘗試 {attempt} 失敗。");
-            }
+
+            int currentAttempt = attempt;
+            PostEvent(() => ReconnectAttemptFailed?.Invoke(currentAttempt));
+            _logger?.Invoke($"重新連線嘗試 {attempt} 失敗。");
 
             try
             {
@@ -844,14 +753,12 @@ namespace WindowsFormsApp1.CCLink.Services
          _heartbeatFailThreshold = HeartbeatFailThreshold;
 
          // 啟動獨立的心跳 Task
-         _heartbeatEnabled = true;
          _heartbeatCts = new CancellationTokenSource();
          _heartbeatTask = Task.Run(() => HeartbeatLoopAsync(_heartbeatCts.Token));
       }
 
       public void StopHeartbeat()
       {
-         _heartbeatEnabled = false;
          ConsecutiveHeartbeatFailures = 0;
 
          // 停止心跳 Task
@@ -878,55 +785,7 @@ namespace WindowsFormsApp1.CCLink.Services
          {
             _logger?.Invoke($"停止心跳時發生例外: {ex.Message}");
          }
-
-         // heartbeat addresses are part of scan ranges, but since we don't have a specific RemoveScanRange per address yet, 
-         // we'll leave it for now or user can call SetScanRanges to clear.
-
-         // stop background monitor if running
-         try
-         {
-            if (_backgroundMonitor != null)
-            {
-               _backgroundMonitor.Stop();
-               try
-               {
-                  _backgroundTask?.Wait(200);
-               }
-               catch
-               {
-               }
-
-               try
-               {
-                  _backgroundCts?.Cancel();
-               }
-               catch
-               {
-               }
-
-               _backgroundTask = null;
-               _backgroundCts = null;
-               _backgroundMonitor = null;
-            }
-         }
-         catch (Exception ex)
-         {
-            _logger?.Invoke($"停止背景監控時發生例外: {ex.Message}");
-         }
       }
-
-      // TimeSync removed for now - keep API but mark unsupported
-      public void StartTimeSync(TimeSpan interval, LinkDeviceAddress requestFlagAddr, LinkDeviceAddress requestDataAddr, LinkDeviceAddress responseFlagAddr)
-      {
-         throw new NotSupportedException("TimeSync is disabled in this build.");
-      }
-
-      public void StopTimeSync()
-      {
-         // noop
-      }
-
-      public bool ForceTimeSync(DateTime dt, LinkDeviceAddress a, LinkDeviceAddress b, LinkDeviceAddress c) => false;
 
       /// <summary>
       /// 設定要掃描的區塊範圍。這會替換先前的所有掃描設定。

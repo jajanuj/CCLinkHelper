@@ -45,10 +45,11 @@
          this.btnClose = new System.Windows.Forms.Button();
          this.btnStartTimeSync = new System.Windows.Forms.Button();
          this.btnForceTimeSync = new System.Windows.Forms.Button();
-         this.button1 = new System.Windows.Forms.Button();
+         this.btnStartHeartbeat = new System.Windows.Forms.Button();
          this.lstLog = new System.Windows.Forms.ListBox();
          this.lblStatus = new System.Windows.Forms.Label();
          this.btnStopSimulator = new System.Windows.Forms.Button();
+         this.btnStartSimulator = new System.Windows.Forms.Button();
          this.flowLayoutPanel1.SuspendLayout();
          this.SuspendLayout();
          // 
@@ -62,8 +63,9 @@
          this.flowLayoutPanel1.Controls.Add(this.btnClose);
          this.flowLayoutPanel1.Controls.Add(this.btnStartTimeSync);
          this.flowLayoutPanel1.Controls.Add(this.btnForceTimeSync);
-         this.flowLayoutPanel1.Controls.Add(this.button1);
+         this.flowLayoutPanel1.Controls.Add(this.btnStartHeartbeat);
          this.flowLayoutPanel1.Controls.Add(this.btnStopSimulator);
+         this.flowLayoutPanel1.Controls.Add(this.btnStartSimulator);
          this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
          this.flowLayoutPanel1.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
@@ -136,16 +138,16 @@
          this.btnForceTimeSync.Text = "Force TimeSync";
          this.btnForceTimeSync.Click += new System.EventHandler(this.btnForceTimeSync_Click);
          // 
-         // button1
+         // btnStartHeartbeat
          // 
-         this.button1.Location = new System.Drawing.Point(20, 66);
-         this.button1.Margin = new System.Windows.Forms.Padding(10);
-         this.button1.Name = "button1";
-         this.button1.Size = new System.Drawing.Size(132, 26);
-         this.button1.TabIndex = 8;
-         this.button1.Text = "Start Heartbeat";
-         this.button1.UseVisualStyleBackColor = true;
-         this.button1.Click += new System.EventHandler(this.btnStartHeartbeat_Click);
+         this.btnStartHeartbeat.Location = new System.Drawing.Point(20, 66);
+         this.btnStartHeartbeat.Margin = new System.Windows.Forms.Padding(10);
+         this.btnStartHeartbeat.Name = "btnStartHeartbeat";
+         this.btnStartHeartbeat.Size = new System.Drawing.Size(132, 26);
+         this.btnStartHeartbeat.TabIndex = 8;
+         this.btnStartHeartbeat.Text = "Start Heartbeat";
+         this.btnStartHeartbeat.UseVisualStyleBackColor = true;
+         this.btnStartHeartbeat.Click += new System.EventHandler(this.btnStartHeartbeat_Click);
          // 
          // lstLog
          // 
@@ -170,6 +172,7 @@
          // 
          // btnStopSimulator
          // 
+         this.btnStopSimulator.Enabled = false;
          this.btnStopSimulator.Location = new System.Drawing.Point(172, 66);
          this.btnStopSimulator.Margin = new System.Windows.Forms.Padding(10);
          this.btnStopSimulator.Name = "btnStopSimulator";
@@ -178,6 +181,16 @@
          this.btnStopSimulator.Text = "Stop Simulator";
          this.btnStopSimulator.UseVisualStyleBackColor = true;
          this.btnStopSimulator.Click += new System.EventHandler(this.btnStopSimulator_Click);
+         // 
+         // btnStartSimulator
+         // 
+         this.btnStartSimulator.Location = new System.Drawing.Point(324, 66);
+         this.btnStartSimulator.Margin = new System.Windows.Forms.Padding(10);
+         this.btnStartSimulator.Name = "btnStartSimulator";
+         this.btnStartSimulator.Size = new System.Drawing.Size(132, 26);
+         this.btnStartSimulator.TabIndex = 10;
+         this.btnStartSimulator.Text = "Start Simulator";
+         this.btnStartSimulator.UseVisualStyleBackColor = true;
          // 
          // Form1
          // 
@@ -198,8 +211,9 @@
 
       #endregion
 
-      private System.Windows.Forms.Button button1;
+      private System.Windows.Forms.Button btnStartHeartbeat;
       private System.Windows.Forms.Button btnStopSimulator;
+      private System.Windows.Forms.Button btnStartSimulator;
    }
 }
 

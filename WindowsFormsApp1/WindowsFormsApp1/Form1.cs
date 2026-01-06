@@ -25,10 +25,6 @@ namespace WindowsFormsApp1
       // PLC 模擬器
       private PlcSimulator _simulator;
 
-      // 動態建立的模擬器按鈕（避免修改 Designer）
-      private Button btnStartSim;
-      private Button btnStopSim;
-
       #endregion
 
       #region Constructors
@@ -49,18 +45,13 @@ namespace WindowsFormsApp1
             return rr == 0;
          }, logger: s => Log($"[Helper] {s}"));
 
-         // 監聽事件更新狀態燈
-         _helper.Reconnected += () => UpdateStatus(true);
-         _helper.Disconnected += () => UpdateStatus(false);
+         BindingHelperEvent();
 
          // 初始顯示為已連線（mock 已 open）
          UpdateStatus(true);
 
          // 設定 lstLog 右鍵選單
          SetupLogContextMenu();
-
-         // 動態建立模擬器相關按鈕（放在 UI 上，不需改 Designer）
-         CreateSimulatorButtons();
       }
 
       #endregion
@@ -103,6 +94,17 @@ namespace WindowsFormsApp1
       #endregion
 
       #region Private Methods
+
+      private void BindingHelperEvent()
+      {
+         // 監聽事件更新狀態燈
+         _helper.Reconnected += () => UpdateStatus(true);
+         _helper.Disconnected += () => UpdateStatus(false);
+
+         // 註冊心跳事件以便診斷
+         _helper.HeartbeatFailed += count => Log($"[Helper] Heartbeat failed count={count}");
+         _helper.HeartbeatSucceeded += () => Log("[Helper] Heartbeat success");
+      }
 
       private void SetupLogContextMenu()
       {
@@ -175,127 +177,25 @@ namespace WindowsFormsApp1
          }
       }
 
-      private void btnStopHeartbeat_Click(object sender, EventArgs e)
-      {
-         _helper?.StopHeartbeat();
-         Log("Heartbeat stopped");
-      }
-
       private void btnStartTimeSync_Click(object sender, EventArgs e)
       {
-         var reqFlag = new LinkDeviceAddress("LB", CCLinkConstants.DefaultRequestFlagAddress, 1);
-         var reqData = new LinkDeviceAddress("LW", CCLinkConstants.DefaultRequestDataAddress, CCLinkConstants.DefaultRequestDataLength);
-         LinkDeviceAddress respFlag = null; // assume PLC will clear request flag itself
-
-         //_helper.TimeSyncSucceeded += () => Log("TimeSync success");
-         //_helper.TimeSyncFailed += () => Log("TimeSync failed");
-
-         _helper.StartTimeSync(TimeSpan.FromMinutes(5), reqFlag, reqData, respFlag);
          Log("TimeSync started");
       }
 
       private void btnForceTimeSync_Click(object sender, EventArgs e)
       {
-         var reqFlag = new LinkDeviceAddress("LB", CCLinkConstants.DefaultRequestFlagAddress, 1);
-         var reqData = new LinkDeviceAddress("LW", CCLinkConstants.DefaultRequestDataAddress, CCLinkConstants.DefaultRequestDataLength);
-         LinkDeviceAddress respFlag = null;
-         bool ok = _helper.ForceTimeSync(DateTime.Now, reqFlag, reqData, respFlag);
-         Log($"ForceTimeSync returned {ok}");
       }
 
       // -------------------
       // PLC 模擬器相關
       // -------------------
 
-      private void CreateSimulatorButtons()
-      {
-         // 建立啟動按鈕
-         btnStartSim = new Button
-         {
-            Name = "btnStartSim",
-            Text = "啟動 PLC 模擬",
-            Width = 120,
-            Height = 28,
-            Left = 12,
-            Top = lstLog.Bottom + 8
-         };
-         btnStartSim.Click += btnStartSim_Click;
-         flowLayoutPanel1.Controls.Add(btnStartSim);
-
-         // 建立停止按鈕
-         btnStopSim = new Button
-         {
-            Name = "btnStopSim",
-            Text = "停止 PLC 模擬",
-            Width = 120,
-            Height = 28,
-            Left = btnStartSim.Right + 8,
-            Top = btnStartSim.Top,
-            Enabled = false
-         };
-         btnStopSim.Click += btnStopSim_Click;
-         flowLayoutPanel1.Controls.Add(btnStopSim);
-      }
-
-      private void btnStartSim_Click(object sender, EventArgs e)
-      {
-         try
-         {
-            // 使用預設 LB 位址（同 heartbeat 範例）
-            var reqFlag = new LinkDeviceAddress("LB", CCLinkConstants.DefaultRequestFlagAddress, 1);
-            var respFlag = new LinkDeviceAddress("LB", CCLinkConstants.DefaultResponseFlagAddress, 1);
-
-            // 若已有模擬器先清除
-            try
-            {
-               _simulator?.Stop();
-               _simulator?.Dispose();
-            }
-            catch
-            {
-            }
-
-            _simulator = new PlcSimulator(_mockAdapter, _path, reqFlag, respFlag, s => Log(s));
-            _simulator.RequestChanged += on => Log($"Simulator Request={(on ? 1 : 0)}");
-            _simulator.ResponseChanged += on => Log($"Simulator Response={(on ? 1 : 0)}");
-
-            // 範例：每秒脈衝，保持 200ms
-            _simulator.StartPulse(TimeSpan.FromSeconds(1), 200);
-
-            Log("PLC 模擬器已啟動（pulse 1s, 200ms）");
-            btnStartSim.Enabled = false;
-            btnStopSim.Enabled = true;
-         }
-         catch (Exception ex)
-         {
-            Log("啟動模擬器失敗: " + ex.Message);
-         }
-      }
-
-      private void btnStopSim_Click(object sender, EventArgs e)
-      {
-         try
-         {
-            _simulator?.Stop();
-            _simulator?.Dispose();
-            _simulator = null;
-            Log("PLC 模擬器已停止");
-         }
-         catch (Exception ex)
-         {
-            Log("停止模擬器失敗: " + ex.Message);
-         }
-         finally
-         {
-            btnStartSim.Enabled = true;
-            btnStopSim.Enabled = false;
-         }
-      }
-
       private async void btnStartHeartbeat_Click(object sender, EventArgs e)
       {
          try
          {
+            btnStartHeartbeat.Enabled = false;
+            btnStopSimulator.Enabled = true;
             // 使用表單欄位中的 mock & helper（在 ctor 已建立）
             // 開啟 helper（若還沒開）並用表單的 CancellationToken
             await _helper.OpenAsync(_cts.Token).ConfigureAwait(false);
@@ -311,12 +211,8 @@ namespace WindowsFormsApp1
                new MelsecHelper.ScanRange { Kind = "LB", Start = start, End = end }
             });
 
-            // 註冊心跳事件以便診斷
-            _helper.HeartbeatFailed += count => Log($"[Helper] Heartbeat failed count={count}");
-            _helper.HeartbeatSucceeded += () => Log("[Helper] Heartbeat success");
-
             // 啟動心跳（間隔改為 1 秒，與模擬器週期同步）
-            _helper.StartHeartbeat(TimeSpan.FromSeconds(0.5), reqAddr, respAddr);
+            _helper.StartHeartbeat(TimeSpan.FromSeconds(0.3), reqAddr, respAddr);
 
             // 建立並保留模擬器實例（使用表單上的 mock 與 path）
             _simulator?.Stop();
@@ -334,12 +230,15 @@ namespace WindowsFormsApp1
          }
          catch (Exception ex)
          {
+            btnStartSimulator.Enabled = true;
             Log("button1_Click 初始化失敗: " + ex.Message);
          }
       }
 
       private void btnStopSimulator_Click(object sender, EventArgs e)
       {
+         btnStartHeartbeat.Enabled = true;
+         btnStopSimulator.Enabled = false;
          _simulator?.Stop();
          Log("模擬器已停止");
       }

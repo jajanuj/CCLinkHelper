@@ -46,7 +46,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CCLink\Services\BackgroundMonitor.cs" />
     <Compile Include="CCLink\Models\CCLinkConstants.cs" />
     <Compile Include="CCLink\Models\ControllerSettings.cs" />
     <Compile Include="CCLink\Models\ControllerStatus.cs" />
