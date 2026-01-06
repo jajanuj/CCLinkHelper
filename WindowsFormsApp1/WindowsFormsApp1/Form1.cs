@@ -16,7 +16,7 @@ namespace WindowsFormsApp1
       #region Fields
 
       private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-      private readonly ControllerSettings _settings = new ControllerSettings { Isx64 = true, TimeoutMs = 3000 };
+      private ControllerSettings _settings;
       private ICCLinkController _controller;
       private MelsecHelper _helper;
       private MockMelsecApiAdapter _mockAdapter;
@@ -32,22 +32,48 @@ namespace WindowsFormsApp1
       public Form1()
       {
          InitializeComponent();
+
+         // 1. 加載或設定連線參數
+         _settings = SettingsPersistence.Load();
+         if (_settings == null)
+         {
+            using (var f = new SettingsForm())
+            {
+               if (f.ShowDialog() == DialogResult.OK)
+               {
+                  _settings = f.Settings;
+                  SettingsPersistence.Save(_settings);
+               }
+               else
+               {
+                  // 若取消設定則不啟動
+                  _settings = new ControllerSettings(); // fallback
+               }
+            }
+         }
+
          _controller = new MockCCLinkController(_settings);
 
-         // prepare mock adapter and open path immediately for demo
+         // prepare mock adapter
          _mockAdapter = new MockMelsecApiAdapter();
-         short r = _mockAdapter.Open(0, 0, out _path);
          _helper = new MelsecHelper(_mockAdapter, _settings, reconnectAsync: async () =>
          {
-            // simple reconnect simulation: attempt to open and return true
-            await Task.Delay(200).ConfigureAwait(false);
+            await Task.Delay(1000).ConfigureAwait(false);
             short rr = _mockAdapter.Open(0, 0, out _path);
             return rr == 0;
          }, logger: s => Log($"[Helper] {s}"));
 
+         // 2. 套用設定中的 ScanRanges
+         if (_settings.ScanRanges != null && _settings.ScanRanges.Count > 0)
+         {
+            _helper.SetScanRanges(_settings.ScanRanges);
+            Log($"已從設定檔載入 {_settings.ScanRanges.Count} 組掃描區域。");
+         }
+
          BindingHelperEvent();
 
-         // 初始顯示為已連線（mock 已 open）
+         // 初始開啟 path (模擬)
+         _mockAdapter.Open(0, 0, out _path);
          UpdateStatus(true);
 
          // 設定 lstLog 右鍵選單
@@ -203,16 +229,19 @@ namespace WindowsFormsApp1
             var reqAddr = new LinkDeviceAddress("LB", CCLinkConstants.DefaultRequestFlagAddress, 1);
             var respAddr = new LinkDeviceAddress("LB", CCLinkConstants.DefaultResponseFlagAddress, 1);
 
-            // 確保輪詢計畫包含 request 與 response 位址（否則 PollAddresses 不會更新這些快取）
-            int start = Math.Min(reqAddr.Start, respAddr.Start);
-            int end = Math.Max(reqAddr.Start, respAddr.Start);
-            _helper.SetScanRanges(new[]
+            // 如果設定中沒有掃描區域，則套用預設的心跳監測範圍
+            if (_settings.ScanRanges == null || _settings.ScanRanges.Count == 0)
             {
-               new MelsecHelper.ScanRange { Kind = "LB", Start = start, End = end }
-            });
+               int start = Math.Min(reqAddr.Start, respAddr.Start);
+               int end = Math.Max(reqAddr.Start, respAddr.Start);
+               _helper.SetScanRanges(new[]
+               {
+                  new ScanRange { Kind = "LB", Start = start, End = end }
+               });
+            }
 
-            // 啟動心跳（間隔改為 1 秒，與模擬器週期同步）
-            _helper.StartHeartbeat(TimeSpan.FromSeconds(0.3), reqAddr, respAddr);
+            // 啟動心跳
+            _helper.StartHeartbeat(_settings.HeartbeatIntervalMs > 0 ? TimeSpan.FromMilliseconds(_settings.HeartbeatIntervalMs) : TimeSpan.FromSeconds(0.3), reqAddr, respAddr);
 
             // 建立並保留模擬器實例（使用表單上的 mock 與 path）
             _simulator?.Stop();

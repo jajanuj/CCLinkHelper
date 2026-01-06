@@ -38,6 +38,9 @@
       /// <summary>是否為 64 位元環境。</summary>
       public bool Isx64 { get; set; } = true;
 
+      /// <summary>要掃描的區域列表。</summary>
+      public System.Collections.Generic.List<ScanRange> ScanRanges { get; set; } = new System.Collections.Generic.List<ScanRange>();
+
       #endregion
    }
 }

@@ -693,19 +693,6 @@ namespace WindowsFormsApp1.CCLink.Services
          }
       }
 
-      #region Internal Models
-
-      public sealed class ScanRange
-      {
-         #region Properties
-
-         public string Kind { get; set; }
-         public int Start { get; set; }
-         public int End { get; set; }
-         public int Length => End - Start + 1;
-
-         #endregion
-      }
 
       private sealed class BatchRead
       {
