@@ -25,8 +25,6 @@ namespace WindowsFormsApp1.CCLink.Services
       private readonly Action<string> _logger;
       private readonly object _planLock = new object();
 
-      // _pollLock 已不再需要，cache 與 registered 採用 thread-safe collection
-      // private readonly object _pollLock = new object();
       private readonly Func<Task<bool>> _reconnectAsync;
 
       private readonly Func<bool> _reconnectSync;
@@ -42,7 +40,7 @@ namespace WindowsFormsApp1.CCLink.Services
 
       // 心跳設定 / 狀態
       private int _heartbeatFailThreshold = 3;
-      private TimeSpan _heartbeatInterval = TimeSpan.FromSeconds(5);
+      private TimeSpan _heartbeatInterval;
       private LinkDeviceAddress _heartbeatRequestFlagAddr;
       private LinkDeviceAddress _heartbeatResponseFlagAddr;
 
@@ -390,7 +388,7 @@ namespace WindowsFormsApp1.CCLink.Services
                return;
             }
 
-            bool ok = false;
+            bool ok;
             bool handshakeCompleted = false;
             try
             {
@@ -570,7 +568,7 @@ namespace WindowsFormsApp1.CCLink.Services
          while (ReconnectMaxAttempts < 0 || attempt < ReconnectMaxAttempts)
          {
             attempt++;
-            bool ok = false;
+            bool ok;
             try
             {
                if (_reconnectAsync != null)
@@ -730,11 +728,6 @@ namespace WindowsFormsApp1.CCLink.Services
       public event Action HeartbeatSucceeded;
       public event Action<int> ReconnectAttemptFailed;
       public event Action Reconnected;
-
-      /// <summary>
-      /// 當中央輪詢工作讀到已註冊的地址資料時觸發，會傳回該地址及其資料陣列（short[]）。
-      /// </summary>
-      public event Action<LinkDeviceAddress, short[]> ValuesUpdated;
 
       #endregion
 
