@@ -204,7 +204,7 @@ namespace WindowsFormsApp1.CCLink.Services
 
                try
                {
-                  // [Fix] 增加等待時間到 1000ms，確保工作緒完全停止
+                  // 增加等待時間到 1000ms，確保工作緒完全停止
                   bool stopped = _workerTask?.Wait(1000) ?? true;
                   if (stopped)
                   {
@@ -371,7 +371,6 @@ namespace WindowsFormsApp1.CCLink.Services
 
       private void PollAddresses()
       {
-         // [Fix] 在 _planLock 內獲取計畫快照，避免迭代過程中被修改
          List<BatchRead> batches;
          lock (_planLock)
          {
@@ -383,19 +382,11 @@ namespace WindowsFormsApp1.CCLink.Services
             return;
          }
 
-         // [Fix] 在整個輪詢週期內持有 _apiLock，確保 UpdatePollingPlan 無法在輪詢過程中替換陣列
          lock (_apiLock)
          {
-            // [Fix] 檢查是否已關閉連線，避免在 Close 後繼續輪詢
-            if (_resolvedPath < 0 || !_status.IsConnected)
+            // 檢查是否已關閉連線，避免在 Close 後繼續輪詢
+            if (!_status.IsConnected)
             {
-               return;
-            }
-            
-            // [Fix] 檢查記憶體是否已初始化
-            if (_deviceMemory.Count == 0)
-            {
-               _logger?.Invoke("[PollAddresses] 記憶體尚未初始化，跳過輪詢 | Memory not initialized, skipping poll");
                return;
             }
             
@@ -437,8 +428,7 @@ namespace WindowsFormsApp1.CCLink.Services
 
          var dest = new short[alignedWords];
 
-         // 逐個 8 位元組讀取 -> 改為一次批量讀取
-         // Optimized to bulk read entire batch instead of byte-by-byte loop
+         // 一次批量讀取
          int totalInBytes = alignedWords; // Each alignedWord represents 8 bits (1 byte)
          int size = totalInBytes;
          
@@ -462,7 +452,7 @@ namespace WindowsFormsApp1.CCLink.Services
                
                if (!hasLast || lastBuffer != bufferPreview)
                {
-                  _logger?.Invoke($"[PollBitDeviceBatch] Buffer 變更 | Buffer changed (BatchStart={batch.Start}, AlignedStart={alignedStart}, RawBuffer=[{bufferPreview}])");
+                  //_logger?.Invoke($"[PollBitDeviceBatch] Buffer 變更 | Buffer changed (BatchStart={batch.Start}, AlignedStart={alignedStart}, RawBuffer=[{bufferPreview}])");
                   _lastPollBuffers[bufferKey] = bufferPreview;
                }
             }
@@ -494,7 +484,7 @@ namespace WindowsFormsApp1.CCLink.Services
             return;
          }
 
-         // 更新快取：從對齊的 buffer 中提取實際需要的位元
+         // 更新快取
          if (_status.IsConnected)
          {
             UpdateBitCache(batch, alignedStart, dest);
@@ -517,7 +507,7 @@ namespace WindowsFormsApp1.CCLink.Services
 
          if (rc == 0)
          {
-            // [Fix] Dictionary 必須在鎖內訪問
+            // Dictionary 必須在鎖內訪問
             if (_deviceMemory.ContainsKey(batch.Kind))
             {
                var memory = _deviceMemory[batch.Kind];
@@ -536,15 +526,12 @@ namespace WindowsFormsApp1.CCLink.Services
       /// </summary>
       private void UpdateBitCache(BatchRead batch, int alignedStart, short[] dest)
       {
-         // [Fix] 加入 Count 診斷
-         int dictCount = _deviceMemory.Count;
          int helperHashCode = RuntimeHelpers.GetHashCode(this);
          
-         // [Fix] 使用 TryGetValue 確保原子性地檢查並獲取陣列引用
          short[] memory;
          if (!_deviceMemory.TryGetValue(batch.Kind, out memory))
          {
-            _logger?.Invoke($"[UpdateBitCache] Kind 不存在 | Kind not found (HelperID={helperHashCode}, Kind={batch.Kind}, DictCount={dictCount})");
+            _logger?.Invoke($"[UpdateBitCache] Kind 不存在 | Kind not found (HelperID={helperHashCode}, Kind={batch.Kind})");
             return;
          }
 
@@ -556,7 +543,7 @@ namespace WindowsFormsApp1.CCLink.Services
          
          if (!hasLast || lastArrayId != currentArrayId)
          {
-            _logger?.Invoke($"[UpdateBitCache] ArrayID 變更 | ArrayID changed (HelperID={helperHashCode}, Kind={batch.Kind}, DictCount={dictCount}, OldID={(hasLast ? lastArrayId.ToString() : "N/A")}, NewID={currentArrayId}, ArrayLen={memory.Length})");
+            //_logger?.Invoke($"[UpdateBitCache] ArrayID 變更 | ArrayID changed (HelperID={helperHashCode}, Kind={batch.Kind}, OldID={(hasLast ? lastArrayId.ToString() : "N/A")}, NewID={currentArrayId}, ArrayLen={memory.Length})");
             _lastUpdateArrayIds[batch.Kind] = currentArrayId;
          }
 
@@ -1033,10 +1020,9 @@ namespace WindowsFormsApp1.CCLink.Services
          {
             try
             {
-               // 還原為使用快取讀取，符合使用者「LB0000 有在掃描範圍內」的設定
                bool requestOn = GetBitFromAddressString(config.TriggerAddress, 0);
 
-               // [Debug] 記錄目前偵測狀態
+               // 記錄目前偵測狀態
                if (requestOn || _lastTimeSyncTrigger)
                {
                   _logger?.Invoke($"[Debug] 對時位元狀態: {config.TriggerAddress}={requestOn}, 上次狀態={_lastTimeSyncTrigger}");
@@ -1129,7 +1115,6 @@ namespace WindowsFormsApp1.CCLink.Services
             throw new ArgumentNullException(nameof(ranges));
          }
 
-         // [Fix] 將 UpdatePollingPlan 移到 _planLock 外部，避免嵌套鎖
          // 先更新使用者範圍，再重新編譯計畫
          lock (_planLock)
          {
@@ -1149,10 +1134,7 @@ namespace WindowsFormsApp1.CCLink.Services
       /// </summary>
       private void UpdatePollingPlanInternal()
       {
-         // 此方法假設已經在 _apiLock 內調用
          var newPlan = new List<BatchRead>();
-
-         // 先在 _planLock 內複製 _userScanRanges
          List<ScanRange> scanRangesCopy;
          lock (_planLock)
          {
@@ -1162,7 +1144,6 @@ namespace WindowsFormsApp1.CCLink.Services
          // 按 Kind 分組
          var groups = scanRangesCopy.GroupBy(r => r.Kind, StringComparer.OrdinalIgnoreCase);
 
-         // 記憶體初始化/擴充邏輯（已在 _apiLock 內）
          foreach (var g in groups)
          {
             string kind = g.Key.ToUpperInvariant();
@@ -1243,7 +1224,6 @@ namespace WindowsFormsApp1.CCLink.Services
             }
          }
 
-         // 在 _planLock 內更新 _pollingPlan
          lock (_planLock)
          {
             _pollingPlan = newPlan;
@@ -1255,8 +1235,6 @@ namespace WindowsFormsApp1.CCLink.Services
       private void UpdatePollingPlan()
       {
          var newPlan = new List<BatchRead>();
-
-         // [Fix] 先在 _planLock 內複製 _userScanRanges，避免與 SetScanRanges 競爭
          List<ScanRange> scanRangesCopy;
          lock (_planLock)
          {
@@ -1266,7 +1244,6 @@ namespace WindowsFormsApp1.CCLink.Services
          // 按 Kind 分組
          var groups = scanRangesCopy.GroupBy(r => r.Kind, StringComparer.OrdinalIgnoreCase);
 
-         // [Fix] 將整個記憶體初始化/擴充邏輯移到 _apiLock 內，避免與輪詢執行緒的陣列引用競爭
          lock (_apiLock)
          {
             foreach (var g in groups)
@@ -1289,8 +1266,7 @@ namespace WindowsFormsApp1.CCLink.Services
                }
                else if (existingMemory.Length <= maxEnd)
                {
-                  // [Fix] 需要擴充容量時，使用原地擴充而非替換陣列
-                  // 這樣可以保持 ArrayID 不變，避免影響正在讀取的執行緒
+                  // 需要擴充容量時，使用原地擴充而非替換陣列
                   int requiredSize = Math.Max(16384, maxEnd + 1);
                   var newMemory = new short[requiredSize];
                   Array.Copy(existingMemory, newMemory, existingMemory.Length);
@@ -1302,7 +1278,7 @@ namespace WindowsFormsApp1.CCLink.Services
 
                   _deviceMemory[kind] = newMemory;
                   
-                  // [Fix] 更新追蹤的 ArrayID，避免 GetBit 記錄誤報
+                  // 更新追蹤的 ArrayID，避免 GetBit 記錄誤報
                   _lastArrayIds[kind] = RuntimeHelpers.GetHashCode(newMemory);
                   _lastUpdateArrayIds[kind] = RuntimeHelpers.GetHashCode(newMemory);
                }
@@ -1355,7 +1331,6 @@ namespace WindowsFormsApp1.CCLink.Services
             }
          }
 
-         // [Fix] 在 _planLock 內更新 _pollingPlan，確保 PollAddresses 讀取時的一致性
          lock (_planLock)
          {
             _pollingPlan = newPlan;

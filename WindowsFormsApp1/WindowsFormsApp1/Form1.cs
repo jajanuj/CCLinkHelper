@@ -154,14 +154,12 @@ namespace WindowsFormsApp1
       {
          try
          {
-            // 防止重複開啟
             if (_isOpened)
             {
                Log("連接已開啟,無需重複操作 | Connection already opened");
                return;
             }
 
-            UseWaitCursor = true;
             btnOpen.Enabled = false;
 
             // 根據選擇的模式建立對應的 adapter
@@ -245,7 +243,6 @@ namespace WindowsFormsApp1
                return;
             }
 
-            UseWaitCursor = true;
             btnClose.Enabled = false;
 
             // 先在 UI 執行緒上停止 Timer 並重置按鈕狀態
@@ -464,17 +461,6 @@ namespace WindowsFormsApp1
 
             var reqAddr = new LinkDeviceAddress("LB", CCLinkConstants.DefaultRequestFlagAddress, 1);
             var respAddr = new LinkDeviceAddress("LB", CCLinkConstants.DefaultResponseFlagAddress, 1);
-
-            // 如果設定中沒有掃描區域，則套用預設的心跳監測範圍
-            //if (_settings.ScanRanges == null || _settings.ScanRanges.Count == 0)
-            //{
-            //   int start = Math.Min(reqAddr.Start, respAddr.Start);
-            //   int end = Math.Max(reqAddr.Start, respAddr.Start);
-            //   _helper.SetScanRanges(new[]
-            //   {
-            //      new ScanRange { Kind = "LB", Start = start, End = end }
-            //   });
-            //}
 
             // 啟動心跳
             _helper.StartHeartbeat(_settings.HeartbeatIntervalMs > 0 ? TimeSpan.FromMilliseconds(_settings.HeartbeatIntervalMs) : TimeSpan.FromSeconds(0.3),
