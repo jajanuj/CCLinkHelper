@@ -82,19 +82,21 @@ namespace WindowsFormsApp1.CCLink.Services
             int devCode = MapDeviceCode(_requestAddr.Kind);
             if (on)
             {
-               _api.DevSetEx(_path, 0, 0, devCode, _requestAddr.Start);
+               // 使用 (1, 1) 表示位元模式 | Use (1, 1) for bit mode
+               _api.DevSetEx(_path, 1, 1, devCode, _requestAddr.Start);
             }
             else
             {
-               _api.DevRstEx(_path, 0, 0, devCode, _requestAddr.Start);
+               // 使用 (1, 1) 表示位元模式 | Use (1, 1) for bit mode
+               _api.DevRstEx(_path, 1, 1, devCode, _requestAddr.Start);
             }
 
-            _logger?.Invoke($"模擬 PLC：設定 Request {_requestAddr.Kind} 0x{_requestAddr.Start:X} = {(on ? 1 : 0)}");
+            _logger?.Invoke($"模擬 PLC 設定請求位元 | Simulator setting request flag (Device: {_requestAddr.Kind} 0x{_requestAddr.Start:X4}, Value: {(on ? 1 : 0)})");
             RequestChanged?.Invoke(on);
          }
          catch (Exception ex)
          {
-            _logger?.Invoke($"模擬 PLC 設定 Request 發生例外: {ex.Message}");
+            _logger?.Invoke($"模擬 PLC 設定請求例外 | Exception while setting simulator request (Error: {ex.Message})");
          }
       }
 
@@ -128,16 +130,16 @@ namespace WindowsFormsApp1.CCLink.Services
                   bool requestOn = GetBit(_requestAddr);
                   if (requestOn)
                   {
-                     _logger?.Invoke($"模擬 PLC：初始化中，清除殘留的 request");
+                     _logger?.Invoke($"模擬 PLC 初始化清除 | Simulator initializing, clearing residual request flag");
                      SetRequest(false);
                      await Task.Delay(100, ct).ConfigureAwait(false);
                   }
 
-                  _logger?.Invoke($"模擬 PLC：初始化完成，開始心跳週期");
+                  _logger?.Invoke($"模擬 PLC 啟動成功 | Simulator initialized, starting heartbeat cycle");
                }
                catch (Exception ex)
                {
-                  _logger?.Invoke($"模擬 PLC：初始化時發生例外: {ex.Message}");
+                  _logger?.Invoke($"模擬 PLC 初始化例外 | Exception during simulator initialization (Error: {ex.Message})");
                }
 
                var count = 0;
@@ -154,7 +156,7 @@ namespace WindowsFormsApp1.CCLink.Services
                      bool requestOn = GetBit(_requestAddr);
                      if (requestOn)
                      {
-                        _logger?.Invoke($"模擬 PLC：⚠️ request 仍為 ON，等待清除");
+                        _logger?.Invoke($"模擬 PLC 等待請求清除 | Simulator request bit still ON, waiting for clear");
                         await Task.Delay(100, ct).ConfigureAwait(false);
                         continue;
                      }
@@ -179,7 +181,7 @@ namespace WindowsFormsApp1.CCLink.Services
                      }
                      else if (remaining < TimeSpan.Zero)
                      {
-                        _logger?.Invoke($"模擬 PLC：⚠️ 週期時間過長，實際 {elapsed.TotalMilliseconds:F0}ms，設定 {period.TotalMilliseconds:F0}ms");
+                        _logger?.Invoke($"模擬 PLC 週期超時 | Simulator cycle duration exceeded (Actual: {elapsed.TotalMilliseconds:F0}ms, Config: {period.TotalMilliseconds:F0}ms)");
                      }
                   }
                   catch (TaskCanceledException)
@@ -188,7 +190,7 @@ namespace WindowsFormsApp1.CCLink.Services
                   }
                   catch (Exception ex)
                   {
-                     _logger?.Invoke($"模擬 PLC pulse 執行例外: {ex.Message}");
+                     _logger?.Invoke($"模擬 PLC 脈衝執行例外 | Exception in simulator pulse execution (Error: {ex.Message})");
                      // 發生錯誤時等待一下再繼續
                      try
                      {
@@ -201,7 +203,7 @@ namespace WindowsFormsApp1.CCLink.Services
                   }
                }
 
-               _logger?.Invoke($"模擬 PLC：心跳循環已停止");
+               _logger?.Invoke($"模擬 PLC 心跳已停止 | Simulator heartbeat cycle stopped");
             }, ct);
          }
       }
@@ -223,7 +225,7 @@ namespace WindowsFormsApp1.CCLink.Services
                   }
                   catch (Exception ex)
                   {
-                     _logger?.Invoke($"模擬 PLC Stop 取消令牌時發生例外: {ex.Message}");
+                     _logger?.Invoke($"模擬 PLC 停止取消例外 | Exception while canceling simulator token (Error: {ex.Message})");
                   }
 
                   try
@@ -231,13 +233,13 @@ namespace WindowsFormsApp1.CCLink.Services
                      // 增加超時時間，確保 Task 完全結束
                      if (_task != null && !_task.Wait(TimeSpan.FromSeconds(5)))
                      {
-                        _logger?.Invoke("⚠️ 警告：Task 未在 5 秒內結束，強制等待");
+                        _logger?.Invoke("協助任務關閉超時 | Warning: Task did not end within 5s, forcing wait");
                         _task.Wait(); // 強制等待直到結束
                      }
                   }
                   catch (AggregateException ex)
                   {
-                     _logger?.Invoke($"等待模擬 PLC 工作緒停止時發生例外: {ex.InnerException?.Message ?? ex.Message}");
+                     _logger?.Invoke($"等待模擬 PLC 停止例外 | Exception while waiting for simulator task to stop (Error: {ex.InnerException?.Message ?? ex.Message})");
                   }
 
                   _cts.Dispose();
@@ -299,13 +301,13 @@ namespace WindowsFormsApp1.CCLink.Services
                   if (!last.HasValue || last.Value != on)
                   {
                      last = on;
-                     _logger?.Invoke($"模擬 PLC 監控到 Response {_responseAddr.Kind} 0x{_responseAddr.Start:X} = {(on ? 1 : 0)}");
+                     _logger?.Invoke($"模擬 PLC 監控到回應變更 | Simulator detected response change (Device: {_responseAddr.Kind} 0x{_responseAddr.Start:X4}, Value: {(on ? 1 : 0)})");
                      ResponseChanged?.Invoke(on);
                   }
                }
                catch (Exception ex)
                {
-                  _logger?.Invoke($"模擬 PLC 監控 Response 時發生例外: {ex.Message}");
+                  _logger?.Invoke($"模擬 PLC 監控回應例外 | Exception in simulator response monitoring (Error: {ex.Message})");
                }
 
                try
@@ -335,7 +337,7 @@ namespace WindowsFormsApp1.CCLink.Services
          }
          catch (Exception ex)
          {
-            _logger?.Invoke($"停止模擬 PLC 監控時發生例外: {ex.Message}");
+            _logger?.Invoke($"停止模擬 PLC 監控例外 | Exception while stopping simulator monitor (Error: {ex.Message})");
          }
       }
 

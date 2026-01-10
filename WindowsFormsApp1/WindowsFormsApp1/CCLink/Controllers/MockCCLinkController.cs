@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -15,8 +16,11 @@ namespace WindowsFormsApp1.CCLink.Controllers
    {
       #region Fields
 
+      private readonly ConcurrentDictionary<string, bool[]> _bitMemory = new ConcurrentDictionary<string, bool[]>(StringComparer.OrdinalIgnoreCase);
+
       private readonly Random _rand = new Random();
       private readonly ControllerSettings _settings;
+      private readonly ConcurrentDictionary<string, short[]> _wordMemory = new ConcurrentDictionary<string, short[]>(StringComparer.OrdinalIgnoreCase);
       private ControllerStatus _status = new ControllerStatus();
 
       #endregion
@@ -41,26 +45,38 @@ namespace WindowsFormsApp1.CCLink.Controllers
          return Task.CompletedTask;
       }
 
-      public async Task<IReadOnlyList<bool>> ReadBitsAsync(string address, int count, CancellationToken ct = default)
+      public async Task<bool> ReadBitsAsync(string address, CancellationToken ct = default)
       {
          await Task.Delay(_settings.RetryBackoffMs, ct).ConfigureAwait(false);
-         return Enumerable.Range(0, count).Select(i => _rand.Next(0, 2) == 1).ToArray();
+         if (_bitMemory.TryGetValue(address, out var mem))
+         {
+            return mem.FirstOrDefault();
+         }
+
+         return _rand.Next(0, 2) == 1;
       }
 
       public async Task WriteBitsAsync(string address, IEnumerable<bool> values, CancellationToken ct = default)
       {
          await Task.Delay(_settings.RetryBackoffMs, ct).ConfigureAwait(false);
+         _bitMemory[address] = values.ToArray();
       }
 
       public async Task<IReadOnlyList<short>> ReadWordsAsync(string address, int count, CancellationToken ct = default)
       {
          await Task.Delay(_settings.RetryBackoffMs, ct).ConfigureAwait(false);
+         if (_wordMemory.TryGetValue(address, out var mem))
+         {
+            return mem.Take(count).ToArray();
+         }
+
          return Enumerable.Range(0, count).Select(i => (short)_rand.Next(short.MinValue, short.MaxValue)).ToArray();
       }
 
       public async Task WriteWordsAsync(string address, IEnumerable<short> values, CancellationToken ct = default)
       {
          await Task.Delay(_settings.RetryBackoffMs, ct).ConfigureAwait(false);
+         _wordMemory[address] = values.ToArray();
       }
 
       public Task<ControllerStatus> GetStatusAsync(CancellationToken ct = default)

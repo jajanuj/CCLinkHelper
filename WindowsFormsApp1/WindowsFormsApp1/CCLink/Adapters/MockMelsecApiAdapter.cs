@@ -74,14 +74,15 @@ namespace WindowsFormsApp1.CCLink.Adapters
             for (int i = 0; i < count; i++)
             {
                int key = devNo + i;
-               if (devType == CCLinkConstants.DEV_LB)
-               {
-                  data[i] = _bits.ContainsKey(key) ? _bits[key] : (short)0;
-               }
-               else
-               {
-                  data[i] = _words.ContainsKey(key) ? _words[key] : (short)0;
-               }
+                bool isBit = devType == CCLinkConstants.DEV_LB || devType == CCLinkConstants.DEV_LX || devType == CCLinkConstants.DEV_LY;
+                if (isBit)
+                {
+                   data[i] = _bits.ContainsKey(key) ? _bits[key] : (short)0;
+                }
+                else
+                {
+                   data[i] = _words.ContainsKey(key) ? _words[key] : (short)0;
+                }
             }
 
             return 0;

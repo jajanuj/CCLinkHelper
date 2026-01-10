@@ -7,7 +7,7 @@ namespace WindowsFormsApp1
 {
    public partial class SettingsForm : Form
    {
-      public ControllerSettings Settings { get; private set; }
+      #region Constructors
 
       public SettingsForm(ControllerSettings existing = null)
       {
@@ -16,18 +16,38 @@ namespace WindowsFormsApp1
          LoadToUI();
       }
 
+      #endregion
+
+      #region Properties
+
+      public ControllerSettings Settings { get; private set; }
+
+      #endregion
+
+      #region Private Methods
+
       private void LoadToUI()
       {
          txtIp.Text = Settings.Ip ?? "127.0.0.1";
+         numPort.Value = Settings.Port;
+         numNetwork.Value = Settings.Network;
          numStation.Value = Settings.Station;
          numHeartbeat.Value = Settings.HeartbeatIntervalMs;
+         numTimeout.Value = Settings.TimeoutMs;
+         numRetryCount.Value = Settings.RetryCount;
+         numRetryBackoff.Value = Settings.RetryBackoffMs;
+         cmbEndian.SelectedItem = Settings.Endian ?? "Big";
+         chkIsx64.Checked = Settings.Isx64;
+         numTimeSync.Value = Settings.TimeSyncIntervalMs;
+         txtTrigger.Text = Settings.TimeSync?.TriggerAddress ?? "LB0301";
+         txtData.Text = Settings.TimeSync?.DataBaseAddress ?? "LW0000";
 
          dgvRanges.Rows.Clear();
          if (Settings.ScanRanges != null)
          {
             foreach (var r in Settings.ScanRanges)
             {
-               dgvRanges.Rows.Add(r.Kind, r.Start.ToString("X"), r.End.ToString("X"));
+               dgvRanges.Rows.Add(r.Kind, r.Start.ToString("X4"), r.End.ToString("X4"));
             }
          }
       }
@@ -35,28 +55,61 @@ namespace WindowsFormsApp1
       private void btnSave_Click(object sender, EventArgs e)
       {
          Settings.Ip = txtIp.Text;
+         Settings.Port = (int)numPort.Value;
+         Settings.Network = (int)numNetwork.Value;
          Settings.Station = (int)numStation.Value;
          Settings.HeartbeatIntervalMs = (int)numHeartbeat.Value;
+         Settings.TimeoutMs = (int)numTimeout.Value;
+         Settings.RetryCount = (int)numRetryCount.Value;
+         Settings.RetryBackoffMs = (int)numRetryBackoff.Value;
+         Settings.Endian = cmbEndian.SelectedItem?.ToString() ?? "Big";
+         Settings.Isx64 = chkIsx64.Checked;
+         Settings.TimeSyncIntervalMs = (int)numTimeSync.Value;
+         Settings.TimeSync.TriggerAddress = txtTrigger.Text?.Trim() ?? "LB0301";
+         Settings.TimeSync.DataBaseAddress = txtData.Text?.Trim() ?? "LW0000";
 
          var ranges = new List<ScanRange>();
          foreach (DataGridViewRow row in dgvRanges.Rows)
          {
-            if (row.IsNewRow) continue;
+            if (row.IsNewRow)
+            {
+               continue;
+            }
 
             string kind = row.Cells[0].Value?.ToString();
-            string startHex = row.Cells[1].Value?.ToString();
-            string endHex = row.Cells[2].Value?.ToString();
+            string startHex = row.Cells[1].Value?.ToString()?.Trim();
+            string endHex = row.Cells[2].Value?.ToString()?.Trim();
 
             if (!string.IsNullOrEmpty(kind) && !string.IsNullOrEmpty(startHex) && !string.IsNullOrEmpty(endHex))
             {
                try
                {
+                  int start = Convert.ToInt32(startHex, 16);
+                  int end = Convert.ToInt32(endHex, 16);
+
+                  // 防呆檢查
+                  if (start < 0 || end < 0 || start > 0x3FFF || end > 0x3FFF)
+                  {
+                     MessageBox.Show($"{kind} 位址超出範圍 (0x0000 - 0x3FFF)。");
+                     return;
+                  }
+
+                  if (start > end)
+                  {
+                     MessageBox.Show($"{kind} 起始位址不可大於結束位址。");
+                     return;
+                  }
+
                   ranges.Add(new ScanRange
                   {
                      Kind = kind.ToUpper(),
-                     Start = Convert.ToInt32(startHex, 16),
-                     End = Convert.ToInt32(endHex, 16)
+                     Start = start,
+                     End = end
                   });
+
+                  // 格式化回 UI (統一用大寫)
+                  row.Cells[1].Value = start.ToString("X4");
+                  row.Cells[2].Value = end.ToString("X4");
                }
                catch
                {
@@ -70,5 +123,7 @@ namespace WindowsFormsApp1
          this.DialogResult = DialogResult.OK;
          this.Close();
       }
+
+      #endregion
    }
 }

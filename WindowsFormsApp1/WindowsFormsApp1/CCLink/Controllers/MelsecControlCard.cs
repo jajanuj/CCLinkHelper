@@ -106,23 +106,37 @@ namespace WindowsFormsApp1.CCLink.Controllers
          }
       }
 
-      public async Task<IReadOnlyList<bool>> ReadBitsAsync(string address, int count, CancellationToken ct = default)
+      public async Task<bool> ReadBitsAsync(string address, CancellationToken ct = default)
       {
-         var parsed = LinkDeviceAddress.Parse(address, count);
+         // 解析位址，例如 LB0001
+         var parsed = LinkDeviceAddress.Parse(address, 1);
          await _lock.WaitAsync(ct).ConfigureAwait(false);
          try
          {
-            short[] buffer = new short[count];
             int deviceCode = MapDevice(parsed.Kind);
-            int size = count * 2;
-            var rc = _api.ReceiveEx(_pathHandle, 0, 0, deviceCode, parsed.Start, ref size, buffer);
+            
+            // 計算對齊到 8 的倍數的起始位址（向下取整）
+            // 例如：LB0001 -> LB0000, LB0009 -> LB0008
+            int alignedStart = (parsed.Start / 8) * 8;
+            
+            // 計算目標位元在 8 位元組中的位置 (0-7)
+            int bitPosition = parsed.Start - alignedStart;
+            
+            // 讀取位元軟元件，size 固定為 1
+            int size = 1;
+            short[] buffer = new short[1];
+            
+            var rc = _api.ReceiveEx(_pathHandle, 0, 0, deviceCode, alignedStart, ref size, buffer);
             if (rc != 0)
             {
                throw MelsecException.FromCode(rc, nameof(_api.ReceiveEx));
             }
 
-            var bits = buffer.Select(x => x != 0).ToArray();
-            return bits;
+            // 從 buffer[0] 中提取特定位元
+            // buffer[0] 包含 8 個位元 (bit 0-7)
+            // 例如：buffer[0] = 2 (二進制: 0000 0010) 表示 bit 1 = true
+            int bitValue = (buffer[0] >> bitPosition) & 1;
+            return bitValue != 0;
          }
          finally
          {

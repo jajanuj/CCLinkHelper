@@ -27,7 +27,7 @@ namespace WindowsFormsApp1.CCLink.Interfaces
       /// <summary>
       /// 讀取位元（LB/LX/LY）。
       /// </summary>
-      Task<IReadOnlyList<bool>> ReadBitsAsync(string address, int count, CancellationToken ct = default);
+      Task<bool> ReadBitsAsync(string address, CancellationToken ct = default);
 
       /// <summary>
       /// 寫入位元（LB/LY）。

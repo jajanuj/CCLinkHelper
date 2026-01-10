@@ -7,11 +7,11 @@ namespace WindowsFormsApp1.CCLink.Services
 {
    public static class SettingsPersistence
    {
-      private static readonly string DefaultPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.xml");
+      #region Public Methods
 
-      public static ControllerSettings Load(string path = null)
+      public static ControllerSettings Load(string name = null)
       {
-         string target = path ?? DefaultPath;
+         string target = GetPath(name);
          if (!File.Exists(target))
          {
             return null;
@@ -31,9 +31,9 @@ namespace WindowsFormsApp1.CCLink.Services
          }
       }
 
-      public static void Save(ControllerSettings settings, string path = null)
+      public static void Save(ControllerSettings settings, string name = null)
       {
-         string target = path ?? DefaultPath;
+         string target = GetPath(name);
          var serializer = new XmlSerializer(typeof(ControllerSettings));
          using (var sw = new StreamWriter(target))
          {
@@ -41,9 +41,30 @@ namespace WindowsFormsApp1.CCLink.Services
          }
       }
 
-      public static bool Exists(string path = null)
+      public static bool Exists(string name = null)
       {
-         return File.Exists(path ?? DefaultPath);
+         return File.Exists(GetPath(name));
       }
+
+      #endregion
+
+      #region Private Methods
+
+      private static string GetPath(string name)
+      {
+         if (string.IsNullOrEmpty(name))
+         {
+            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.xml");
+         }
+
+         if (!name.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+         {
+            name += ".xml";
+         }
+
+         return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, name);
+      }
+
+      #endregion
    }
 }
