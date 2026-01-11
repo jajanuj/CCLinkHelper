@@ -38,6 +38,17 @@ namespace WindowsFormsApp1.CCLink.Models
       /// </summary>
       public ushort ControlStatus { get; set; }
 
+        public CommonReportStatus1() { }
+
+        public CommonReportStatus1(ushort alarm, ushort machine, ushort action, ushort waiting, ushort control)
+        {
+            AlarmStatus = alarm;
+            MachineStatus = machine;
+            ActionStatus = action;
+            WaitingStatus = waiting;
+            ControlStatus = control;
+        }
+
       #region Equality Members
 
       public bool Equals(CommonReportStatus1 other)

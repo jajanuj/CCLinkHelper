@@ -79,6 +79,27 @@ namespace WindowsFormsApp1.CCLink.Models
       /// </summary>
       public string CurrentRecipeName { get; set; } = string.Empty;
 
+        public CommonReportStatus2() { }
+
+        public CommonReportStatus2(ushort red, ushort yellow, ushort green, ushort upWait, ushort downWait,
+                                   ushort rate, ushort stopTime, uint processing, ushort retained,
+                                   ushort recipeNo, ushort thickness, ushort uld, string recipeName)
+        {
+            RedLightStatus = red;
+            YellowLightStatus = yellow;
+            GreenLightStatus = green;
+            UpstreamWaitingStatus = upWait;
+            DownstreamWaitingStatus = downWait;
+            DischargeRate = rate;
+            StopTime = stopTime;
+            ProcessingCounter = processing;
+            RetainedBoardCount = retained;
+            CurrentRecipeNo = recipeNo;
+            BoardThicknessStatus = thickness;
+            UldFlag = uld;
+            CurrentRecipeName = recipeName;
+        }
+
       #region Equality Members
 
       public bool Equals(CommonReportStatus2 other)

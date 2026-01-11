@@ -41,7 +41,6 @@ namespace WindowsFormsApp1.CCLink.Services
       private readonly object _commonReportLock = new object();
 
       // 設備記憶體快取 (Key: Kind, Value: short[] array representing the device memory)
-      // [Fix] 改用 Dictionary，完全由 _apiLock 保護，避免 ConcurrentDictionary 的替換競爭
       private readonly Dictionary<string, short[]> _deviceMemory = new Dictionary<string, short[]>(StringComparer.OrdinalIgnoreCase);
 
       // 追蹤上次的 ArrayID，用於偵測陣列更換 (Key: "Kind:Address")
@@ -1749,19 +1748,6 @@ namespace WindowsFormsApp1.CCLink.Services
       public event Action<CommonReportStatus1> CommonReportStatus1Updated;
       public event Action<CommonReportStatus2> CommonReportStatus2Updated;
       public event Action<CommonReportAlarm> CommonReportAlarmUpdated;
-
-      /// <summary>
-      /// 重置定期上報的快取狀態，強制下一次更新時寫入 PLC
-      /// </summary>
-      public void ResetCommonReportCache()
-      {
-         lock (_commonReportLock)
-         {
-            _lastCommonReportStatus1 = null;
-            _lastCommonReportStatus2 = null;
-            _lastCommonReportAlarm = null;
-         }
-      }
 
       /// <summary>
       /// 更新定期上報共通資料 - Status1（機台狀態資料）

@@ -629,161 +629,84 @@ namespace WindowsFormsApp1
 
       private void btnSetCommonReporting_Click(object sender, EventArgs e)
       {
-         // 1. Status1 Settings
-         using (var form1 = new CommonReportStatus1SettingsForm(_alarmStatus, _machineStatus, _actionStatus, _waitingStatus, _controlStatus))
+         // Create status objects from current fields
+         var s1 = new CommonReportStatus1(_alarmStatus, _machineStatus, _actionStatus, _waitingStatus, _controlStatus);
+         var s2 = new CommonReportStatus2(
+             _redLightStatus, _yellowLightStatus, _greenLightStatus,
+             _upstreamWaitingStatus, _downstreamWaitingStatus,
+             _dischargeRate, _stopTime, _processingCounter,
+             _retainedBoardCount, _currentRecipeNo, _boardThicknessStatus,
+             0, // UldFlag (Always 0 as wasn't exposed)
+             _currentRecipeName);
+         var alarm = new CommonReportAlarm(_errorCodes);
+
+         // Open Consolidated Form
+         using (var form = new CommonReportSettingsForm(s1, s2, alarm))
          {
-            if (form1.ShowDialog(this) != DialogResult.OK)
+            if (form.ShowDialog(this) != DialogResult.OK)
             {
                return;
             }
 
-            // Check for Status1 Changes before updates
-            if (_alarmStatus != form1.AlarmStatus)
+            // 1. Update Status 1
+            var newS1 = form.Status1Result;
+            if (_alarmStatus != newS1.AlarmStatus) Log($"[Status1] Alarm Changed: {_alarmStatus} -> {newS1.AlarmStatus}");
+            if (_machineStatus != newS1.MachineStatus) Log($"[Status1] MachineStatus Changed: {_machineStatus} -> {newS1.MachineStatus}");
+            if (_actionStatus != newS1.ActionStatus) Log($"[Status1] ActionStatus Changed: {_actionStatus} -> {newS1.ActionStatus}");
+            if (_waitingStatus != newS1.WaitingStatus) Log($"[Status1] WaitingStatus Changed: {_waitingStatus} -> {newS1.WaitingStatus}");
+            if (_controlStatus != newS1.ControlStatus) Log($"[Status1] ControlStatus Changed: {_controlStatus} -> {newS1.ControlStatus}");
+
+            _alarmStatus = newS1.AlarmStatus;
+            _machineStatus = newS1.MachineStatus;
+            _actionStatus = newS1.ActionStatus;
+            _waitingStatus = newS1.WaitingStatus;
+            _controlStatus = newS1.ControlStatus;
+
+            // 2. Update Status 2
+            var newS2 = form.Status2Result;
+            if (_redLightStatus != newS2.RedLightStatus) Log($"[Status2] RedLight Changed: {_redLightStatus} -> {newS2.RedLightStatus}");
+            if (_yellowLightStatus != newS2.YellowLightStatus) Log($"[Status2] YellowLight Changed: {_yellowLightStatus} -> {newS2.YellowLightStatus}");
+            if (_greenLightStatus != newS2.GreenLightStatus) Log($"[Status2] GreenLight Changed: {_greenLightStatus} -> {newS2.GreenLightStatus}");
+            if (_upstreamWaitingStatus != newS2.UpstreamWaitingStatus) Log($"[Status2] UpstreamWaiting Changed: {_upstreamWaitingStatus} -> {newS2.UpstreamWaitingStatus}");
+            if (_downstreamWaitingStatus != newS2.DownstreamWaitingStatus) Log($"[Status2] DownstreamWaiting Changed: {_downstreamWaitingStatus} -> {newS2.DownstreamWaitingStatus}");
+            if (_dischargeRate != newS2.DischargeRate) Log($"[Status2] DischargeRate Changed: {_dischargeRate} -> {newS2.DischargeRate}");
+            if (_stopTime != newS2.StopTime) Log($"[Status2] StopTime Changed: {_stopTime} -> {newS2.StopTime}");
+            if (_processingCounter != newS2.ProcessingCounter) Log($"[Status2] ProcessingCounter Changed: {_processingCounter} -> {newS2.ProcessingCounter}");
+            if (_retainedBoardCount != newS2.RetainedBoardCount) Log($"[Status2] RetainedBoardCount Changed: {_retainedBoardCount} -> {newS2.RetainedBoardCount}");
+            if (_currentRecipeNo != newS2.CurrentRecipeNo) Log($"[Status2] CurrentRecipeNo Changed: {_currentRecipeNo} -> {newS2.CurrentRecipeNo}");
+            if (_boardThicknessStatus != newS2.BoardThicknessStatus) Log($"[Status2] BoardThickness Changed: {_boardThicknessStatus} -> {newS2.BoardThicknessStatus}");
+            if (_currentRecipeName != newS2.CurrentRecipeName) Log($"[Status2] RecipeName Changed: {_currentRecipeName} -> {newS2.CurrentRecipeName}");
+
+            _redLightStatus = newS2.RedLightStatus;
+            _yellowLightStatus = newS2.YellowLightStatus;
+            _greenLightStatus = newS2.GreenLightStatus;
+            _upstreamWaitingStatus = newS2.UpstreamWaitingStatus;
+            _downstreamWaitingStatus = newS2.DownstreamWaitingStatus;
+            _dischargeRate = newS2.DischargeRate;
+            _stopTime = newS2.StopTime;
+            _processingCounter = newS2.ProcessingCounter;
+            _retainedBoardCount = newS2.RetainedBoardCount;
+            _currentRecipeNo = newS2.CurrentRecipeNo;
+            _boardThicknessStatus = newS2.BoardThicknessStatus;
+            _currentRecipeName = newS2.CurrentRecipeName;
+
+            // 3. Update Alarm
+            var newAlarm = form.AlarmResult;
+            for (int i = 0; i < 12 && i < newAlarm.ErrorCodes.Length; i++)
             {
-               Log($"[Status1] Alarm Changed: {_alarmStatus} -> {form1.AlarmStatus}");
-            }
-
-            if (_machineStatus != form1.MachineStatus)
-            {
-               Log($"[Status1] MachineStatus Changed: {_machineStatus} -> {form1.MachineStatus}");
-            }
-
-            if (_actionStatus != form1.ActionStatus)
-            {
-               Log($"[Status1] ActionStatus Changed: {_actionStatus} -> {form1.ActionStatus}");
-            }
-
-            if (_waitingStatus != form1.WaitingStatus)
-            {
-               Log($"[Status1] WaitingStatus Changed: {_waitingStatus} -> {form1.WaitingStatus}");
-            }
-
-            if (_controlStatus != form1.ControlStatus)
-            {
-               Log($"[Status1] ControlStatus Changed: {_controlStatus} -> {form1.ControlStatus}");
-            }
-
-            _alarmStatus = form1.AlarmStatus;
-            _machineStatus = form1.MachineStatus;
-            _actionStatus = form1.ActionStatus;
-            _waitingStatus = form1.WaitingStatus;
-            _controlStatus = form1.ControlStatus;
-         }
-
-         // 2. Status2 Settings
-         using (var form2 = new CommonReportStatus2SettingsForm(
-                   _redLightStatus, _yellowLightStatus, _greenLightStatus,
-                   _upstreamWaitingStatus, _downstreamWaitingStatus,
-                   _dischargeRate, _stopTime, _processingCounter,
-                   _retainedBoardCount, _currentRecipeNo, _boardThicknessStatus,
-                   _currentRecipeName))
-         {
-            if (form2.ShowDialog(this) != DialogResult.OK)
-            {
-               return;
-            }
-
-            // Check for Status2 Changes
-            if (_redLightStatus != form2.RedLightStatus)
-            {
-               Log($"[Status2] RedLight Changed: {_redLightStatus} -> {form2.RedLightStatus}");
-            }
-
-            if (_yellowLightStatus != form2.YellowLightStatus)
-            {
-               Log($"[Status2] YellowLight Changed: {_yellowLightStatus} -> {form2.YellowLightStatus}");
-            }
-
-            if (_greenLightStatus != form2.GreenLightStatus)
-            {
-               Log($"[Status2] GreenLight Changed: {_greenLightStatus} -> {form2.GreenLightStatus}");
-            }
-
-            if (_upstreamWaitingStatus != form2.UpstreamWaitingStatus)
-            {
-               Log($"[Status2] UpstreamWaiting Changed: {_upstreamWaitingStatus} -> {form2.UpstreamWaitingStatus}");
-            }
-
-            if (_downstreamWaitingStatus != form2.DownstreamWaitingStatus)
-            {
-               Log($"[Status2] DownstreamWaiting Changed: {_downstreamWaitingStatus} -> {form2.DownstreamWaitingStatus}");
-            }
-
-            if (_dischargeRate != form2.DischargeRate)
-            {
-               Log($"[Status2] DischargeRate Changed: {_dischargeRate} -> {form2.DischargeRate}");
-            }
-
-            if (_stopTime != form2.StopTime)
-            {
-               Log($"[Status2] StopTime Changed: {_stopTime} -> {form2.StopTime}");
-            }
-
-            if (_processingCounter != form2.ProcessingCounter)
-            {
-               Log($"[Status2] ProcessingCounter Changed: {_processingCounter} -> {form2.ProcessingCounter}");
-            }
-
-            if (_retainedBoardCount != form2.RetainedBoardCount)
-            {
-               Log($"[Status2] RetainedBoardCount Changed: {_retainedBoardCount} -> {form2.RetainedBoardCount}");
-            }
-
-            if (_currentRecipeNo != form2.CurrentRecipeNo)
-            {
-               Log($"[Status2] CurrentRecipeNo Changed: {_currentRecipeNo} -> {form2.CurrentRecipeNo}");
-            }
-
-            if (_boardThicknessStatus != form2.BoardThicknessStatus)
-            {
-               Log($"[Status2] BoardThickness Changed: {_boardThicknessStatus} -> {form2.BoardThicknessStatus}");
-            }
-
-            if (_currentRecipeName != form2.CurrentRecipeName)
-            {
-               Log($"[Status2] RecipeName Changed: {_currentRecipeName} -> {form2.CurrentRecipeName}");
-            }
-
-            _redLightStatus = form2.RedLightStatus;
-            _yellowLightStatus = form2.YellowLightStatus;
-            _greenLightStatus = form2.GreenLightStatus;
-            _upstreamWaitingStatus = form2.UpstreamWaitingStatus;
-            _downstreamWaitingStatus = form2.DownstreamWaitingStatus;
-            _dischargeRate = form2.DischargeRate;
-            _stopTime = form2.StopTime;
-            _processingCounter = form2.ProcessingCounter;
-            _retainedBoardCount = form2.RetainedBoardCount;
-            _currentRecipeNo = form2.CurrentRecipeNo;
-            _boardThicknessStatus = form2.BoardThicknessStatus;
-            _currentRecipeName = form2.CurrentRecipeName;
-         }
-
-         // 3. Alarm Settings
-         using (var formAlarm = new CommonReportAlarmSettingsForm(_errorCodes))
-         {
-            if (formAlarm.ShowDialog(this) != DialogResult.OK)
-            {
-               return;
-            }
-
-            for (int i = 0; i < 12; i++)
-            {
-               if (_errorCodes[i] != formAlarm.ErrorCodes[i])
+               if (_errorCodes[i] != newAlarm.ErrorCodes[i])
                {
-                  Log($"[Alarm] Error Code {i + 1} Changed: {_errorCodes[i]} -> {formAlarm.ErrorCodes[i]}");
+                  Log($"[Alarm] Error Code {i + 1} Changed: {_errorCodes[i]} -> {newAlarm.ErrorCodes[i]}");
+                  _errorCodes[i] = newAlarm.ErrorCodes[i];
                }
             }
 
-            _errorCodes = formAlarm.ErrorCodes;
-         }
+            Log("Common Reporting Settings Updated.");
 
-         // 取消強制寫入，僅紀錄變更
-         Log("Common Reporting Settings Updated.");
-
-         // 如果尚未啟動上報，則啟動定時器
-         if (_updateTimer == null)
-         {
-            StartCommonReporting();
+            if (_updateTimer == null)
+            {
+               StartCommonReporting();
+            }
          }
       }
 

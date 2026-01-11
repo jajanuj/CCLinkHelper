@@ -14,6 +14,20 @@ namespace WindowsFormsApp1.CCLink.Models
       /// </summary>
       public ushort[] ErrorCodes { get; set; } = new ushort[12];
 
+        public CommonReportAlarm() { }
+
+        public CommonReportAlarm(ushort[] codes)
+        {
+            if (codes != null && codes.Length == 12)
+            {
+                ErrorCodes = codes;
+            }
+            else if (codes != null)
+            {
+                Array.Copy(codes, ErrorCodes, Math.Min(codes.Length, 12));
+            }
+        }
+
       #region Equality Members
 
       public bool Equals(CommonReportAlarm other)
