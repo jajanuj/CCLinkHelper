@@ -15,8 +15,7 @@ namespace WindowsFormsApp1.CCLink.Forms
 
       private void InitializeComponent()
       {
-         this.label1 = new System.Windows.Forms.Label();
-         this.txtIp = new System.Windows.Forms.TextBox();
+
          this.label2 = new System.Windows.Forms.Label();
          this.numStation = new System.Windows.Forms.NumericUpDown();
          this.label3 = new System.Windows.Forms.Label();
@@ -56,22 +55,7 @@ namespace WindowsFormsApp1.CCLink.Forms
          ((System.ComponentModel.ISupportInitialize)(this.numRetryBackoff)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.numTimeSync)).BeginInit();
          this.SuspendLayout();
-         // 
-         // label1
-         // 
-         this.label1.AutoSize = true;
-         this.label1.Location = new System.Drawing.Point(12, 15);
-         this.label1.Name = "label1";
-         this.label1.Size = new System.Drawing.Size(42, 12);
-         this.label1.TabIndex = 0;
-         this.label1.Text = "PLC IP:";
-         // 
-         // txtIp
-         // 
-         this.txtIp.Location = new System.Drawing.Point(80, 12);
-         this.txtIp.Name = "txtIp";
-         this.txtIp.Size = new System.Drawing.Size(100, 22);
-         this.txtIp.TabIndex = 1;
+
          // 
          // label2
          // 
@@ -357,8 +341,7 @@ namespace WindowsFormsApp1.CCLink.Forms
          this.Controls.Add(this.label3);
          this.Controls.Add(this.numStation);
          this.Controls.Add(this.label2);
-         this.Controls.Add(this.txtIp);
-         this.Controls.Add(this.label1);
+
          this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
          this.MaximizeBox = false;
          this.MinimizeBox = false;
@@ -379,8 +362,7 @@ namespace WindowsFormsApp1.CCLink.Forms
 
       }
 
-      private System.Windows.Forms.Label label1;
-      private System.Windows.Forms.TextBox txtIp;
+
       private System.Windows.Forms.Label label2;
       private System.Windows.Forms.NumericUpDown numStation;
       private System.Windows.Forms.Label label3;

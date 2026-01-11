@@ -43,16 +43,23 @@ namespace WindowsFormsApp1.CCLink.Services
       private readonly SynchronizationContext _syncContext;
       private readonly List<ScanRange> _userScanRanges = new List<ScanRange>();
       private bool _disposed;
-      private int _mergeGapTolerance = 300;
       private List<BatchRead> _pollingPlan = new List<BatchRead>();
 
       // Polling & Cache
       private TimeSpan _pollInterval;
       private int _resolvedPath = -1;
+      private readonly int _mergeGapTolerance = 4; // 合併相鄰掃描範圍的容差
 
       // Worker
       private CancellationTokenSource _workerCts;
       private Task _workerTask;
+
+      #endregion
+
+      #region Private Properties
+
+      private int NetworkNo => _settings.NetworkNo;
+      private int StationNo => _settings.StationNo;
 
       #endregion
 
@@ -83,12 +90,6 @@ namespace WindowsFormsApp1.CCLink.Services
 
             _pollInterval = value;
          }
-      }
-
-      public int MergeGapTolerance
-      {
-         get => _mergeGapTolerance;
-         set => _mergeGapTolerance = Math.Max(0, value);
       }
 
       #endregion
@@ -295,7 +296,7 @@ namespace WindowsFormsApp1.CCLink.Services
          int size = alignedWords;
          var buffer = new short[(size + 1) / 2];
 
-         int rc = _api.ReceiveEx(path, 1, 1, devCode, alignedStart, ref size, buffer);
+         int rc = _api.ReceiveEx(path, NetworkNo, StationNo, devCode, alignedStart, ref size, buffer);
          UpdateConnectionStatus(rc);
 
          if (rc == 0)
@@ -320,7 +321,7 @@ namespace WindowsFormsApp1.CCLink.Services
       {
          int size = batch.Words * 2;
          var dest = new short[batch.Words];
-         int rc = _api.ReceiveEx(_resolvedPath, 0, 0, MapDeviceCode(batch.Kind), batch.Start, ref size, dest);
+         int rc = _api.ReceiveEx(_resolvedPath, NetworkNo, StationNo, MapDeviceCode(batch.Kind), batch.Start, ref size, dest);
          UpdateConnectionStatus(rc);
 
          if (rc == 0 && _deviceMemory.ContainsKey(batch.Kind))
@@ -510,7 +511,7 @@ namespace WindowsFormsApp1.CCLink.Services
             lock (_apiLock)
             {
                int path;
-               int rc = _api.Open((short)_settings.Port, OpenMode, out path);
+               int rc = _api.Open((short)_settings.Channel, OpenMode, out path);
                if (rc != 0)
                {
                   throw MelsecException.FromCode(rc, nameof(_api.Open));
@@ -520,7 +521,7 @@ namespace WindowsFormsApp1.CCLink.Services
                _deviceMemory.Clear();
 
                _status.IsConnected = true;
-               _status.Channel = _settings.Port;
+               _status.Channel = _settings.Channel;
                _status.LastUpdated = DateTime.UtcNow;
 
                UpdatePollingPlanInternal();
@@ -570,7 +571,7 @@ namespace WindowsFormsApp1.CCLink.Services
          {
             lock (_apiLock)
             {
-               int rc = _api.ReceiveEx(_resolvedPath, 0, 0, deviceCode, alignedStart, ref size, buffer);
+               int rc = _api.ReceiveEx(_resolvedPath, NetworkNo, StationNo, deviceCode, alignedStart, ref size, buffer);
                if (rc != 0)
                {
                   throw MelsecException.FromCode(rc, nameof(_api.ReceiveEx));
@@ -593,7 +594,7 @@ namespace WindowsFormsApp1.CCLink.Services
          {
             lock (_apiLock)
             {
-               int rc = _api.SendEx(_resolvedPath, 0, 0, deviceCode, parsed.Start, ref size, src);
+               int rc = _api.SendEx(_resolvedPath, NetworkNo, StationNo, deviceCode, parsed.Start, ref size, src);
                if (rc != 0)
                {
                   throw MelsecException.FromCode(rc, nameof(_api.SendEx));
@@ -616,7 +617,7 @@ namespace WindowsFormsApp1.CCLink.Services
          {
             lock (_apiLock)
             {
-               int rc = _api.ReceiveEx(_resolvedPath, 0, 0, deviceCode, parsed.Start, ref size, buffer);
+               int rc = _api.ReceiveEx(_resolvedPath, NetworkNo, StationNo, deviceCode, parsed.Start, ref size, buffer);
                if (rc != 0)
                {
                   throw MelsecException.FromCode(rc, nameof(_api.ReceiveEx));
@@ -638,7 +639,7 @@ namespace WindowsFormsApp1.CCLink.Services
          {
             lock (_apiLock)
             {
-               int rc = _api.SendEx(_resolvedPath, 0, 0, deviceCode, parsed.Start, ref size, src);
+               int rc = _api.SendEx(_resolvedPath, NetworkNo, StationNo, deviceCode, parsed.Start, ref size, src);
                if (rc != 0)
                {
                   throw MelsecException.FromCode(rc, nameof(_api.SendEx));

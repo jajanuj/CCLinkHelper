@@ -28,10 +28,10 @@ namespace WindowsFormsApp1.CCLink.Forms
 
       private void LoadToUI()
       {
-         txtIp.Text = Settings.Ip ?? "127.0.0.1";
-         numPort.Value = Settings.Port;
-         numNetwork.Value = Settings.Network;
-         numStation.Value = Settings.Station;
+
+         numPort.Value = Settings.Channel;
+         numNetwork.Value = Settings.NetworkNo;
+         numStation.Value = Settings.StationNo;
          numHeartbeat.Value = Settings.HeartbeatIntervalMs;
          numTimeout.Value = Settings.TimeoutMs;
          numRetryCount.Value = Settings.RetryCount;
@@ -54,10 +54,10 @@ namespace WindowsFormsApp1.CCLink.Forms
 
       private void btnSave_Click(object sender, EventArgs e)
       {
-         Settings.Ip = txtIp.Text;
-         Settings.Port = (int)numPort.Value;
-         Settings.Network = (int)numNetwork.Value;
-         Settings.Station = (int)numStation.Value;
+
+         Settings.Channel = (int)numPort.Value;
+         Settings.NetworkNo = (int)numNetwork.Value;
+         Settings.StationNo = (int)numStation.Value;
          Settings.HeartbeatIntervalMs = (int)numHeartbeat.Value;
          Settings.TimeoutMs = (int)numTimeout.Value;
          Settings.RetryCount = (int)numRetryCount.Value;

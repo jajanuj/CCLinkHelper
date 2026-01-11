@@ -29,10 +29,10 @@ namespace WindowsFormsApp1.CCLink.Models
          if (loaded != null)
          {
             // 複製屬性
-            Ip = loaded.Ip;
-            Port = loaded.Port;
-            Network = loaded.Network;
-            Station = loaded.Station;
+
+            Channel = loaded.Channel;
+            NetworkNo = loaded.NetworkNo;
+            StationNo = loaded.StationNo;
             TimeoutMs = loaded.TimeoutMs;
             RetryCount = loaded.RetryCount;
             RetryBackoffMs = loaded.RetryBackoffMs;
@@ -54,17 +54,14 @@ namespace WindowsFormsApp1.CCLink.Models
 
       #region Properties
 
-      /// <summary>PLC/控制卡的 IP 位址。</summary>
-      public string Ip { get; set; }
+      /// <summary>通訊通道。</summary>
+      public int Channel { get; set; }
 
-      /// <summary>通訊埠或通道編號。</summary>
-      public int Port { get; set; }
+      /// <summary>Network 編號。</summary>
+      public int NetworkNo { get; set; }
 
-      /// <summary>Network 編號（依現場設定）。</summary>
-      public int Network { get; set; }
-
-      /// <summary>Station 編號（依現場設定）。</summary>
-      public int Station { get; set; }
+      /// <summary>Station 編號。</summary>
+      public int StationNo { get; set; }
 
       /// <summary>逾時毫秒數（mdSetTimeout）。</summary>
       public int TimeoutMs { get; set; } = 3000;

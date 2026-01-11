@@ -58,8 +58,8 @@ namespace WindowsFormsApp1.CCLink.Controllers
          await _lock.WaitAsync(ct).ConfigureAwait(false);
          try
          {
-            short chan = (short)_settings.Port; // 依現場設定對應通道
-            short mode = 1;                     // 依手冊定義（示例：1=開啟）
+            short chan = (short)_settings.Channel; // 依現場設定對應通道
+            short mode = 1;                        // 依手冊定義（示例：1=開啟）
             int path;
             var rc = _api.Open(chan, mode, out path);
             if (rc != 0)
