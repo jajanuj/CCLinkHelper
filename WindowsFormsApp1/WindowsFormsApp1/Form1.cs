@@ -8,6 +8,7 @@ using WindowsFormsApp1.CCLink.Controllers;
 using WindowsFormsApp1.CCLink.Interfaces;
 using WindowsFormsApp1.CCLink.Models;
 using WindowsFormsApp1.CCLink.Services;
+using Timer = System.Threading.Timer;
 
 namespace WindowsFormsApp1
 {
@@ -16,23 +17,48 @@ namespace WindowsFormsApp1
       #region Fields
 
       private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-      private ICCLinkController _controller;
-      private MelsecHelper _helper;
+      private ushort _actionStatus = 2; // 預設：基板搬送中
       private IMelsecApiAdapter _adapter;
+
+      // 定期上報 Status1 設定值
+      private ushort _alarmStatus = 4; // 預設：無警報
+      private ushort _boardThicknessStatus = 0;
+      private ICCLinkController _controller;
+      private ushort _controlStatus = 1; // 預設：自動運轉
+      private string _currentRecipeName = "DEFAULT_RECIPE";
+      private ushort _currentRecipeNo = 1;
+      private ushort _dischargeRate = 85; // 預設：85%
+      private ushort _downstreamWaitingStatus = 1;
+
+      // 定期上報 Alarm 設定值（12個錯誤代碼）
+      private ushort[] _errorCodes = new ushort[12];
+
+      // 事件綁定標記
+      private bool _eventsBound = false;
+      private ushort _greenLightStatus = 3; // 預設：閃爍
+      private MelsecHelper _helper;
+
+      // 連接狀態標記
+      private bool _isOpened = false;
+      private ushort _machineStatus = 4; // 預設：生產中
       private int _path = -1;
+      private uint _processingCounter = 0;
+
+      // 定期上報 Status2 設定值
+      private ushort _redLightStatus = 0;
+      private ushort _retainedBoardCount = 0;
+
+      // 掃描監控視窗 (單例)
+      private ScanMonitorForm _scanMonitorForm;
       private ControllerSettings _settings;
 
       // PLC 模擬器
       private PlcSimulator _simulator;
-
-      // 掃描監控視窗 (單例)
-      private ScanMonitorForm _scanMonitorForm;
-
-      // 連接狀態標記
-      private bool _isOpened = false;
-
-      // 事件綁定標記
-      private bool _eventsbound = false;
+      private ushort _stopTime = 0;
+      private Timer _updateTimer;
+      private ushort _upstreamWaitingStatus = 1;
+      private ushort _waitingStatus = 1; // 預設：無等待
+      private ushort _yellowLightStatus = 0;
 
       #endregion
 
@@ -71,6 +97,43 @@ namespace WindowsFormsApp1
          lblStatus.BackColor = connected ? System.Drawing.Color.LightGreen : System.Drawing.Color.LightCoral;
       }
 
+      public void StartCommonReporting()
+      {
+         // 每 100ms 更新一次（頻率可調整）
+         _updateTimer = new Timer(_ =>
+         {
+            // 更新 Status1（機台狀態）
+            _helper.UpdateCommonReportStatus1(
+               alarmStatus: GetCurrentAlarmStatus(),     // 1-4
+               machineStatus: GetCurrentMachineStatus(), // 1-6
+               actionStatus: GetCurrentActionStatus(),   // 1,2,99
+               waitingStatus: GetCurrentWaitingStatus(), // 1-5,99
+               controlStatus: GetCurrentControlStatus()  // 1-5,99
+            );
+
+            // 更新 Status2（詳細狀態）
+            _helper.UpdateCommonReportStatus2(
+               redLightStatus: GetRedLightStatus(),       // 0-3
+               yellowLightStatus: GetYellowLightStatus(), // 0-3
+               greenLightStatus: GetGreenLightStatus(),   // 0-3
+               upstreamWaitingStatus: GetUpstreamWaiting(),
+               downstreamWaitingStatus: GetDownstreamWaiting(),
+               dischargeRate: GetDischargeRate(),
+               stopTime: GetStopTime(),
+               processingCounter: GetProcessingCounter(), // UINT32
+               retainedBoardCount: GetRetainedBoardCount(),
+               currentRecipeNo: GetCurrentRecipeNo(),
+               boardThicknessStatus: GetBoardThickness(),
+               uldFlag: 0,                               // 固定填入 0
+               currentRecipeName: GetCurrentRecipeName() // 最多100字元
+            );
+
+            // 更新 Alarm（警報資料）
+            ushort[] errorCodes = GetCurrentErrorCodes(); // 12個錯誤代碼
+            _helper.UpdateCommonReportAlarm(errorCodes);
+         }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
+      }
+
       #endregion
 
       #region Protected Methods
@@ -95,10 +158,33 @@ namespace WindowsFormsApp1
 
       #region Private Methods
 
+      private ushort GetCurrentControlStatus() => _controlStatus;
+      private ushort GetCurrentWaitingStatus() => _waitingStatus;
+      private ushort GetCurrentActionStatus() => _actionStatus;
+      private ushort GetCurrentMachineStatus() => _machineStatus;
+      private ushort GetCurrentAlarmStatus() => _alarmStatus;
+
+      // Status2 資料生成方法
+      private ushort GetRedLightStatus() => _redLightStatus;
+      private ushort GetYellowLightStatus() => _yellowLightStatus;
+      private ushort GetGreenLightStatus() => _greenLightStatus;
+      private ushort GetUpstreamWaiting() => _upstreamWaitingStatus;
+      private ushort GetDownstreamWaiting() => _downstreamWaitingStatus;
+      private ushort GetDischargeRate() => _dischargeRate;
+      private ushort GetStopTime() => _stopTime;
+      private uint GetProcessingCounter() => _processingCounter;
+      private ushort GetRetainedBoardCount() => _retainedBoardCount;
+      private ushort GetCurrentRecipeNo() => _currentRecipeNo;
+      private ushort GetBoardThickness() => _boardThicknessStatus;
+      private string GetCurrentRecipeName() => _currentRecipeName;
+
+      // Alarm 資料生成方法
+      private ushort[] GetCurrentErrorCodes() => _errorCodes;
+
       private void BindingHelperEvent()
       {
          // 防止重複綁定
-         if (_eventsbound || _helper == null)
+         if (_eventsBound || _helper == null)
          {
             return;
          }
@@ -113,7 +199,7 @@ namespace WindowsFormsApp1
          _helper.HeartbeatFailed += () => Log("[Helper] 心跳中斷 | Heartbeat failed");
          _helper.HeartbeatSucceeded += () => Log("[Helper] 心跳成功 | Heartbeat success");
 
-         _eventsbound = true;
+         _eventsBound = true;
       }
 
       private void SetupLogContextMenu()
@@ -182,8 +268,6 @@ namespace WindowsFormsApp1
             _helper = new MelsecHelper(_adapter, _settings, logger: s => Log($"[Helper] {s}"));
             _controller = _helper;
 
-
-
             // 綁定事件
             BindingHelperEvent();
 
@@ -197,18 +281,18 @@ namespace WindowsFormsApp1
             await _helper.OpenAsync(_cts.Token).ConfigureAwait(false);
 
             _isOpened = true;
-            
+
             BeginInvoke((Action)(() =>
             {
                // 互鎖: 開啟後禁用 Open 按鈕和 RadioButton，啟用 Close 按鈕
                grpConnectionMode.Enabled = false;
                btnClose.Enabled = true;
-               
+
                if (_scanMonitorForm != null && !_scanMonitorForm.IsDisposed)
                {
                   // 更新 Monitor 視窗的 Helper 參照，確保使用新的連線實例
                   _scanMonitorForm.SetHelper(_helper);
-                  
+
                   // 自動啟動監控
                   _scanMonitorForm.StartMonitoring();
                }
@@ -251,7 +335,7 @@ namespace WindowsFormsApp1
                try
                {
                   var formType = _scanMonitorForm.GetType();
-                  
+
                   // 停止 Timer
                   var timerField = formType.GetField("_updateTimer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                   if (timerField != null)
@@ -263,18 +347,19 @@ namespace WindowsFormsApp1
                         Log("[Close] 已暫停 ScanMonitor Timer | ScanMonitor timer stopped");
                      }
                   }
-                  
+
                   // 重置按鈕狀態：啟用 Start 按鈕，禁用 Stop 按鈕
                   var btnStartField = formType.GetField("btnStartUpdate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                   var btnStopField = formType.GetField("btnStopUpdate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                  var nudIntervalField = formType.GetField("nudUpdateInterval", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                  
+                  var nudIntervalField = formType.GetField("nudUpdateInterval",
+                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
                   if (btnStartField != null && btnStopField != null)
                   {
                      var btnStart = btnStartField.GetValue(_scanMonitorForm) as Button;
                      var btnStop = btnStopField.GetValue(_scanMonitorForm) as Button;
                      var nudInterval = nudIntervalField?.GetValue(_scanMonitorForm) as NumericUpDown;
-                     
+
                      if (btnStart != null && btnStop != null)
                      {
                         btnStart.Enabled = true;
@@ -302,7 +387,7 @@ namespace WindowsFormsApp1
             }
 
             _isOpened = false;
-            _eventsbound = false; // 重置事件綁定標記
+            _eventsBound = false; // 重置事件綁定標記
 
             BeginInvoke((Action)(() =>
             {
@@ -318,10 +403,7 @@ namespace WindowsFormsApp1
          }
          finally
          {
-            BeginInvoke((Action)(() =>
-            {
-               UseWaitCursor = false;
-            }));
+            BeginInvoke((Action)(() => { UseWaitCursor = false; }));
          }
       }
 
@@ -543,6 +625,171 @@ namespace WindowsFormsApp1
             _scanMonitorForm.BringToFront();
             Log("掃描監控視窗已存在,切換至前景 | Scan monitor window already exists, bringing to front");
          }
+      }
+
+      private void btnSetCommonReporting_Click(object sender, EventArgs e)
+      {
+         // 1. Status1 Settings
+         using (var form1 = new CommonReportStatus1SettingsForm(_alarmStatus, _machineStatus, _actionStatus, _waitingStatus, _controlStatus))
+         {
+            if (form1.ShowDialog(this) != DialogResult.OK)
+            {
+               return;
+            }
+
+            // Check for Status1 Changes before updates
+            if (_alarmStatus != form1.AlarmStatus)
+            {
+               Log($"[Status1] Alarm Changed: {_alarmStatus} -> {form1.AlarmStatus}");
+            }
+
+            if (_machineStatus != form1.MachineStatus)
+            {
+               Log($"[Status1] MachineStatus Changed: {_machineStatus} -> {form1.MachineStatus}");
+            }
+
+            if (_actionStatus != form1.ActionStatus)
+            {
+               Log($"[Status1] ActionStatus Changed: {_actionStatus} -> {form1.ActionStatus}");
+            }
+
+            if (_waitingStatus != form1.WaitingStatus)
+            {
+               Log($"[Status1] WaitingStatus Changed: {_waitingStatus} -> {form1.WaitingStatus}");
+            }
+
+            if (_controlStatus != form1.ControlStatus)
+            {
+               Log($"[Status1] ControlStatus Changed: {_controlStatus} -> {form1.ControlStatus}");
+            }
+
+            _alarmStatus = form1.AlarmStatus;
+            _machineStatus = form1.MachineStatus;
+            _actionStatus = form1.ActionStatus;
+            _waitingStatus = form1.WaitingStatus;
+            _controlStatus = form1.ControlStatus;
+         }
+
+         // 2. Status2 Settings
+         using (var form2 = new CommonReportStatus2SettingsForm(
+                   _redLightStatus, _yellowLightStatus, _greenLightStatus,
+                   _upstreamWaitingStatus, _downstreamWaitingStatus,
+                   _dischargeRate, _stopTime, _processingCounter,
+                   _retainedBoardCount, _currentRecipeNo, _boardThicknessStatus,
+                   _currentRecipeName))
+         {
+            if (form2.ShowDialog(this) != DialogResult.OK)
+            {
+               return;
+            }
+
+            // Check for Status2 Changes
+            if (_redLightStatus != form2.RedLightStatus)
+            {
+               Log($"[Status2] RedLight Changed: {_redLightStatus} -> {form2.RedLightStatus}");
+            }
+
+            if (_yellowLightStatus != form2.YellowLightStatus)
+            {
+               Log($"[Status2] YellowLight Changed: {_yellowLightStatus} -> {form2.YellowLightStatus}");
+            }
+
+            if (_greenLightStatus != form2.GreenLightStatus)
+            {
+               Log($"[Status2] GreenLight Changed: {_greenLightStatus} -> {form2.GreenLightStatus}");
+            }
+
+            if (_upstreamWaitingStatus != form2.UpstreamWaitingStatus)
+            {
+               Log($"[Status2] UpstreamWaiting Changed: {_upstreamWaitingStatus} -> {form2.UpstreamWaitingStatus}");
+            }
+
+            if (_downstreamWaitingStatus != form2.DownstreamWaitingStatus)
+            {
+               Log($"[Status2] DownstreamWaiting Changed: {_downstreamWaitingStatus} -> {form2.DownstreamWaitingStatus}");
+            }
+
+            if (_dischargeRate != form2.DischargeRate)
+            {
+               Log($"[Status2] DischargeRate Changed: {_dischargeRate} -> {form2.DischargeRate}");
+            }
+
+            if (_stopTime != form2.StopTime)
+            {
+               Log($"[Status2] StopTime Changed: {_stopTime} -> {form2.StopTime}");
+            }
+
+            if (_processingCounter != form2.ProcessingCounter)
+            {
+               Log($"[Status2] ProcessingCounter Changed: {_processingCounter} -> {form2.ProcessingCounter}");
+            }
+
+            if (_retainedBoardCount != form2.RetainedBoardCount)
+            {
+               Log($"[Status2] RetainedBoardCount Changed: {_retainedBoardCount} -> {form2.RetainedBoardCount}");
+            }
+
+            if (_currentRecipeNo != form2.CurrentRecipeNo)
+            {
+               Log($"[Status2] CurrentRecipeNo Changed: {_currentRecipeNo} -> {form2.CurrentRecipeNo}");
+            }
+
+            if (_boardThicknessStatus != form2.BoardThicknessStatus)
+            {
+               Log($"[Status2] BoardThickness Changed: {_boardThicknessStatus} -> {form2.BoardThicknessStatus}");
+            }
+
+            if (_currentRecipeName != form2.CurrentRecipeName)
+            {
+               Log($"[Status2] RecipeName Changed: {_currentRecipeName} -> {form2.CurrentRecipeName}");
+            }
+
+            _redLightStatus = form2.RedLightStatus;
+            _yellowLightStatus = form2.YellowLightStatus;
+            _greenLightStatus = form2.GreenLightStatus;
+            _upstreamWaitingStatus = form2.UpstreamWaitingStatus;
+            _downstreamWaitingStatus = form2.DownstreamWaitingStatus;
+            _dischargeRate = form2.DischargeRate;
+            _stopTime = form2.StopTime;
+            _processingCounter = form2.ProcessingCounter;
+            _retainedBoardCount = form2.RetainedBoardCount;
+            _currentRecipeNo = form2.CurrentRecipeNo;
+            _boardThicknessStatus = form2.BoardThicknessStatus;
+            _currentRecipeName = form2.CurrentRecipeName;
+         }
+
+         // 3. Alarm Settings
+         using (var formAlarm = new CommonReportAlarmSettingsForm(_errorCodes))
+         {
+            if (formAlarm.ShowDialog(this) != DialogResult.OK)
+            {
+               return;
+            }
+
+            for (int i = 0; i < 12; i++)
+            {
+               if (_errorCodes[i] != formAlarm.ErrorCodes[i])
+               {
+                  Log($"[Alarm] Error Code {i + 1} Changed: {_errorCodes[i]} -> {formAlarm.ErrorCodes[i]}");
+               }
+            }
+
+            _errorCodes = formAlarm.ErrorCodes;
+         }
+
+         // 取消強制寫入，僅紀錄變更
+         Log("Common Reporting Settings Updated.");
+
+         // 如果尚未啟動上報，則啟動定時器
+         if (_updateTimer == null)
+         {
+            StartCommonReporting();
+         }
+      }
+
+      private void btnStartCommonReporting_Click(object sender, EventArgs e)
+      {
+         StartCommonReporting();
       }
 
       #endregion

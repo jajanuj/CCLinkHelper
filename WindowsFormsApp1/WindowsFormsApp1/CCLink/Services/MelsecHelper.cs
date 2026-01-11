@@ -38,6 +38,7 @@ namespace WindowsFormsApp1.CCLink.Services
 
       // 同步 / 工作緒
       private readonly object _apiLock = new object();
+      private readonly object _commonReportLock = new object();
 
       // 設備記憶體快取 (Key: Kind, Value: short[] array representing the device memory)
       // [Fix] 改用 Dictionary，完全由 _apiLock 保護，避免 ConcurrentDictionary 的替換競爭
@@ -45,12 +46,12 @@ namespace WindowsFormsApp1.CCLink.Services
 
       // 追蹤上次的 ArrayID，用於偵測陣列更換 (Key: "Kind:Address")
       private readonly Dictionary<string, int> _lastArrayIds = new Dictionary<string, int>();
-      
-      // 追蹤 UpdateBitCache 上次的 ArrayID (Key: "Kind")
-      private readonly Dictionary<string, int> _lastUpdateArrayIds = new Dictionary<string, int>();
-      
+
       // 追蹤 PollBitDeviceBatch 上次的 buffer 內容 (Key: "Kind:Start")
       private readonly Dictionary<string, string> _lastPollBuffers = new Dictionary<string, string>();
+
+      // 追蹤 UpdateBitCache 上次的 ArrayID (Key: "Kind")
+      private readonly Dictionary<string, int> _lastUpdateArrayIds = new Dictionary<string, int>();
 
       private readonly Action<string> _logger;
       private readonly object _planLock = new object();
@@ -76,6 +77,11 @@ namespace WindowsFormsApp1.CCLink.Services
 
       // 心跳專用的 Task 和 CancellationTokenSource
       private Task _heartbeatTask;
+      private CommonReportAlarm _lastCommonReportAlarm;
+
+      // 定期上報共通資料 - 快取上一次的資料，用於變化檢測
+      private CommonReportStatus1 _lastCommonReportStatus1;
+      private CommonReportStatus2 _lastCommonReportStatus2;
 
       // 心跳觀察快取，避免在無變化時重複宣告成功
       private bool? _lastObservedRequest;
@@ -177,7 +183,8 @@ namespace WindowsFormsApp1.CCLink.Services
          }
 
          _workerCts = new CancellationTokenSource();
-         _workerTask = Task.Run(() => PollingWorkerLoopAsync(_workerCts.Token));
+         var ct = _workerCts.Token; // 先保存 Token，避免競爭條件
+         _workerTask = Task.Run(() => PollingWorkerLoopAsync(ct));
       }
 
       /// <summary>
@@ -186,7 +193,7 @@ namespace WindowsFormsApp1.CCLink.Services
       private void StopPollingWorker()
       {
          _logger?.Invoke("[StopPollingWorker] 開始停止輪詢 | Starting to stop polling...");
-         
+
          try
          {
             var c = Interlocked.Exchange(ref _workerCts, null);
@@ -219,7 +226,7 @@ namespace WindowsFormsApp1.CCLink.Services
                {
                   _logger?.Invoke($"停止輪詢工作緒等待例外 | Exception while waiting for polling worker (Error: {ex.Message})");
                }
-               
+
                try
                {
                   c.Dispose();
@@ -389,7 +396,7 @@ namespace WindowsFormsApp1.CCLink.Services
             {
                return;
             }
-            
+
             foreach (var batch in batches)
             {
                try
@@ -431,7 +438,7 @@ namespace WindowsFormsApp1.CCLink.Services
          // 一次批量讀取
          int totalInBytes = alignedWords; // Each alignedWord represents 8 bits (1 byte)
          int size = totalInBytes;
-         
+
          // Buffer logic: size is in bytes. short[] buffer needs ceil(size/2)
          // e.g., 65 bytes -> 33 shorts.
          var buffer = new short[(size + 1) / 2];
@@ -449,7 +456,7 @@ namespace WindowsFormsApp1.CCLink.Services
                string bufferKey = $"{batch.Kind}:{batch.Start}";
                string lastBuffer;
                bool hasLast = _lastPollBuffers.TryGetValue(bufferKey, out lastBuffer);
-               
+
                if (!hasLast || lastBuffer != bufferPreview)
                {
                   //_logger?.Invoke($"[PollBitDeviceBatch] Buffer 變更 | Buffer changed (BatchStart={batch.Start}, AlignedStart={alignedStart}, RawBuffer=[{bufferPreview}])");
@@ -462,8 +469,8 @@ namespace WindowsFormsApp1.CCLink.Services
             for (int i = 0; i < alignedWords; i++)
             {
                int bufferIndex = i / 2;
-               bool isLowerByte = (i % 2) == 0;
-               
+               bool isLowerByte = i % 2 == 0;
+
                if (bufferIndex < buffer.Length)
                {
                   short raw = buffer[bufferIndex];
@@ -527,7 +534,7 @@ namespace WindowsFormsApp1.CCLink.Services
       private void UpdateBitCache(BatchRead batch, int alignedStart, short[] dest)
       {
          int helperHashCode = RuntimeHelpers.GetHashCode(this);
-         
+
          short[] memory;
          if (!_deviceMemory.TryGetValue(batch.Kind, out memory))
          {
@@ -536,11 +543,11 @@ namespace WindowsFormsApp1.CCLink.Services
          }
 
          int currentArrayId = RuntimeHelpers.GetHashCode(memory);
-         
+
          // 只在 ArrayID 變化時記錄（按 Kind 追蹤）
          int lastArrayId;
          bool hasLast = _lastUpdateArrayIds.TryGetValue(batch.Kind, out lastArrayId);
-         
+
          if (!hasLast || lastArrayId != currentArrayId)
          {
             //_logger?.Invoke($"[UpdateBitCache] ArrayID 變更 | ArrayID changed (HelperID={helperHashCode}, Kind={batch.Kind}, OldID={(hasLast ? lastArrayId.ToString() : "N/A")}, NewID={currentArrayId}, ArrayLen={memory.Length})");
@@ -1277,7 +1284,7 @@ namespace WindowsFormsApp1.CCLink.Services
                      RuntimeHelpers.GetHashCode(newMemory)));
 
                   _deviceMemory[kind] = newMemory;
-                  
+
                   // 更新追蹤的 ArrayID，避免 GetBit 記錄誤報
                   _lastArrayIds[kind] = RuntimeHelpers.GetHashCode(newMemory);
                   _lastUpdateArrayIds[kind] = RuntimeHelpers.GetHashCode(newMemory);
@@ -1285,7 +1292,8 @@ namespace WindowsFormsApp1.CCLink.Services
                else
                {
                   // 容量足夠，不需要重新配置
-                  _logger?.Invoke(string.Format("[UpdatePollingPlan] 記憶體容量足夠，重用現有陣列 | Memory capacity sufficient, reusing existing array (Kind={0}, Size={1}, MaxEnd={2}, ArrayID={3})",
+                  _logger?.Invoke(string.Format(
+                     "[UpdatePollingPlan] 記憶體容量足夠，重用現有陣列 | Memory capacity sufficient, reusing existing array (Kind={0}, Size={1}, MaxEnd={2}, ArrayID={3})",
                      kind, existingMemory.Length, maxEnd, RuntimeHelpers.GetHashCode(existingMemory)));
                }
 
@@ -1383,26 +1391,27 @@ namespace WindowsFormsApp1.CCLink.Services
             // [Fix] 加入 Count 診斷，確認是否與 UpdateBitCache 看到的一致
             int dictCount = _deviceMemory.Count;
             int helperHashCode = RuntimeHelpers.GetHashCode(this);
-            
+
             if (_deviceMemory.ContainsKey(kind))
             {
                var memory = _deviceMemory[kind];
-               
+
                if (address >= 0 && address < memory.Length)
                {
                   short value = memory[address];
                   int currentArrayId = RuntimeHelpers.GetHashCode(memory);
-                  
+
                   // 只在 ArrayID 變化時記錄（按 Kind 追蹤）
                   int lastArrayId;
                   bool hasLast = _lastArrayIds.TryGetValue(kind, out lastArrayId);
-                  
+
                   if (!hasLast || lastArrayId != currentArrayId)
                   {
-                     _logger?.Invoke($"[GetBit] ArrayID 變更 | ArrayID changed (HelperID={helperHashCode}, Kind={kind}, Addr={address}, DictCount={dictCount}, OldID={(hasLast ? lastArrayId.ToString() : "N/A")}, NewID={currentArrayId}, ArrayLen={memory.Length})");
+                     _logger?.Invoke(
+                        $"[GetBit] ArrayID 變更 | ArrayID changed (HelperID={helperHashCode}, Kind={kind}, Addr={address}, DictCount={dictCount}, OldID={(hasLast ? lastArrayId.ToString() : "N/A")}, NewID={currentArrayId}, ArrayLen={memory.Length})");
                      _lastArrayIds[kind] = currentArrayId;
                   }
-                  
+
                   return value != 0;
                }
                else
@@ -1467,14 +1476,14 @@ namespace WindowsFormsApp1.CCLink.Services
          await Task.Run(() =>
          {
             _logger?.Invoke("[OpenAsync] 開始開啟連線 | Starting connection...");
-            
+
             // [Fix] 先確保輪詢工作已完全停止
             if (_workerTask != null)
             {
                _logger?.Invoke("[OpenAsync] 偵測到輪詢工作仍在執行，先停止... | Polling worker still running, stopping...");
                StopPollingWorker();
             }
-            
+
             // [Fix] 使用單一鎖保護整個初始化過程
             lock (_apiLock)
             {
@@ -1500,19 +1509,20 @@ namespace WindowsFormsApp1.CCLink.Services
                _status.Channel = _settings.Port;
                _status.LastUpdated = DateTime.UtcNow;
                _logger?.Invoke($"[OpenAsync] PLC 通訊路徑已開啟 | PLC path opened (Path={path}, Channel={_settings.Port})");
-               
+
                // [Fix] 在 _apiLock 內重新初始化輪詢計畫，確保記憶體陣列在鎖內建立完成
                _logger?.Invoke("[OpenAsync] 準備重建輪詢計畫 | Rebuilding polling plan...");
                UpdatePollingPlanInternal();
                _logger?.Invoke($"[OpenAsync] 輪詢計畫重建完成 | Polling plan rebuilt (MemCount={_deviceMemory.Count})");
             }
-            
+
             // [Fix] 在 _apiLock 外啟動輪詢工作，避免死鎖
             // 此時記憶體已完全初始化，可以安全地開始輪詢
             if (_workerTask == null)
             {
                _workerCts = new CancellationTokenSource();
-               _workerTask = Task.Run(() => PollingWorkerLoopAsync(_workerCts.Token));
+               var workerToken = _workerCts.Token; // 先保存 Token，避免競爭條件
+               _workerTask = Task.Run(() => PollingWorkerLoopAsync(workerToken));
                _logger?.Invoke("[OpenAsync] 輪詢工作已啟動 | Polling worker started");
             }
 
@@ -1523,11 +1533,11 @@ namespace WindowsFormsApp1.CCLink.Services
       public async Task CloseAsync(CancellationToken ct = default)
       {
          _logger?.Invoke("[CloseAsync] 準備關閉連線 | Preparing to close connection...");
-         
+
          // [Fix] 先停止輪詢和心跳，確保沒有執行緒在使用 _deviceMemory
          StopPollingWorker();
          StopHeartbeat();
-         
+
          // [Fix] 額外等待以確保工作緒完全停止
          await Task.Delay(100, ct).ConfigureAwait(false);
 
@@ -1728,6 +1738,268 @@ namespace WindowsFormsApp1.CCLink.Services
             case "LX": return CCLinkConstants.DEV_LX;
             case "LY": return CCLinkConstants.DEV_LY;
             default: throw new ArgumentException($"Unsupported device kind: {kind}");
+         }
+      }
+
+      #endregion
+
+      #region Common Report (定期上報共通資料)
+
+      // 上報事件（當資料變化並成功寫入 PLC 後觸發）
+      public event Action<CommonReportStatus1> CommonReportStatus1Updated;
+      public event Action<CommonReportStatus2> CommonReportStatus2Updated;
+      public event Action<CommonReportAlarm> CommonReportAlarmUpdated;
+
+      /// <summary>
+      /// 重置定期上報的快取狀態，強制下一次更新時寫入 PLC
+      /// </summary>
+      public void ResetCommonReportCache()
+      {
+         lock (_commonReportLock)
+         {
+            _lastCommonReportStatus1 = null;
+            _lastCommonReportStatus2 = null;
+            _lastCommonReportAlarm = null;
+         }
+      }
+
+      /// <summary>
+      /// 更新定期上報共通資料 - Status1（機台狀態資料）
+      /// 主程式定時呼叫此方法，內部會比對資料變化，只在變化時才寫入 PLC
+      /// </summary>
+      /// <param name="alarmStatus">警報狀態 (1=重大/2=輕警報/3=預報/4=無警報)</param>
+      /// <param name="machineStatus">機台狀態 (1=初始化/2=準備/3=準備完成/4=生產/5=停機/6=停止)</param>
+      /// <param name="actionStatus">機台動作狀態 (1=原點復歸/2=基板搬送/99=其他)</param>
+      /// <param name="waitingStatus">基板等待狀態 (1=無等待/2=下游/3=上游/4=上下游/5=特殊/99=其他)</param>
+      /// <param name="controlStatus">設備控制狀態 (1=自動/2=手動/3=條件設定/4=準備調整/5=品種切換/99=其他)</param>
+      public void UpdateCommonReportStatus1(ushort alarmStatus, ushort machineStatus, ushort actionStatus, ushort waitingStatus, ushort controlStatus)
+      {
+         lock (_commonReportLock)
+         {
+            var newData = new CommonReportStatus1
+            {
+               AlarmStatus = alarmStatus,
+               MachineStatus = machineStatus,
+               ActionStatus = actionStatus,
+               WaitingStatus = waitingStatus,
+               ControlStatus = controlStatus
+            };
+
+            // 只在資料變化時才寫入 PLC
+            if (newData.Equals(_lastCommonReportStatus1))
+            {
+               return; // 資料無變化，不執行寫入
+            }
+
+            try
+            {
+               // 準備寫入資料（5個 UINT16）
+               short[] values = new short[5];
+               values[0] = (short)alarmStatus;
+               values[1] = (short)machineStatus;
+               values[2] = (short)actionStatus;
+               values[3] = (short)waitingStatus;
+               values[4] = (short)controlStatus;
+
+               // 寫入 PLC (LW1146-LW114A)
+               lock (_apiLock)
+               {
+                  int path = _resolvedPath;
+                  int devCode = MapDeviceCode("LW");
+                  int startAddr = 0x1146; // LW1146
+                  int sizeInBytes = values.Length * 2;
+
+                  int rc = _api.SendEx(path, 0, 0, devCode, startAddr, ref sizeInBytes, values);
+
+                  if (rc == 0)
+                  {
+                     _lastCommonReportStatus1 = newData;
+                     //_logger?.Invoke($"定期上報 Status1 已更新 | Common Report Status1 updated ({newData})");
+
+                     // 觸發事件
+                     CommonReportStatus1Updated?.Invoke(newData);
+                  }
+                  else
+                  {
+                     _logger?.Invoke($"定期上報 Status1 寫入失敗 | Failed to write Common Report Status1 (RC: {rc})");
+                  }
+               }
+            }
+            catch (Exception ex)
+            {
+               _logger?.Invoke($"定期上報 Status1 發生例外 | Exception in UpdateCommonReportStatus1 (Error: {ex.Message})");
+               TryRaiseException(ex);
+            }
+         }
+      }
+
+      /// <summary>
+      /// 更新定期上報共通資料 - Status2（詳細狀態資料）
+      /// 主程式定時呼叫此方法，內部會比對資料變化，只在變化時才寫入 PLC
+      /// </summary>
+      public void UpdateCommonReportStatus2(
+         ushort redLightStatus, ushort yellowLightStatus, ushort greenLightStatus,
+         ushort upstreamWaitingStatus, ushort downstreamWaitingStatus,
+         ushort dischargeRate, ushort stopTime,
+         uint processingCounter,
+         ushort retainedBoardCount, ushort currentRecipeNo,
+         ushort boardThicknessStatus, ushort uldFlag,
+         string currentRecipeName)
+      {
+         lock (_commonReportLock)
+         {
+            var newData = new CommonReportStatus2
+            {
+               RedLightStatus = redLightStatus,
+               YellowLightStatus = yellowLightStatus,
+               GreenLightStatus = greenLightStatus,
+               UpstreamWaitingStatus = upstreamWaitingStatus,
+               DownstreamWaitingStatus = downstreamWaitingStatus,
+               DischargeRate = dischargeRate,
+               StopTime = stopTime,
+               ProcessingCounter = processingCounter,
+               RetainedBoardCount = retainedBoardCount,
+               CurrentRecipeNo = currentRecipeNo,
+               BoardThicknessStatus = boardThicknessStatus,
+               UldFlag = uldFlag,
+               CurrentRecipeName = currentRecipeName ?? string.Empty
+            };
+
+            // 只在資料變化時才寫入 PLC
+            if (newData.Equals(_lastCommonReportStatus2))
+            {
+               return; // 資料無變化，不執行寫入
+            }
+
+            try
+            {
+               // 準備寫入資料（13個 UINT16 + 50個 UINT16 配方名稱）
+               short[] values = new short[63];
+               values[0] = (short)redLightStatus;
+               values[1] = (short)yellowLightStatus;
+               values[2] = (short)greenLightStatus;
+               values[3] = (short)upstreamWaitingStatus;
+               values[4] = (short)downstreamWaitingStatus;
+               values[5] = (short)dischargeRate;
+               values[6] = (short)stopTime;
+               values[7] = (short)(processingCounter & 0xFFFF);         // 低位
+               values[8] = (short)((processingCounter >> 16) & 0xFFFF); // 高位
+               values[9] = (short)retainedBoardCount;
+               values[10] = (short)currentRecipeNo;
+               values[11] = (short)boardThicknessStatus;
+               values[12] = (short)uldFlag;
+
+               // 轉換配方名稱為 ASCII bytes（最多100字元）
+               byte[] nameBytes = new byte[100];
+               if (!string.IsNullOrEmpty(currentRecipeName))
+               {
+                  byte[] sourceBytes = System.Text.Encoding.ASCII.GetBytes(currentRecipeName);
+                  int copyLength = Math.Min(sourceBytes.Length, 99); // 保留最後一個 byte 為 0x00
+                  Array.Copy(sourceBytes, nameBytes, copyLength);
+               }
+
+               // 將 bytes 轉換為 shorts（100 bytes = 50 shorts）
+               for (int i = 0; i < 50; i++)
+               {
+                  values[13 + i] = (short)((nameBytes[i * 2 + 1] << 8) | nameBytes[i * 2]);
+               }
+
+               // 寫入 PLC (LW114B-LW1189)
+               lock (_apiLock)
+               {
+                  int path = _resolvedPath;
+                  int devCode = MapDeviceCode("LW");
+                  int startAddr = 0x114B; // LW114B
+                  int sizeInBytes = values.Length * 2;
+
+                  int rc = _api.SendEx(path, 0, 0, devCode, startAddr, ref sizeInBytes, values);
+
+                  if (rc == 0)
+                  {
+                     _lastCommonReportStatus2 = newData;
+                     _logger?.Invoke($"定期上報 Status2 已更新 | Common Report Status2 updated ({newData})");
+
+                     // 觸發事件
+                     CommonReportStatus2Updated?.Invoke(newData);
+                  }
+                  else
+                  {
+                     _logger?.Invoke($"定期上報 Status2 寫入失敗 | Failed to write Common Report Status2 (RC: {rc})");
+                  }
+               }
+            }
+            catch (Exception ex)
+            {
+               _logger?.Invoke($"定期上報 Status2 發生例外 | Exception in UpdateCommonReportStatus2 (Error: {ex.Message})");
+               TryRaiseException(ex);
+            }
+         }
+      }
+
+      /// <summary>
+      /// 更新定期上報共通資料 - Alarm（警報資料）
+      /// 主程式定時呼叫此方法，內部會比對資料變化，只在變化時才寫入 PLC
+      /// </summary>
+      /// <param name="errorCodes">錯誤代碼陣列（12個 UINT16）</param>
+      public void UpdateCommonReportAlarm(ushort[] errorCodes)
+      {
+         if (errorCodes == null || errorCodes.Length != 12)
+         {
+            _logger?.Invoke($"定期上報 Alarm 參數錯誤 | Invalid parameter for UpdateCommonReportAlarm (Expected 12 error codes, Got: {errorCodes?.Length ?? 0})");
+            return;
+         }
+
+         lock (_commonReportLock)
+         {
+            var newData = new CommonReportAlarm
+            {
+               ErrorCodes = (ushort[])errorCodes.Clone() // 複製陣列避免外部修改
+            };
+
+            // 只在資料變化時才寫入 PLC
+            if (newData.Equals(_lastCommonReportAlarm))
+            {
+               return; // 資料無變化，不執行寫入
+            }
+
+            try
+            {
+               // 準備寫入資料（12個 UINT16）
+               short[] values = new short[12];
+               for (int i = 0; i < 12; i++)
+               {
+                  values[i] = (short)errorCodes[i];
+               }
+
+               // 寫入 PLC (LW113A-LW1145)
+               lock (_apiLock)
+               {
+                  int path = _resolvedPath;
+                  int devCode = MapDeviceCode("LW");
+                  int startAddr = 0x113A; // LW113A
+                  int sizeInBytes = values.Length * 2;
+
+                  int rc = _api.SendEx(path, 0, 0, devCode, startAddr, ref sizeInBytes, values);
+
+                  if (rc == 0)
+                  {
+                     _lastCommonReportAlarm = newData;
+                     _logger?.Invoke($"定期上報 Alarm 已更新 | Common Report Alarm updated ({newData})");
+
+                     // 觸發事件
+                     CommonReportAlarmUpdated?.Invoke(newData);
+                  }
+                  else
+                  {
+                     _logger?.Invoke($"定期上報 Alarm 寫入失敗 | Failed to write Common Report Alarm (RC: {rc})");
+                  }
+               }
+            }
+            catch (Exception ex)
+            {
+               _logger?.Invoke($"定期上報 Alarm 發生例外 | Exception in UpdateCommonReportAlarm (Error: {ex.Message})");
+               TryRaiseException(ex);
+            }
          }
       }
 

@@ -63,6 +63,8 @@
          this.btnStopSimulator = new System.Windows.Forms.Button();
          this.btnPlcSettings = new System.Windows.Forms.Button();
          this.btnScanMonitor = new System.Windows.Forms.Button();
+         this.btnStartCommonReporting = new System.Windows.Forms.Button();
+         this.btnSetCommonReporting = new System.Windows.Forms.Button();
          this.grpManualTime = new System.Windows.Forms.GroupBox();
          this.dtpDate = new System.Windows.Forms.DateTimePicker();
          this.dtpTime = new System.Windows.Forms.DateTimePicker();
@@ -92,13 +94,15 @@
          this.flowLayoutPanel1.Controls.Add(this.btnStopSimulator);
          this.flowLayoutPanel1.Controls.Add(this.btnPlcSettings);
          this.flowLayoutPanel1.Controls.Add(this.btnScanMonitor);
+         this.flowLayoutPanel1.Controls.Add(this.btnStartCommonReporting);
+         this.flowLayoutPanel1.Controls.Add(this.btnSetCommonReporting);
          this.flowLayoutPanel1.Controls.Add(this.grpManualTime);
          this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
          this.flowLayoutPanel1.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
          this.flowLayoutPanel1.Name = "flowLayoutPanel1";
          this.flowLayoutPanel1.Padding = new System.Windows.Forms.Padding(10);
-         this.flowLayoutPanel1.Size = new System.Drawing.Size(832, 266);
+         this.flowLayoutPanel1.Size = new System.Drawing.Size(832, 312);
          this.flowLayoutPanel1.TabIndex = 0;
          // 
          // grpConnectionMode
@@ -118,7 +122,7 @@
          this.rbMockMode.AutoSize = true;
          this.rbMockMode.Location = new System.Drawing.Point(15, 25);
          this.rbMockMode.Name = "rbMockMode";
-         this.rbMockMode.Size = new System.Drawing.Size(130, 18);
+         this.rbMockMode.Size = new System.Drawing.Size(122, 18);
          this.rbMockMode.TabIndex = 0;
          this.rbMockMode.Text = "模擬模式 (Mock)";
          this.rbMockMode.UseVisualStyleBackColor = true;
@@ -129,7 +133,7 @@
          this.rbRealMode.Checked = true;
          this.rbRealMode.Location = new System.Drawing.Point(15, 50);
          this.rbRealMode.Name = "rbRealMode";
-         this.rbRealMode.Size = new System.Drawing.Size(130, 18);
+         this.rbRealMode.Size = new System.Drawing.Size(122, 18);
          this.rbRealMode.TabIndex = 1;
          this.rbRealMode.TabStop = true;
          this.rbRealMode.Text = "實際連接 (Real)";
@@ -267,13 +271,35 @@
          this.btnScanMonitor.UseVisualStyleBackColor = true;
          this.btnScanMonitor.Click += new System.EventHandler(this.btnScanMonitor_Click);
          // 
+         // btnStartCommonReporting
+         // 
+         this.btnStartCommonReporting.Location = new System.Drawing.Point(324, 166);
+         this.btnStartCommonReporting.Margin = new System.Windows.Forms.Padding(10);
+         this.btnStartCommonReporting.Name = "btnStartCommonReporting";
+         this.btnStartCommonReporting.Size = new System.Drawing.Size(181, 26);
+         this.btnStartCommonReporting.TabIndex = 17;
+         this.btnStartCommonReporting.Text = "Start Common Reporting";
+         this.btnStartCommonReporting.UseVisualStyleBackColor = true;
+         this.btnStartCommonReporting.Click += new System.EventHandler(this.btnStartCommonReporting_Click);
+         // 
+         // btnSetCommonReporting
+         // 
+         this.btnSetCommonReporting.Location = new System.Drawing.Point(525, 166);
+         this.btnSetCommonReporting.Margin = new System.Windows.Forms.Padding(10);
+         this.btnSetCommonReporting.Name = "btnSetCommonReporting";
+         this.btnSetCommonReporting.Size = new System.Drawing.Size(181, 26);
+         this.btnSetCommonReporting.TabIndex = 16;
+         this.btnSetCommonReporting.Text = "Set Common Reporting";
+         this.btnSetCommonReporting.UseVisualStyleBackColor = true;
+         this.btnSetCommonReporting.Click += new System.EventHandler(this.btnSetCommonReporting_Click);
+         // 
          // grpManualTime
          // 
          this.grpManualTime.Controls.Add(this.dtpDate);
          this.grpManualTime.Controls.Add(this.dtpTime);
          this.grpManualTime.Controls.Add(this.btnSyncFromPc);
          this.grpManualTime.Controls.Add(this.btnSetTimeToPlc);
-         this.grpManualTime.Location = new System.Drawing.Point(324, 166);
+         this.grpManualTime.Location = new System.Drawing.Point(20, 212);
          this.grpManualTime.Margin = new System.Windows.Forms.Padding(10);
          this.grpManualTime.Name = "grpManualTime";
          this.grpManualTime.Size = new System.Drawing.Size(300, 80);
@@ -323,9 +349,9 @@
          this.lstLog.Dock = System.Windows.Forms.DockStyle.Fill;
          this.lstLog.FormattingEnabled = true;
          this.lstLog.ItemHeight = 12;
-         this.lstLog.Location = new System.Drawing.Point(0, 266);
+         this.lstLog.Location = new System.Drawing.Point(0, 312);
          this.lstLog.Name = "lstLog";
-         this.lstLog.Size = new System.Drawing.Size(832, 160);
+         this.lstLog.Size = new System.Drawing.Size(832, 114);
          this.lstLog.TabIndex = 10;
          // 
          // lblStatus
@@ -366,6 +392,19 @@
       private System.Windows.Forms.Button btnPlcSettings;
       private System.Windows.Forms.Button btnStopHeartbeat;
       private System.Windows.Forms.Button btnScanMonitor;
+      private System.Windows.Forms.Button btnSetCommonReporting;
+      private System.Windows.Forms.GroupBox grpCommonReportStatus1;
+      private System.Windows.Forms.NumericUpDown nudAlarmStatus;
+      private System.Windows.Forms.NumericUpDown nudMachineStatus;
+      private System.Windows.Forms.NumericUpDown nudActionStatus;
+      private System.Windows.Forms.NumericUpDown nudWaitingStatus;
+      private System.Windows.Forms.NumericUpDown nudControlStatus;
+      private System.Windows.Forms.Label lblAlarmStatus;
+      private System.Windows.Forms.Label lblMachineStatus;
+      private System.Windows.Forms.Label lblActionStatus;
+      private System.Windows.Forms.Label lblWaitingStatus;
+      private System.Windows.Forms.Label lblControlStatus;
+      private System.Windows.Forms.Button btnStartCommonReporting;
    }
 }
 

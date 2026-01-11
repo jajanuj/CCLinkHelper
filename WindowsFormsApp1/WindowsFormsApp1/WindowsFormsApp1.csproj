@@ -64,6 +64,27 @@
     <Compile Include="CCLink\Controllers\MockCCLinkController.cs" />
     <Compile Include="CCLink\Adapters\MockMelsecApiAdapter.cs" />
     <Compile Include="CCLink\Services\PlcSimulator.cs" />
+    <Compile Include="CCLink\Models\CommonReportStatus1.cs" />
+    <Compile Include="CCLink\Models\CommonReportStatus2.cs" />
+    <Compile Include="CCLink\Models\CommonReportAlarm.cs" />
+    <Compile Include="CommonReportStatus1SettingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CommonReportStatus1SettingsForm.Designer.cs">
+      <DependentUpon>CommonReportStatus1SettingsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CommonReportStatus2SettingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CommonReportStatus2SettingsForm.Designer.cs">
+      <DependentUpon>CommonReportStatus2SettingsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CommonReportAlarmSettingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CommonReportAlarmSettingsForm.Designer.cs">
+      <DependentUpon>CommonReportAlarmSettingsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -84,6 +105,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="CommonReportStatus1SettingsForm.resx">
+      <DependentUpon>CommonReportStatus1SettingsForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
