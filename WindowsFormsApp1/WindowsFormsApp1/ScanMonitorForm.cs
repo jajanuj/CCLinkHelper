@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
+using System.IO;
 using WindowsFormsApp1.CCLink.Models;
 using WindowsFormsApp1.CCLink.Services;
 
@@ -31,7 +32,11 @@ namespace WindowsFormsApp1
          _updateTimer.Tick += UpdateTimer_Tick;
 
          InitializeMonitorItems();
+         LoadFavorites();
          LoadDataToGrid();
+         
+         // Register events
+         dgvMonitor.CellContentClick += DgvMonitor_CellContentClick;
       }
 
       #endregion
@@ -132,6 +137,7 @@ namespace WindowsFormsApp1
             {
                int rowIndex = dgvMonitor.Rows.Add();
                var row = dgvMonitor.Rows[rowIndex];
+               row.Cells[colSelect.Index].Value = item.IsFavorite;
                row.Cells[colAddress.Index].Value = FormatAddress(item.Kind, item.Index);
                row.Cells[colType.Index].Value = item.Type;
                row.Cells[colCurrentValue.Index].Value = "-";
@@ -168,12 +174,20 @@ namespace WindowsFormsApp1
          _isHexFormat = !_isHexFormat;
          chkHexFormat.Checked = _isHexFormat;
 
-         // 只更新位址欄位,不重新載入整個 grid
+         // 更新兩個 grid 的顯示
          foreach (DataGridViewRow row in dgvMonitor.Rows)
          {
             if (row.Tag is MonitorItem item)
             {
                row.Cells[colAddress.Index].Value = FormatAddress(item.Kind, item.Index);
+            }
+         }
+         
+         foreach (DataGridViewRow row in dgvFavorites.Rows)
+         {
+            if (row.Tag is MonitorItem item)
+            {
+               row.Cells[colFavAddress.Index].Value = FormatAddress(item.Kind, item.Index);
             }
          }
       }
@@ -185,42 +199,57 @@ namespace WindowsFormsApp1
       {
          try
          {
-            // [Diagnostic] 記錄 helper 實例的 HashCode
-            int helperHashCode = RuntimeHelpers.GetHashCode(_helper);
-            
-            foreach (DataGridViewRow row in dgvMonitor.Rows)
-            {
-               if (row.Tag is MonitorItem item)
-               {
-                  object currentValue = null;
+             // 決定要更新哪個 Grid
+             DataGridView targetGrid;
+             int colValIdx;
+             
+             if (tabControlMain.SelectedTab == tabFavorites)
+             {
+                targetGrid = dgvFavorites;
+                colValIdx = colFavCurrentValue.Index;
+             }
+             else
+             {
+                targetGrid = dgvMonitor;
+                colValIdx = colCurrentValue.Index;
+             }
 
-                  if (item.IsBit)
-                  {
-                     // [Diagnostic] 第一次呼叫時記錄 helper 實例
-                     if (row.Index == 0)
-                     {
-                        lblLastUpdate.Text = $"HelperID: {helperHashCode}";
-                     }
-                     
-                     bool bitValue = _helper.GetBit(item.Kind, item.Index);
-                     currentValue = bitValue.ToString();
-                  }
-                  else
-                  {
-                     short wordValue = _helper.GetWord(item.Kind, item.Index);
-                     currentValue = wordValue.ToString();
-                  }
-
-                  row.Cells[colCurrentValue.Index].Value = currentValue;
-               }
-            }
-
-            lblLastUpdate.Text = $"Last Update: {DateTime.Now:HH:mm:ss.fff} (HelperID: {helperHashCode})";
-         }
-         catch (Exception ex)
-         {
-            lblLastUpdate.Text = $"Update Error: {ex.Message}";
-         }
+             // [Diagnostic] 記錄 helper 實例的 HashCode
+             int helperHashCode = RuntimeHelpers.GetHashCode(_helper);
+             
+             foreach (DataGridViewRow row in targetGrid.Rows)
+             {
+                if (row.Tag is MonitorItem item)
+                {
+                   object currentValue = null;
+ 
+                   if (item.IsBit)
+                   {
+                      // [Diagnostic] 第一次呼叫時記錄 helper 實例
+                      if (row.Index == 0)
+                      {
+                         lblLastUpdate.Text = $"HelperID: {helperHashCode}";
+                      }
+                      
+                      bool bitValue = _helper.GetBit(item.Kind, item.Index);
+                      currentValue = bitValue.ToString();
+                   }
+                   else
+                   {
+                      short wordValue = _helper.GetWord(item.Kind, item.Index);
+                      currentValue = wordValue.ToString();
+                   }
+ 
+                   row.Cells[colValIdx].Value = currentValue;
+                }
+             }
+ 
+             lblLastUpdate.Text = $"Last Update: {DateTime.Now:HH:mm:ss.fff} (HelperID: {helperHashCode})";
+          }
+          catch (Exception ex)
+          {
+             lblLastUpdate.Text = $"Update Error: {ex.Message}";
+          }
       }
 
       /// <summary>
@@ -228,7 +257,10 @@ namespace WindowsFormsApp1
       /// </summary>
       private async void WriteSelectedValue()
       {
-         if (dgvMonitor.SelectedRows.Count == 0)
+         var activeGrid = tabControlMain.SelectedTab == tabFavorites ? dgvFavorites : dgvMonitor;
+         var newValColIdx = tabControlMain.SelectedTab == tabFavorites ? colFavNewValue.Index : colNewValue.Index;
+
+         if (activeGrid.SelectedRows.Count == 0)
          {
             MessageBox.Show("Please select a row to write.", "Information",
                MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -237,10 +269,10 @@ namespace WindowsFormsApp1
 
          try
          {
-            var row = dgvMonitor.SelectedRows[0];
+            var row = activeGrid.SelectedRows[0];
             if (row.Tag is MonitorItem item)
             {
-               string newValueStr = row.Cells[colNewValue.Index].Value?.ToString();
+               string newValueStr = row.Cells[newValColIdx].Value?.ToString();
                if (string.IsNullOrWhiteSpace(newValueStr))
                {
                   MessageBox.Show("Please enter a new value to write.", "Information",
@@ -295,14 +327,17 @@ namespace WindowsFormsApp1
       {
          try
          {
+            var activeGrid = tabControlMain.SelectedTab == tabFavorites ? dgvFavorites : dgvMonitor;
+            var newValColIdx = tabControlMain.SelectedTab == tabFavorites ? colFavNewValue.Index : colNewValue.Index;
+
             int writeCount = 0;
             var errors = new List<string>();
-
-            foreach (DataGridViewRow row in dgvMonitor.Rows)
+ 
+            foreach (DataGridViewRow row in activeGrid.Rows)
             {
                if (row.Tag is MonitorItem item)
                {
-                  string newValueStr = row.Cells[colNewValue.Index].Value?.ToString();
+                  string newValueStr = row.Cells[newValColIdx].Value?.ToString();
                   if (string.IsNullOrWhiteSpace(newValueStr))
                      continue;
 
@@ -313,7 +348,7 @@ namespace WindowsFormsApp1
                         if (bool.TryParse(newValueStr, out bool bitValue))
                         {
                            await _helper.WriteBitsAsync(item.GetAddress(), new[] { bitValue });
-                           row.Cells[colNewValue.Index].Value = "";
+                           row.Cells[newValColIdx].Value = "";
                            writeCount++;
                         }
                         else
@@ -326,7 +361,7 @@ namespace WindowsFormsApp1
                         if (short.TryParse(newValueStr, out short wordValue))
                         {
                            await _helper.WriteWordsAsync(item.GetAddress(), new[] { wordValue });
-                           row.Cells[colNewValue.Index].Value = "";
+                           row.Cells[newValColIdx].Value = "";
                            writeCount++;
                         }
                         else
@@ -432,6 +467,8 @@ namespace WindowsFormsApp1
 
       protected override void OnClosing(CancelEventArgs e)
       {
+         SaveFavorites();
+
          // [Fix] 確保關閉視窗時停止定時器，避免在 Close/Open 過程中繼續讀取
          if (_updateTimer != null)
          {
@@ -441,6 +478,101 @@ namespace WindowsFormsApp1
          }
 
          base.OnClosing(e);
+      }
+
+      private void tabControlMain_SelectedIndexChanged(object sender, EventArgs e)
+      {
+         if (tabControlMain.SelectedTab == tabFavorites)
+         {
+             RefreshFavoritesGrid();
+         }
+         UpdateValues();
+      }
+
+      private void DgvMonitor_CellContentClick(object sender, DataGridViewCellEventArgs e)
+      {
+         if (e.RowIndex >= 0 && e.ColumnIndex == colSelect.Index)
+         {
+            dgvMonitor.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            
+            var row = dgvMonitor.Rows[e.RowIndex];
+            if (row.Tag is MonitorItem item)
+            {
+               // CheckBox value might be null initially
+               var isChecked = (bool)(row.Cells[colSelect.Index].Value ?? false);
+               item.IsFavorite = isChecked;
+            }
+         }
+      }
+
+      private void RefreshFavoritesGrid()
+      {
+         dgvFavorites.SuspendLayout();
+         try
+         {
+            dgvFavorites.Rows.Clear();
+            // 已排序 _monitorItems (Kind -> Index)
+            var favItems = _monitorItems.Where(x => x.IsFavorite).ToList();
+            
+            foreach (var item in favItems)
+            {
+               int rowIndex = dgvFavorites.Rows.Add();
+               var row = dgvFavorites.Rows[rowIndex];
+               row.Cells[colFavAddress.Index].Value = FormatAddress(item.Kind, item.Index);
+               row.Cells[colFavType.Index].Value = item.Type;
+               row.Cells[colFavCurrentValue.Index].Value = "-";
+               row.Cells[colFavNewValue.Index].Value = "";
+               row.Tag = item;
+            }
+         }
+         finally
+         {
+            dgvFavorites.ResumeLayout();
+         }
+      }
+
+      private void LoadFavorites()
+      {
+         try
+         {
+            string path = Path.Combine(Application.StartupPath, "monitor_favorites.txt");
+            if (File.Exists(path))
+            {
+               var addresses = File.ReadAllLines(path);
+               if (addresses != null)
+               {
+                  var set = new HashSet<string>(addresses, StringComparer.OrdinalIgnoreCase);
+                  foreach (var item in _monitorItems)
+                  {
+                     if (set.Contains(item.GetAddress()))
+                     {
+                        item.IsFavorite = true;
+                     }
+                  }
+               }
+            }
+         }
+         catch (Exception ex)
+         {
+            // Fail silently or log
+            Console.WriteLine($"Failed to load favorites: {ex.Message}");
+         }
+      }
+
+      private void SaveFavorites()
+      {
+         try
+         {
+            var addresses = _monitorItems.Where(x => x.IsFavorite)
+                                         .Select(x => x.GetAddress())
+                                         .ToList();
+            string path = Path.Combine(Application.StartupPath, "monitor_favorites.txt");
+            File.WriteAllLines(path, addresses);
+         }
+         catch (Exception ex)
+         {
+            Console.WriteLine($"Failed to save favorites: {ex.Message}");
+         }
       }
 
       #endregion
@@ -456,6 +588,7 @@ namespace WindowsFormsApp1
          public int Index { get; set; }
          public string Type { get; set; }
          public bool IsBit { get; set; }
+         public bool IsFavorite { get; set; }
 
          public string GetAddress()
          {
