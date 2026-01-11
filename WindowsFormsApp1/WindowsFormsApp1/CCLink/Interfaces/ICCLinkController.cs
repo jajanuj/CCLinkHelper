@@ -49,6 +49,16 @@ namespace WindowsFormsApp1.CCLink.Interfaces
       /// </summary>
       Task<ControllerStatus> GetStatusAsync(CancellationToken ct = default);
 
+      /// <summary>
+      /// 從快取讀取位元狀態。
+      /// </summary>
+      bool GetBit(string address);
+
+      /// <summary>
+      /// 從快取讀取字組數值。
+      /// </summary>
+      short GetWord(string address);
+
       #endregion
    }
 }

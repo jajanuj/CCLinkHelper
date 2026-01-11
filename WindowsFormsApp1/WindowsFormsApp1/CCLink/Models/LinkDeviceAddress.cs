@@ -73,12 +73,25 @@ namespace WindowsFormsApp1.CCLink.Models
             throw new ArgumentException("Invalid prefix");
          }
 
-         if (!int.TryParse(numPart, out var start))
+         // 嘗試以十六進位解析，若失敗則嘗試十進位
+         int start;
+         if (!int.TryParse(numPart, System.Globalization.NumberStyles.HexNumber, null, out start))
          {
-            throw new ArgumentException("Invalid number");
+            if (!int.TryParse(numPart, out start))
+            {
+               throw new ArgumentException("Invalid number");
+            }
          }
 
          return new LinkDeviceAddress(prefix, start, length);
+      }
+
+      /// <summary>
+      /// 回傳格式化的地址字串 (e.g., "LW0100")。
+      /// </summary>
+      public override string ToString()
+      {
+         return $"{Kind}{Start:X4}";
       }
 
       #endregion

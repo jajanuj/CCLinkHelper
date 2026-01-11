@@ -60,6 +60,7 @@
     <Compile Include="CCLink\Adapters\MelsecApiAdapter.cs" />
     <Compile Include="CCLink\Controllers\MelsecControlCard.cs" />
     <Compile Include="CCLink\Models\MelsecException.cs" />
+    <Compile Include="CCLink\Services\AppPlcService.cs" />
     <Compile Include="CCLink\Services\MelsecHelper.cs" />
     <Compile Include="CCLink\Controllers\MockCCLinkController.cs" />
     <Compile Include="CCLink\Adapters\MockMelsecApiAdapter.cs" />

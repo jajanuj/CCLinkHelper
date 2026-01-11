@@ -181,7 +181,8 @@ namespace WindowsFormsApp1.CCLink.Services
                      }
                      else if (remaining < TimeSpan.Zero)
                      {
-                        _logger?.Invoke($"模擬 PLC 週期超時 | Simulator cycle duration exceeded (Actual: {elapsed.TotalMilliseconds:F0}ms, Config: {period.TotalMilliseconds:F0}ms)");
+                        _logger?.Invoke(
+                           $"模擬 PLC 週期超時 | Simulator cycle duration exceeded (Actual: {elapsed.TotalMilliseconds:F0}ms, Config: {period.TotalMilliseconds:F0}ms)");
                      }
                   }
                   catch (TaskCanceledException)
@@ -301,7 +302,8 @@ namespace WindowsFormsApp1.CCLink.Services
                   if (!last.HasValue || last.Value != on)
                   {
                      last = on;
-                     _logger?.Invoke($"模擬 PLC 監控到回應變更 | Simulator detected response change (Device: {_responseAddr.Kind} 0x{_responseAddr.Start:X4}, Value: {(on ? 1 : 0)})");
+                     _logger?.Invoke(
+                        $"模擬 PLC 監控到回應變更 | Simulator detected response change (Device: {_responseAddr.Kind} 0x{_responseAddr.Start:X4}, Value: {(on ? 1 : 0)})");
                      ResponseChanged?.Invoke(on);
                   }
                }

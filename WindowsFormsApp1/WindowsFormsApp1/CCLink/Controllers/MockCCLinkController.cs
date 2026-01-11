@@ -85,5 +85,17 @@ namespace WindowsFormsApp1.CCLink.Controllers
          _status.LastErrorCode = 0;
          return Task.FromResult(_status);
       }
+
+      public bool GetBit(string address)
+      {
+         if (_bitMemory.TryGetValue(address, out var mem)) return mem.FirstOrDefault();
+         return false;
+      }
+
+      public short GetWord(string address)
+      {
+         if (_wordMemory.TryGetValue(address, out var mem)) return mem.FirstOrDefault();
+         return 0;
+      }
    }
 }

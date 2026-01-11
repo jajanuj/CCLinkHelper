@@ -225,6 +225,9 @@ namespace WindowsFormsApp1.CCLink.Controllers
          }
       }
 
+      public bool GetBit(string address) => false;
+      public short GetWord(string address) => 0;
+
       public void Dispose()
       {
          if (_pathHandle != 0)

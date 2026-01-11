@@ -22,8 +22,8 @@ namespace WindowsFormsApp1
 
       // 定期上報 Status1 設定值
       private ushort _alarmStatus = 4; // 預設：無警報
+      private AppPlcService _appPlcService;
       private ushort _boardThicknessStatus = 0;
-      private ICCLinkController _controller;
       private ushort _controlStatus = 1; // 預設：自動運轉
       private string _currentRecipeName = "DEFAULT_RECIPE";
       private ushort _currentRecipeNo = 1;
@@ -103,7 +103,7 @@ namespace WindowsFormsApp1
          _updateTimer = new Timer(_ =>
          {
             // 更新 Status1（機台狀態）
-            _helper.UpdateCommonReportStatus1(
+            _appPlcService.UpdateStatus1(
                alarmStatus: GetCurrentAlarmStatus(),     // 1-4
                machineStatus: GetCurrentMachineStatus(), // 1-6
                actionStatus: GetCurrentActionStatus(),   // 1,2,99
@@ -112,25 +112,25 @@ namespace WindowsFormsApp1
             );
 
             // 更新 Status2（詳細狀態）
-            _helper.UpdateCommonReportStatus2(
-               redLightStatus: GetRedLightStatus(),       // 0-3
-               yellowLightStatus: GetYellowLightStatus(), // 0-3
-               greenLightStatus: GetGreenLightStatus(),   // 0-3
-               upstreamWaitingStatus: GetUpstreamWaiting(),
-               downstreamWaitingStatus: GetDownstreamWaiting(),
+            _appPlcService.UpdateStatus2(
+               redLight: GetRedLightStatus(),       // 0-3
+               yellowLight: GetYellowLightStatus(), // 0-3
+               greenLight: GetGreenLightStatus(),   // 0-3
+               upstreamWait: GetUpstreamWaiting(),
+               downstreamWait: GetDownstreamWaiting(),
                dischargeRate: GetDischargeRate(),
                stopTime: GetStopTime(),
                processingCounter: GetProcessingCounter(), // UINT32
-               retainedBoardCount: GetRetainedBoardCount(),
+               retainedBoard: GetRetainedBoardCount(),
                currentRecipeNo: GetCurrentRecipeNo(),
-               boardThicknessStatus: GetBoardThickness(),
-               uldFlag: 0,                               // 固定填入 0
-               currentRecipeName: GetCurrentRecipeName() // 最多100字元
+               boardThickness: GetBoardThickness(),
+               uldFlag: 0,                        // 固定填入 0
+               recipeName: GetCurrentRecipeName() // 最多100字元
             );
 
             // 更新 Alarm（警報資料）
             ushort[] errorCodes = GetCurrentErrorCodes(); // 12個錯誤代碼
-            _helper.UpdateCommonReportAlarm(errorCodes);
+            _appPlcService.UpdateAlarm(errorCodes);
          }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
       }
 
@@ -150,6 +150,7 @@ namespace WindowsFormsApp1
          {
          }
 
+         _appPlcService?.Dispose();
          _helper?.Dispose();
          base.OnClosing(e);
       }
@@ -184,20 +185,19 @@ namespace WindowsFormsApp1
       private void BindingHelperEvent()
       {
          // 防止重複綁定
-         if (_eventsBound || _helper == null)
+         if (_eventsBound || _helper == null || _appPlcService == null)
          {
             return;
          }
 
          // 監聽事件更新狀態燈
          _helper.Connected += () => UpdateStatus(true);
-         _helper.Reconnected += () => UpdateStatus(true);
          _helper.Disconnected += () => UpdateStatus(false);
 
          // 註冊心跳事件以便診斷
-         _helper.ConsecutiveHeartbeatFailures += count => Log($"[Helper] 心跳失敗 | Heartbeat failed (Count: {count})");
-         _helper.HeartbeatFailed += () => Log("[Helper] 心跳中斷 | Heartbeat failed");
-         _helper.HeartbeatSucceeded += () => Log("[Helper] 心跳成功 | Heartbeat success");
+         _appPlcService.ConsecutiveHeartbeatFailures += count => Log($"[Helper] 心跳失敗 | Heartbeat failed (Count: {count})");
+         _appPlcService.HeartbeatFailed += () => Log("[Helper] 心跳中斷 | Heartbeat failed");
+         _appPlcService.HeartbeatSucceeded += () => Log("[Helper] 心跳成功 | Heartbeat success");
 
          _eventsBound = true;
       }
@@ -266,7 +266,7 @@ namespace WindowsFormsApp1
 
             // 建立 helper
             _helper = new MelsecHelper(_adapter, _settings, logger: s => Log($"[Helper] {s}"));
-            _controller = _helper;
+            _appPlcService = new AppPlcService(_helper, logger: s => Log(s));
 
             // 綁定事件
             BindingHelperEvent();
@@ -380,6 +380,9 @@ namespace WindowsFormsApp1
                }
             }
 
+            // 關閉 service
+            _appPlcService?.Dispose();
+
             // 關閉 helper 連接
             if (_helper != null)
             {
@@ -432,7 +435,7 @@ namespace WindowsFormsApp1
 
       private void btnStartTimeSync_Click(object sender, EventArgs e)
       {
-         _helper.StartTimeSync(
+         _appPlcService.StartTimeSync(
             TimeSpan.FromMilliseconds(_settings.TimeSyncIntervalMs),
             _settings.TimeSync.TriggerAddress,
             _settings.TimeSync.DataBaseAddress);
@@ -444,7 +447,7 @@ namespace WindowsFormsApp1
 
       private void btnStopTimeSync_Click(object sender, EventArgs e)
       {
-         _helper.StopTimeSync();
+         _appPlcService.StopTimeSync();
          btnStartTimeSync.Enabled = true;
          btnStopTimeSync.Enabled = false;
          Log("停止系統時間同步監控 | System time sync monitoring stopped");
@@ -457,13 +460,13 @@ namespace WindowsFormsApp1
             btnForceTimeSync.Enabled = false;
             Log($"手動觸發對時脈衝 | Manually triggering time sync pulse (Addr: {_settings.TimeSync.TriggerAddress})");
 
-            // 使用 _controller.WriteBitsAsync 以確保 MelsecHelper 的快取能立即同步
-            await _controller.WriteBitsAsync(_settings.TimeSync.TriggerAddress, new[] { true }).ConfigureAwait(true);
+            // 使用 _helper.WriteBitsAsync 以確保 MelsecHelper 的快取能立即同步
+            await _helper.WriteBitsAsync(_settings.TimeSync.TriggerAddress, new[] { true }).ConfigureAwait(true);
 
             await Task.Delay(1000).ConfigureAwait(true);
 
             // OFF
-            await _controller.WriteBitsAsync(_settings.TimeSync.TriggerAddress, new[] { false }).ConfigureAwait(true);
+            await _helper.WriteBitsAsync(_settings.TimeSync.TriggerAddress, new[] { false }).ConfigureAwait(true);
 
             Log("對時脈衝完成 | Time sync pulse completed (1s)");
          }
@@ -545,8 +548,9 @@ namespace WindowsFormsApp1
             var respAddr = new LinkDeviceAddress("LB", CCLinkConstants.DefaultResponseFlagAddress, 1);
 
             // 啟動心跳
-            _helper.StartHeartbeat(_settings.HeartbeatIntervalMs > 0 ? TimeSpan.FromMilliseconds(_settings.HeartbeatIntervalMs) : TimeSpan.FromSeconds(0.3),
-               reqAddr, respAddr);
+            _appPlcService.StartHeartbeat(
+               _settings.HeartbeatIntervalMs > 0 ? TimeSpan.FromMilliseconds(_settings.HeartbeatIntervalMs) : TimeSpan.FromSeconds(0.3),
+               reqAddr.ToString(), respAddr.ToString());
 
             // 只有在使用 Mock 模式時才建立模擬器
             if (_adapter is MockMelsecApiAdapter mockAdapter)
@@ -599,7 +603,7 @@ namespace WindowsFormsApp1
 
       private void btnStopHeartbeat_Click(object sender, EventArgs e)
       {
-         _helper?.StopHeartbeat();
+         _appPlcService?.StopHeartbeat();
          _simulator?.Stop();
 
          btnStartHeartbeat.Enabled = true;
@@ -632,12 +636,12 @@ namespace WindowsFormsApp1
          // Create status objects from current fields
          var s1 = new CommonReportStatus1(_alarmStatus, _machineStatus, _actionStatus, _waitingStatus, _controlStatus);
          var s2 = new CommonReportStatus2(
-             _redLightStatus, _yellowLightStatus, _greenLightStatus,
-             _upstreamWaitingStatus, _downstreamWaitingStatus,
-             _dischargeRate, _stopTime, _processingCounter,
-             _retainedBoardCount, _currentRecipeNo, _boardThicknessStatus,
-             0, // UldFlag (Always 0 as wasn't exposed)
-             _currentRecipeName);
+            _redLightStatus, _yellowLightStatus, _greenLightStatus,
+            _upstreamWaitingStatus, _downstreamWaitingStatus,
+            _dischargeRate, _stopTime, _processingCounter,
+            _retainedBoardCount, _currentRecipeNo, _boardThicknessStatus,
+            0, // UldFlag (Always 0 as wasn't exposed)
+            _currentRecipeName);
          var alarm = new CommonReportAlarm(_errorCodes);
 
          // Open Consolidated Form
@@ -650,11 +654,30 @@ namespace WindowsFormsApp1
 
             // 1. Update Status 1
             var newS1 = form.Status1Result;
-            if (_alarmStatus != newS1.AlarmStatus) Log($"[Status1] Alarm Changed: {_alarmStatus} -> {newS1.AlarmStatus}");
-            if (_machineStatus != newS1.MachineStatus) Log($"[Status1] MachineStatus Changed: {_machineStatus} -> {newS1.MachineStatus}");
-            if (_actionStatus != newS1.ActionStatus) Log($"[Status1] ActionStatus Changed: {_actionStatus} -> {newS1.ActionStatus}");
-            if (_waitingStatus != newS1.WaitingStatus) Log($"[Status1] WaitingStatus Changed: {_waitingStatus} -> {newS1.WaitingStatus}");
-            if (_controlStatus != newS1.ControlStatus) Log($"[Status1] ControlStatus Changed: {_controlStatus} -> {newS1.ControlStatus}");
+            if (_alarmStatus != newS1.AlarmStatus)
+            {
+               Log($"[Status1] Alarm Changed: {_alarmStatus} -> {newS1.AlarmStatus}");
+            }
+
+            if (_machineStatus != newS1.MachineStatus)
+            {
+               Log($"[Status1] MachineStatus Changed: {_machineStatus} -> {newS1.MachineStatus}");
+            }
+
+            if (_actionStatus != newS1.ActionStatus)
+            {
+               Log($"[Status1] ActionStatus Changed: {_actionStatus} -> {newS1.ActionStatus}");
+            }
+
+            if (_waitingStatus != newS1.WaitingStatus)
+            {
+               Log($"[Status1] WaitingStatus Changed: {_waitingStatus} -> {newS1.WaitingStatus}");
+            }
+
+            if (_controlStatus != newS1.ControlStatus)
+            {
+               Log($"[Status1] ControlStatus Changed: {_controlStatus} -> {newS1.ControlStatus}");
+            }
 
             _alarmStatus = newS1.AlarmStatus;
             _machineStatus = newS1.MachineStatus;
@@ -664,18 +687,65 @@ namespace WindowsFormsApp1
 
             // 2. Update Status 2
             var newS2 = form.Status2Result;
-            if (_redLightStatus != newS2.RedLightStatus) Log($"[Status2] RedLight Changed: {_redLightStatus} -> {newS2.RedLightStatus}");
-            if (_yellowLightStatus != newS2.YellowLightStatus) Log($"[Status2] YellowLight Changed: {_yellowLightStatus} -> {newS2.YellowLightStatus}");
-            if (_greenLightStatus != newS2.GreenLightStatus) Log($"[Status2] GreenLight Changed: {_greenLightStatus} -> {newS2.GreenLightStatus}");
-            if (_upstreamWaitingStatus != newS2.UpstreamWaitingStatus) Log($"[Status2] UpstreamWaiting Changed: {_upstreamWaitingStatus} -> {newS2.UpstreamWaitingStatus}");
-            if (_downstreamWaitingStatus != newS2.DownstreamWaitingStatus) Log($"[Status2] DownstreamWaiting Changed: {_downstreamWaitingStatus} -> {newS2.DownstreamWaitingStatus}");
-            if (_dischargeRate != newS2.DischargeRate) Log($"[Status2] DischargeRate Changed: {_dischargeRate} -> {newS2.DischargeRate}");
-            if (_stopTime != newS2.StopTime) Log($"[Status2] StopTime Changed: {_stopTime} -> {newS2.StopTime}");
-            if (_processingCounter != newS2.ProcessingCounter) Log($"[Status2] ProcessingCounter Changed: {_processingCounter} -> {newS2.ProcessingCounter}");
-            if (_retainedBoardCount != newS2.RetainedBoardCount) Log($"[Status2] RetainedBoardCount Changed: {_retainedBoardCount} -> {newS2.RetainedBoardCount}");
-            if (_currentRecipeNo != newS2.CurrentRecipeNo) Log($"[Status2] CurrentRecipeNo Changed: {_currentRecipeNo} -> {newS2.CurrentRecipeNo}");
-            if (_boardThicknessStatus != newS2.BoardThicknessStatus) Log($"[Status2] BoardThickness Changed: {_boardThicknessStatus} -> {newS2.BoardThicknessStatus}");
-            if (_currentRecipeName != newS2.CurrentRecipeName) Log($"[Status2] RecipeName Changed: {_currentRecipeName} -> {newS2.CurrentRecipeName}");
+            if (_redLightStatus != newS2.RedLightStatus)
+            {
+               Log($"[Status2] RedLight Changed: {_redLightStatus} -> {newS2.RedLightStatus}");
+            }
+
+            if (_yellowLightStatus != newS2.YellowLightStatus)
+            {
+               Log($"[Status2] YellowLight Changed: {_yellowLightStatus} -> {newS2.YellowLightStatus}");
+            }
+
+            if (_greenLightStatus != newS2.GreenLightStatus)
+            {
+               Log($"[Status2] GreenLight Changed: {_greenLightStatus} -> {newS2.GreenLightStatus}");
+            }
+
+            if (_upstreamWaitingStatus != newS2.UpstreamWaitingStatus)
+            {
+               Log($"[Status2] UpstreamWaiting Changed: {_upstreamWaitingStatus} -> {newS2.UpstreamWaitingStatus}");
+            }
+
+            if (_downstreamWaitingStatus != newS2.DownstreamWaitingStatus)
+            {
+               Log($"[Status2] DownstreamWaiting Changed: {_downstreamWaitingStatus} -> {newS2.DownstreamWaitingStatus}");
+            }
+
+            if (_dischargeRate != newS2.DischargeRate)
+            {
+               Log($"[Status2] DischargeRate Changed: {_dischargeRate} -> {newS2.DischargeRate}");
+            }
+
+            if (_stopTime != newS2.StopTime)
+            {
+               Log($"[Status2] StopTime Changed: {_stopTime} -> {newS2.StopTime}");
+            }
+
+            if (_processingCounter != newS2.ProcessingCounter)
+            {
+               Log($"[Status2] ProcessingCounter Changed: {_processingCounter} -> {newS2.ProcessingCounter}");
+            }
+
+            if (_retainedBoardCount != newS2.RetainedBoardCount)
+            {
+               Log($"[Status2] RetainedBoardCount Changed: {_retainedBoardCount} -> {newS2.RetainedBoardCount}");
+            }
+
+            if (_currentRecipeNo != newS2.CurrentRecipeNo)
+            {
+               Log($"[Status2] CurrentRecipeNo Changed: {_currentRecipeNo} -> {newS2.CurrentRecipeNo}");
+            }
+
+            if (_boardThicknessStatus != newS2.BoardThicknessStatus)
+            {
+               Log($"[Status2] BoardThickness Changed: {_boardThicknessStatus} -> {newS2.BoardThicknessStatus}");
+            }
+
+            if (_currentRecipeName != newS2.CurrentRecipeName)
+            {
+               Log($"[Status2] RecipeName Changed: {_currentRecipeName} -> {newS2.CurrentRecipeName}");
+            }
 
             _redLightStatus = newS2.RedLightStatus;
             _yellowLightStatus = newS2.YellowLightStatus;
