@@ -8,7 +8,7 @@ using System.IO;
 using WindowsFormsApp1.CCLink.Models;
 using WindowsFormsApp1.CCLink.Services;
 
-namespace WindowsFormsApp1
+namespace WindowsFormsApp1.CCLink.Forms
 {
    public partial class ScanMonitorForm : Form
    {

@@ -1,6 +1,6 @@
 using System;
 
-namespace WindowsFormsApp1.CCLink.Models
+namespace WindowsFormsApp1.Models
 {
    /// <summary>
    /// 定期上報共通資料 - Status2（詳細狀態資料）

@@ -47,7 +47,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CCLink\Models\ScanRange.cs" />
-    <Compile Include="CCLink\Models\TimeSyncSettings.cs" />
     <Compile Include="CCLink\Services\SettingsPersistence.cs" />
     <Compile Include="CCLink\Models\CCLinkConstants.cs" />
     <Compile Include="CCLink\Models\ControllerSettings.cs" />
@@ -60,48 +59,49 @@
     <Compile Include="CCLink\Adapters\MelsecApiAdapter.cs" />
     <Compile Include="CCLink\Controllers\MelsecControlCard.cs" />
     <Compile Include="CCLink\Models\MelsecException.cs" />
-    <Compile Include="CCLink\Services\AppPlcService.cs" />
+    <Compile Include="Forms\CommonReportSettingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\CommonReportSettingsForm.Designer.cs">
+      <DependentUpon>CommonReportSettingsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Models\CommonReportAlarm.cs" />
+    <Compile Include="Models\CommonReportStatus1.cs" />
+    <Compile Include="Models\CommonReportStatus2.cs" />
+    <Compile Include="Models\TimeSyncSettings.cs" />
+    <Compile Include="Services\AppPlcService.cs" />
     <Compile Include="CCLink\Services\MelsecHelper.cs" />
     <Compile Include="CCLink\Controllers\MockCCLinkController.cs" />
     <Compile Include="CCLink\Adapters\MockMelsecApiAdapter.cs" />
-    <Compile Include="CCLink\Services\PlcSimulator.cs" />
-    <Compile Include="CCLink\Models\CommonReportStatus1.cs" />
-    <Compile Include="CCLink\Models\CommonReportStatus2.cs" />
-    <Compile Include="CCLink\Models\CommonReportAlarm.cs" />
-    <Compile Include="CommonReportSettingsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="CommonReportSettingsForm.Designer.cs">
-      <DependentUpon>CommonReportSettingsForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingsForm.cs">
+    <Compile Include="CCLink\Forms\SettingsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SettingsForm.Designer.cs">
+    <Compile Include="CCLink\Forms\SettingsForm.Designer.cs">
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="ScanMonitorForm.cs">
+    <Compile Include="CCLink\Forms\ScanMonitorForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ScanMonitorForm.Designer.cs">
+    <Compile Include="CCLink\Forms\ScanMonitorForm.Designer.cs">
       <DependentUpon>ScanMonitorForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="CommonReportSettingsForm.resx">
-      <DependentUpon>CommonReportSettingsForm.cs</DependentUpon>
-    </EmbeddedResource>
+    <Compile Include="Services\PlcSimulator.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ScanMonitorForm.resx">
+    <EmbeddedResource Include="CCLink\Forms\ScanMonitorForm.resx">
       <DependentUpon>ScanMonitorForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\CommonReportSettingsForm.resx">
+      <DependentUpon>CommonReportSettingsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

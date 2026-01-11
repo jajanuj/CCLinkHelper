@@ -1,6 +1,6 @@
 using System;
 
-namespace WindowsFormsApp1.CCLink.Models
+namespace WindowsFormsApp1.Models
 {
    /// <summary>
    /// 定期上報共通資料 - Status1（機台狀態資料）
@@ -8,6 +8,25 @@ namespace WindowsFormsApp1.CCLink.Models
    /// </summary>
    public sealed class CommonReportStatus1 : IEquatable<CommonReportStatus1>
    {
+      #region Constructors
+
+      public CommonReportStatus1()
+      {
+      }
+
+      public CommonReportStatus1(ushort alarm, ushort machine, ushort action, ushort waiting, ushort control)
+      {
+         AlarmStatus = alarm;
+         MachineStatus = machine;
+         ActionStatus = action;
+         WaitingStatus = waiting;
+         ControlStatus = control;
+      }
+
+      #endregion
+
+      #region Properties
+
       /// <summary>
       /// 警報狀態 (LW1146)
       /// 1=重大警報, 2=輕警報, 3=預報, 4=無警報
@@ -38,27 +57,35 @@ namespace WindowsFormsApp1.CCLink.Models
       /// </summary>
       public ushort ControlStatus { get; set; }
 
-        public CommonReportStatus1() { }
+      #endregion
 
-        public CommonReportStatus1(ushort alarm, ushort machine, ushort action, ushort waiting, ushort control)
-        {
-            AlarmStatus = alarm;
-            MachineStatus = machine;
-            ActionStatus = action;
-            WaitingStatus = waiting;
-            ControlStatus = control;
-        }
+      #region Public Methods
+
+      public override string ToString()
+      {
+         return $"Status1[Alarm:{AlarmStatus}, Machine:{MachineStatus}, Action:{ActionStatus}, Waiting:{WaitingStatus}, Control:{ControlStatus}]";
+      }
+
+      #endregion
 
       #region Equality Members
 
       public bool Equals(CommonReportStatus1 other)
       {
-         if (ReferenceEquals(null, other)) return false;
-         if (ReferenceEquals(this, other)) return true;
-         return AlarmStatus == other.AlarmStatus 
-                && MachineStatus == other.MachineStatus 
-                && ActionStatus == other.ActionStatus 
-                && WaitingStatus == other.WaitingStatus 
+         if (ReferenceEquals(null, other))
+         {
+            return false;
+         }
+
+         if (ReferenceEquals(this, other))
+         {
+            return true;
+         }
+
+         return AlarmStatus == other.AlarmStatus
+                && MachineStatus == other.MachineStatus
+                && ActionStatus == other.ActionStatus
+                && WaitingStatus == other.WaitingStatus
                 && ControlStatus == other.ControlStatus;
       }
 
@@ -91,10 +118,5 @@ namespace WindowsFormsApp1.CCLink.Models
       }
 
       #endregion
-
-      public override string ToString()
-      {
-         return $"Status1[Alarm:{AlarmStatus}, Machine:{MachineStatus}, Action:{ActionStatus}, Waiting:{WaitingStatus}, Control:{ControlStatus}]";
-      }
    }
 }

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using WindowsFormsApp1.CCLink.Models;
+using WindowsFormsApp1.Models;
 
-namespace WindowsFormsApp1
+namespace WindowsFormsApp1.Forms
 {
     public partial class CommonReportSettingsForm : Form
     {

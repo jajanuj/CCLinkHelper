@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using WindowsFormsApp1.CCLink.Interfaces;
 using WindowsFormsApp1.CCLink.Models;
 
-namespace WindowsFormsApp1.CCLink.Services
+namespace WindowsFormsApp1.Services
 {
    /// <summary>
    /// 簡易 PLC 模擬器：可定期或手動在指定 request flag 上產生 pulse/toggle，並監控 response flag 的變化。

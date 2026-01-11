@@ -1,6 +1,6 @@
 using System;
 
-namespace WindowsFormsApp1.CCLink.Models
+namespace WindowsFormsApp1.Models
 {
    /// <summary>
    /// 對時功能設定。

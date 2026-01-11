@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using WindowsFormsApp1.CCLink.Models;
 
-namespace WindowsFormsApp1
+namespace WindowsFormsApp1.CCLink.Forms
 {
    public partial class SettingsForm : Form
    {

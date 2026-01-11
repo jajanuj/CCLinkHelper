@@ -1,4 +1,4 @@
-namespace WindowsFormsApp1
+namespace WindowsFormsApp1.CCLink.Forms
 {
    partial class SettingsForm
    {

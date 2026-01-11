@@ -312,7 +312,7 @@
          this.dtpDate.Format = System.Windows.Forms.DateTimePickerFormat.Short;
          this.dtpDate.Location = new System.Drawing.Point(6, 21);
          this.dtpDate.Name = "dtpDate";
-         this.dtpDate.Size = new System.Drawing.Size(100, 22);
+         this.dtpDate.Size = new System.Drawing.Size(116, 22);
          this.dtpDate.TabIndex = 0;
          // 
          // dtpTime
@@ -321,12 +321,12 @@
          this.dtpTime.Location = new System.Drawing.Point(6, 49);
          this.dtpTime.Name = "dtpTime";
          this.dtpTime.ShowUpDown = true;
-         this.dtpTime.Size = new System.Drawing.Size(100, 22);
+         this.dtpTime.Size = new System.Drawing.Size(116, 22);
          this.dtpTime.TabIndex = 1;
          // 
          // btnSyncFromPc
          // 
-         this.btnSyncFromPc.Location = new System.Drawing.Point(112, 19);
+         this.btnSyncFromPc.Location = new System.Drawing.Point(128, 18);
          this.btnSyncFromPc.Name = "btnSyncFromPc";
          this.btnSyncFromPc.Size = new System.Drawing.Size(150, 25);
          this.btnSyncFromPc.TabIndex = 2;
@@ -336,7 +336,7 @@
          // 
          // btnSetTimeToPlc
          // 
-         this.btnSetTimeToPlc.Location = new System.Drawing.Point(112, 47);
+         this.btnSetTimeToPlc.Location = new System.Drawing.Point(128, 46);
          this.btnSetTimeToPlc.Name = "btnSetTimeToPlc";
          this.btnSetTimeToPlc.Size = new System.Drawing.Size(150, 25);
          this.btnSetTimeToPlc.TabIndex = 3;

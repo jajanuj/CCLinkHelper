@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace WindowsFormsApp1.CCLink.Models
+namespace WindowsFormsApp1.Models
 {
    /// <summary>
    /// 定期上報共通資料 - Alarm（警報資料）

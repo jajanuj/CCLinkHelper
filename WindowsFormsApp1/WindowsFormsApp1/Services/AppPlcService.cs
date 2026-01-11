@@ -6,9 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using WindowsFormsApp1.CCLink.Interfaces;
 using WindowsFormsApp1.CCLink.Models;
-using WindowsFormsApp1.CCLink.Services;
+using WindowsFormsApp1.Models;
 
-namespace WindowsFormsApp1.CCLink.Services
+namespace WindowsFormsApp1.Services
 {
    public class AppPlcService : IDisposable
    {
