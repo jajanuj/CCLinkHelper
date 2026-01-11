@@ -9,11 +9,14 @@ namespace WindowsFormsApp1.CCLink.Forms
    {
       #region Constructors
 
-      public SettingsForm(ControllerSettings existing = null)
+      public SettingsForm() : this(null)
+      {
+      }
+
+      public SettingsForm(ControllerSettings existing)
       {
          InitializeComponent();
          Settings = existing ?? new ControllerSettings();
-         LoadToUI();
       }
 
       #endregion
@@ -24,23 +27,27 @@ namespace WindowsFormsApp1.CCLink.Forms
 
       #endregion
 
-      #region Private Methods
+      #region Protected Methods
 
-      private void LoadToUI()
+      protected override void OnLoad(EventArgs e)
       {
+         base.OnLoad(e);
+         if (!DesignMode)
+         {
+            LoadToUI();
+         }
+      }
 
+      protected virtual void LoadToUI()
+      {
          numPort.Value = Settings.Channel;
          numNetwork.Value = Settings.NetworkNo;
          numStation.Value = Settings.StationNo;
-         numHeartbeat.Value = Settings.HeartbeatIntervalMs;
          numTimeout.Value = Settings.TimeoutMs;
          numRetryCount.Value = Settings.RetryCount;
          numRetryBackoff.Value = Settings.RetryBackoffMs;
          cmbEndian.SelectedItem = Settings.Endian ?? "Big";
          chkIsx64.Checked = Settings.Isx64;
-         numTimeSync.Value = Settings.TimeSyncIntervalMs;
-         txtTrigger.Text = Settings.TimeSync?.TriggerAddress ?? "LB0301";
-         txtData.Text = Settings.TimeSync?.DataBaseAddress ?? "LW0000";
 
          dgvRanges.Rows.Clear();
          if (Settings.ScanRanges != null)
@@ -52,21 +59,17 @@ namespace WindowsFormsApp1.CCLink.Forms
          }
       }
 
-      private void btnSave_Click(object sender, EventArgs e)
+      protected virtual void btnSave_Click(object sender, EventArgs e)
       {
-
          Settings.Channel = (int)numPort.Value;
          Settings.NetworkNo = (int)numNetwork.Value;
          Settings.StationNo = (int)numStation.Value;
-         Settings.HeartbeatIntervalMs = (int)numHeartbeat.Value;
+
          Settings.TimeoutMs = (int)numTimeout.Value;
          Settings.RetryCount = (int)numRetryCount.Value;
          Settings.RetryBackoffMs = (int)numRetryBackoff.Value;
          Settings.Endian = cmbEndian.SelectedItem?.ToString() ?? "Big";
          Settings.Isx64 = chkIsx64.Checked;
-         Settings.TimeSyncIntervalMs = (int)numTimeSync.Value;
-         Settings.TimeSync.TriggerAddress = txtTrigger.Text?.Trim() ?? "LB0301";
-         Settings.TimeSync.DataBaseAddress = txtData.Text?.Trim() ?? "LW0000";
 
          var ranges = new List<ScanRange>();
          foreach (DataGridViewRow row in dgvRanges.Rows)
@@ -77,8 +80,8 @@ namespace WindowsFormsApp1.CCLink.Forms
             }
 
             string kind = row.Cells[0].Value?.ToString();
-            string startHex = row.Cells[1].Value?.ToString()?.Trim();
-            string endHex = row.Cells[2].Value?.ToString()?.Trim();
+            string startHex = row.Cells[1].Value?.ToString().Trim();
+            string endHex = row.Cells[2].Value?.ToString().Trim();
 
             if (!string.IsNullOrEmpty(kind) && !string.IsNullOrEmpty(startHex) && !string.IsNullOrEmpty(endHex))
             {
@@ -120,8 +123,8 @@ namespace WindowsFormsApp1.CCLink.Forms
          }
 
          Settings.ScanRanges = ranges;
-         this.DialogResult = DialogResult.OK;
-         this.Close();
+         DialogResult = DialogResult.OK;
+         Close();
       }
 
       #endregion

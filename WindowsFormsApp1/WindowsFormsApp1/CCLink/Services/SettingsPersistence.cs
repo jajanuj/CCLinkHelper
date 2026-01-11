@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Xml.Serialization;
-using WindowsFormsApp1.CCLink.Models;
 
 namespace WindowsFormsApp1.CCLink.Services
 {
@@ -9,7 +8,7 @@ namespace WindowsFormsApp1.CCLink.Services
    {
       #region Public Methods
 
-      public static ControllerSettings Load(string name = null)
+      public static T Load<T>(string name = null) where T : class
       {
          string target = GetPath(name);
          if (!File.Exists(target))
@@ -19,10 +18,10 @@ namespace WindowsFormsApp1.CCLink.Services
 
          try
          {
-            var serializer = new XmlSerializer(typeof(ControllerSettings));
+            var serializer = new XmlSerializer(typeof(T));
             using (var fs = new FileStream(target, FileMode.Open))
             {
-               return (ControllerSettings)serializer.Deserialize(fs);
+               return (T)serializer.Deserialize(fs);
             }
          }
          catch
@@ -31,10 +30,10 @@ namespace WindowsFormsApp1.CCLink.Services
          }
       }
 
-      public static void Save(ControllerSettings settings, string name = null)
+      public static void Save<T>(T settings, string name = null)
       {
          string target = GetPath(name);
-         var serializer = new XmlSerializer(typeof(ControllerSettings));
+         var serializer = new XmlSerializer(typeof(T));
          using (var sw = new StreamWriter(target))
          {
             serializer.Serialize(sw, settings);

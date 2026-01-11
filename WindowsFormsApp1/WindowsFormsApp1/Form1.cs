@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsFormsApp1.CCLink.Adapters;
-using WindowsFormsApp1.CCLink.Controllers;
 using WindowsFormsApp1.CCLink.Forms;
 using WindowsFormsApp1.CCLink.Interfaces;
 using WindowsFormsApp1.CCLink.Models;
@@ -27,7 +26,7 @@ namespace WindowsFormsApp1
       // 定期上報 Status1 設定值
       private ushort _alarmStatus = 4; // 預設：無警報
       private AppPlcService _appPlcService;
-      private ushort _boardThicknessStatus = 0;
+      private ushort _boardThicknessStatus;
       private ushort _controlStatus = 1; // 預設：自動運轉
       private string _currentRecipeName = "DEFAULT_RECIPE";
       private ushort _currentRecipeNo = 1;
@@ -38,31 +37,31 @@ namespace WindowsFormsApp1
       private ushort[] _errorCodes = new ushort[12];
 
       // 事件綁定標記
-      private bool _eventsBound = false;
+      private bool _eventsBound;
       private ushort _greenLightStatus = 3; // 預設：閃爍
       private MelsecHelper _helper;
 
       // 連接狀態標記
-      private bool _isOpened = false;
+      private bool _isOpened;
       private ushort _machineStatus = 4; // 預設：生產中
       private int _path = -1;
-      private uint _processingCounter = 0;
+      private uint _processingCounter;
 
       // 定期上報 Status2 設定值
-      private ushort _redLightStatus = 0;
-      private ushort _retainedBoardCount = 0;
+      private ushort _redLightStatus;
+      private ushort _retainedBoardCount;
 
       // 掃描監控視窗 (單例)
       private ScanMonitorForm _scanMonitorForm;
-      private ControllerSettings _settings;
+      private AppControllerSettings _settings;
 
       // PLC 模擬器
       private PlcSimulator _simulator;
-      private ushort _stopTime = 0;
+      private ushort _stopTime;
       private Timer _updateTimer;
       private ushort _upstreamWaitingStatus = 1;
       private ushort _waitingStatus = 1; // 預設：無等待
-      private ushort _yellowLightStatus = 0;
+      private ushort _yellowLightStatus;
 
       #endregion
 
@@ -73,7 +72,7 @@ namespace WindowsFormsApp1
          InitializeComponent();
 
          // 1. 加載或設定連線參數 (內建自動檢查檔名與開啟 UI 邏輯)
-         _settings = new ControllerSettings("Settings");
+         _settings = new AppControllerSettings("Settings");
 
          // 注意: adapter 和 helper 將在 btnOpen_Click 時根據選擇的模式初始化
 
@@ -144,18 +143,70 @@ namespace WindowsFormsApp1
 
       protected override void OnClosing(CancelEventArgs e)
       {
+         // 1. 取消後台任務
          _cts.Cancel();
+
+         // 2. 停止並釋放定期更新 Timer
+         try
+         {
+            if (_updateTimer != null)
+            {
+               _updateTimer.Change(Timeout.Infinite, Timeout.Infinite);
+               _updateTimer.Dispose();
+               _updateTimer = null;
+            }
+         }
+         catch (Exception ex)
+         {
+            System.Diagnostics.Debug.WriteLine($"Error disposing timer: {ex.Message}");
+         }
+
+         // 3. 關閉 Monitor 視窗 (若存在)
+         try
+         {
+            if (_scanMonitorForm != null && !_scanMonitorForm.IsDisposed)
+            {
+               _scanMonitorForm.Close();
+               _scanMonitorForm.Dispose();
+               _scanMonitorForm = null;
+            }
+         }
+         catch (Exception ex)
+         {
+            System.Diagnostics.Debug.WriteLine($"Error closing ScanMonitor: {ex.Message}");
+         }
+
+         // 4. 停止模擬器 (若存在)
          try
          {
             _simulator?.Stop();
             _simulator?.Dispose();
          }
-         catch
+         catch (Exception ex)
          {
+            System.Diagnostics.Debug.WriteLine($"Error stopping Simulator: {ex.Message}");
          }
 
-         _appPlcService?.Dispose();
-         _helper?.Dispose();
+         // 5. 釋放 Service
+         try
+         {
+            _appPlcService?.Dispose();
+         }
+         catch (Exception ex)
+         {
+            System.Diagnostics.Debug.WriteLine($"Error disposing AppPlcService: {ex.Message}");
+         }
+
+         // 6. 釋放 Helper
+         try
+         {
+            _helper?.Dispose();
+         }
+         catch (Exception ex)
+         {
+            System.Diagnostics.Debug.WriteLine($"Error disposing Helper: {ex.Message}");
+         }
+
          base.OnClosing(e);
       }
 

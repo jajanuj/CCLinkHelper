@@ -53,18 +53,23 @@
     <Compile Include="CCLink\Models\ControllerStatus.cs" />
     <Compile Include="CCLink\Interfaces\ICCLinkController.cs" />
     <Compile Include="CCLink\Interfaces\IMelsecApiAdapter.cs" />
-
-
     <Compile Include="CCLink\Models\LinkDeviceAddress.cs" />
     <Compile Include="CCLink\Adapters\MelsecApiAdapter.cs" />
     <Compile Include="CCLink\Controllers\MelsecControlCard.cs" />
     <Compile Include="CCLink\Models\MelsecException.cs" />
+    <Compile Include="Forms\AppSettingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\AppSettingsForm.Designer.cs">
+      <DependentUpon>AppSettingsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\CommonReportSettingsForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\CommonReportSettingsForm.Designer.cs">
       <DependentUpon>CommonReportSettingsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Models\AppControllerSettings.cs" />
     <Compile Include="Models\CommonReportAlarm.cs" />
     <Compile Include="Models\CommonReportStatus1.cs" />
     <Compile Include="Models\CommonReportStatus2.cs" />

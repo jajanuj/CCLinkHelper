@@ -18,8 +18,7 @@ namespace WindowsFormsApp1.CCLink.Forms
 
          this.label2 = new System.Windows.Forms.Label();
          this.numStation = new System.Windows.Forms.NumericUpDown();
-         this.label3 = new System.Windows.Forms.Label();
-         this.numHeartbeat = new System.Windows.Forms.NumericUpDown();
+
          this.dgvRanges = new System.Windows.Forms.DataGridView();
          this.colKind = new System.Windows.Forms.DataGridViewComboBoxColumn();
          this.colStart = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -39,21 +38,16 @@ namespace WindowsFormsApp1.CCLink.Forms
          this.cmbEndian = new System.Windows.Forms.ComboBox();
          this.chkIsx64 = new System.Windows.Forms.CheckBox();
          this.label10 = new System.Windows.Forms.Label();
-         this.label11 = new System.Windows.Forms.Label();
-         this.numTimeSync = new System.Windows.Forms.NumericUpDown();
-         this.label12 = new System.Windows.Forms.Label();
-         this.txtTrigger = new System.Windows.Forms.TextBox();
-         this.label13 = new System.Windows.Forms.Label();
-         this.txtData = new System.Windows.Forms.TextBox();
+
          ((System.ComponentModel.ISupportInitialize)(this.numStation)).BeginInit();
-         ((System.ComponentModel.ISupportInitialize)(this.numHeartbeat)).BeginInit();
+
          ((System.ComponentModel.ISupportInitialize)(this.dgvRanges)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.numPort)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.numNetwork)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.numTimeout)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.numRetryCount)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.numRetryBackoff)).BeginInit();
-         ((System.ComponentModel.ISupportInitialize)(this.numTimeSync)).BeginInit();
+
          this.SuspendLayout();
 
          // 
@@ -73,25 +67,7 @@ namespace WindowsFormsApp1.CCLink.Forms
          this.numStation.Name = "numStation";
          this.numStation.Size = new System.Drawing.Size(60, 22);
          this.numStation.TabIndex = 7;
-         // 
-         // label3
-         // 
-         this.label3.AutoSize = true;
-         this.label3.Location = new System.Drawing.Point(200, 15);
-         this.label3.Name = "label3";
-         this.label3.Size = new System.Drawing.Size(62, 12);
-         this.label3.TabIndex = 11;
-         this.label3.Text = "HB Int (ms):";
-         // 
-         // numHeartbeat
-         // 
-         this.numHeartbeat.Location = new System.Drawing.Point(300, 13);
-         this.numHeartbeat.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
-         this.numHeartbeat.Minimum = new decimal(new int[] { 10, 0, 0, 0 });
-         this.numHeartbeat.Name = "numHeartbeat";
-         this.numHeartbeat.Size = new System.Drawing.Size(80, 22);
-         this.numHeartbeat.TabIndex = 12;
-         this.numHeartbeat.Value = new decimal(new int[] { 300, 0, 0, 0 });
+
          // 
          // dgvRanges
          // 
@@ -130,7 +106,7 @@ namespace WindowsFormsApp1.CCLink.Forms
          this.btnSave.Name = "btnSave";
          this.btnSave.Size = new System.Drawing.Size(75, 25);
          this.btnSave.TabIndex = 23;
-         this.btnSave.Text = "儲存並啟動";
+         this.btnSave.Text = "Save";
          this.btnSave.UseVisualStyleBackColor = true;
          this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
          // 
@@ -259,68 +235,14 @@ namespace WindowsFormsApp1.CCLink.Forms
          this.chkIsx64.TabIndex = 19;
          this.chkIsx64.Text = "Is 64-bit?";
          this.chkIsx64.UseVisualStyleBackColor = true;
-         // 
-         // label11
-         // 
-         this.label11.AutoSize = true;
-         this.label11.Location = new System.Drawing.Point(200, 155);
-         this.label11.Name = "label11";
-         this.label11.Size = new System.Drawing.Size(63, 12);
-         this.label11.TabIndex = 10;
-         this.label11.Text = "TS Int (ms):";
-         // 
-         // numTimeSync
-         // 
-         this.numTimeSync.Location = new System.Drawing.Point(300, 153);
-         this.numTimeSync.Maximum = new decimal(new int[] { 3600000, 0, 0, 0 });
-         this.numTimeSync.Name = "numTimeSync";
-         this.numTimeSync.Size = new System.Drawing.Size(80, 22);
-         this.numTimeSync.TabIndex = 10;
-         this.numTimeSync.Value = new decimal(new int[] { 1000, 0, 0, 0 });
-         // 
-         // label12
-         // 
-         this.label12.AutoSize = true;
-         this.label12.Location = new System.Drawing.Point(12, 185);
-         this.label12.Name = "label12";
-         this.label12.Size = new System.Drawing.Size(61, 12);
-         this.label12.TabIndex = 24;
-         this.label12.Text = "TS Trigger:";
-         // 
-         // txtTrigger
-         // 
-         this.txtTrigger.Location = new System.Drawing.Point(80, 182);
-         this.txtTrigger.Name = "txtTrigger";
-         this.txtTrigger.Size = new System.Drawing.Size(80, 22);
-         this.txtTrigger.TabIndex = 25;
-         // 
-         // label13
-         // 
-         this.label13.AutoSize = true;
-         this.label13.Location = new System.Drawing.Point(200, 185);
-         this.label13.Name = "label13";
-         this.label13.Size = new System.Drawing.Size(46, 12);
-         this.label13.TabIndex = 26;
-         this.label13.Text = "TS Data:";
-         // 
-         // txtData
-         // 
-         this.txtData.Location = new System.Drawing.Point(300, 182);
-         this.txtData.Name = "txtData";
-         this.txtData.Size = new System.Drawing.Size(80, 22);
-         this.txtData.TabIndex = 27;
+
          // 
          // SettingsForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.ClientSize = new System.Drawing.Size(400, 480);
-         this.Controls.Add(this.txtData);
-         this.Controls.Add(this.label13);
-         this.Controls.Add(this.txtTrigger);
-         this.Controls.Add(this.label12);
-         this.Controls.Add(this.numTimeSync);
-         this.Controls.Add(this.label11);
+
          this.Controls.Add(this.chkIsx64);
          this.Controls.Add(this.cmbEndian);
          this.Controls.Add(this.label10);
@@ -337,8 +259,7 @@ namespace WindowsFormsApp1.CCLink.Forms
          this.Controls.Add(this.label4);
          this.Controls.Add(this.btnSave);
          this.Controls.Add(this.dgvRanges);
-         this.Controls.Add(this.numHeartbeat);
-         this.Controls.Add(this.label3);
+
          this.Controls.Add(this.numStation);
          this.Controls.Add(this.label2);
 
@@ -349,48 +270,42 @@ namespace WindowsFormsApp1.CCLink.Forms
          this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
          this.Text = "連線與通訊設定";
          ((System.ComponentModel.ISupportInitialize)(this.numStation)).EndInit();
-         ((System.ComponentModel.ISupportInitialize)(this.numHeartbeat)).EndInit();
+
          ((System.ComponentModel.ISupportInitialize)(this.dgvRanges)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.numPort)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.numNetwork)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.numTimeout)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.numRetryCount)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.numRetryBackoff)).EndInit();
-         ((System.ComponentModel.ISupportInitialize)(this.numTimeSync)).EndInit();
+
          this.ResumeLayout(false);
          this.PerformLayout();
 
       }
 
 
-      private System.Windows.Forms.Label label2;
-      private System.Windows.Forms.NumericUpDown numStation;
-      private System.Windows.Forms.Label label3;
-      private System.Windows.Forms.NumericUpDown numHeartbeat;
-      private System.Windows.Forms.DataGridView dgvRanges;
-      private System.Windows.Forms.Button btnSave;
-      private System.Windows.Forms.DataGridViewComboBoxColumn colKind;
-      private System.Windows.Forms.DataGridViewTextBoxColumn colStart;
-      private System.Windows.Forms.DataGridViewTextBoxColumn colEnd;
-      private System.Windows.Forms.Label label4;
-      private System.Windows.Forms.Label label5;
-      private System.Windows.Forms.NumericUpDown numPort;
-      private System.Windows.Forms.Label label6;
-      private System.Windows.Forms.NumericUpDown numNetwork;
-      private System.Windows.Forms.Label label7;
-      private System.Windows.Forms.NumericUpDown numTimeout;
-      private System.Windows.Forms.Label label8;
-      private System.Windows.Forms.NumericUpDown numRetryCount;
-      private System.Windows.Forms.Label label9;
-      private System.Windows.Forms.NumericUpDown numRetryBackoff;
-      private System.Windows.Forms.Label label10;
-      private System.Windows.Forms.ComboBox cmbEndian;
-      private System.Windows.Forms.CheckBox chkIsx64;
-      private System.Windows.Forms.Label label11;
-      private System.Windows.Forms.NumericUpDown numTimeSync;
-      private System.Windows.Forms.Label label12;
-      private System.Windows.Forms.TextBox txtTrigger;
-      private System.Windows.Forms.Label label13;
-      private System.Windows.Forms.TextBox txtData;
+      protected System.Windows.Forms.Label label2;
+      protected System.Windows.Forms.NumericUpDown numStation;
+
+      protected System.Windows.Forms.DataGridView dgvRanges;
+      protected System.Windows.Forms.Button btnSave;
+      protected System.Windows.Forms.DataGridViewComboBoxColumn colKind;
+      protected System.Windows.Forms.DataGridViewTextBoxColumn colStart;
+      protected System.Windows.Forms.DataGridViewTextBoxColumn colEnd;
+      protected System.Windows.Forms.Label label4;
+      protected System.Windows.Forms.Label label5;
+      protected System.Windows.Forms.NumericUpDown numPort;
+      protected System.Windows.Forms.Label label6;
+      protected System.Windows.Forms.NumericUpDown numNetwork;
+      protected System.Windows.Forms.Label label7;
+      protected System.Windows.Forms.NumericUpDown numTimeout;
+      protected System.Windows.Forms.Label label8;
+      protected System.Windows.Forms.NumericUpDown numRetryCount;
+      protected System.Windows.Forms.Label label9;
+      protected System.Windows.Forms.NumericUpDown numRetryBackoff;
+      protected System.Windows.Forms.Label label10;
+      protected System.Windows.Forms.ComboBox cmbEndian;
+      protected System.Windows.Forms.CheckBox chkIsx64;
+
    }
 }
