@@ -53,8 +53,8 @@
     <Compile Include="CCLink\Models\ControllerStatus.cs" />
     <Compile Include="CCLink\Interfaces\ICCLinkController.cs" />
     <Compile Include="CCLink\Interfaces\IMelsecApiAdapter.cs" />
-    <Compile Include="CCLink\Interfaces\IPlcDriver.cs" />
-    <Compile Include="CCLink\Drivers\MelsecPlcDriver.cs" />
+
+
     <Compile Include="CCLink\Models\LinkDeviceAddress.cs" />
     <Compile Include="CCLink\Adapters\MelsecApiAdapter.cs" />
     <Compile Include="CCLink\Controllers\MelsecControlCard.cs" />

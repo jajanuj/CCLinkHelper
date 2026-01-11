@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using WindowsFormsApp1.CCLink.Interfaces;
@@ -35,10 +34,6 @@ namespace WindowsFormsApp1.CCLink.Services
       // Device Cache: Key = Kind (e.g. "LB"), Value = short[]
       private readonly Dictionary<string, short[]> _deviceMemory = new Dictionary<string, short[]>(StringComparer.OrdinalIgnoreCase);
 
-      // Diagnostics / Change Tracking
-      private readonly Dictionary<string, int> _lastArrayIds = new Dictionary<string, int>();
-      private readonly Dictionary<string, string> _lastPollBuffers = new Dictionary<string, string>();
-      private readonly Dictionary<string, int> _lastUpdateArrayIds = new Dictionary<string, int>();
       private readonly Action<string> _logger;
       private readonly object _planLock = new object();
       private readonly ControllerSettings _settings;
@@ -523,9 +518,6 @@ namespace WindowsFormsApp1.CCLink.Services
 
                _resolvedPath = path;
                _deviceMemory.Clear();
-               _lastArrayIds.Clear();
-               _lastUpdateArrayIds.Clear();
-               _lastPollBuffers.Clear();
 
                _status.IsConnected = true;
                _status.Channel = _settings.Port;

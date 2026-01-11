@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
+using WindowsFormsApp1.CCLink.Adapters;
 using WindowsFormsApp1.CCLink.Interfaces;
 using WindowsFormsApp1.CCLink.Models;
-using WindowsFormsApp1.CCLink.Adapters;
 
 namespace WindowsFormsApp1.CCLink.Controllers
 {
@@ -17,7 +16,7 @@ namespace WindowsFormsApp1.CCLink.Controllers
       private readonly IMelsecApiAdapter _api;
       private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
       private readonly ControllerSettings _settings;
-      private int _pathHandle = 0;
+      private int _pathHandle;
       private ControllerStatus _status = new ControllerStatus();
 
       #endregion
@@ -114,18 +113,18 @@ namespace WindowsFormsApp1.CCLink.Controllers
          try
          {
             int deviceCode = MapDevice(parsed.Kind);
-            
+
             // 計算對齊到 8 的倍數的起始位址（向下取整）
             // 例如：LB0001 -> LB0000, LB0009 -> LB0008
-            int alignedStart = (parsed.Start / 8) * 8;
-            
+            int alignedStart = parsed.Start / 8 * 8;
+
             // 計算目標位元在 8 位元組中的位置 (0-7)
             int bitPosition = parsed.Start - alignedStart;
-            
+
             // 讀取位元軟元件，size 固定為 1
             int size = 1;
             short[] buffer = new short[1];
-            
+
             var rc = _api.ReceiveEx(_pathHandle, 0, 0, deviceCode, alignedStart, ref size, buffer);
             if (rc != 0)
             {
