@@ -88,14 +88,28 @@ namespace WindowsFormsApp1.CCLink.Controllers
 
       public bool GetBit(string address)
       {
-         if (_bitMemory.TryGetValue(address, out var mem)) return mem.FirstOrDefault();
+         if (_bitMemory.TryGetValue(address, out var mem))
+         {
+            return mem.FirstOrDefault();
+         }
+
          return false;
       }
 
       public short GetWord(string address)
       {
-         if (_wordMemory.TryGetValue(address, out var mem)) return mem.FirstOrDefault();
+         if (_wordMemory.TryGetValue(address, out var mem))
+         {
+            return mem.FirstOrDefault();
+         }
+
          return 0;
+      }
+
+      public void SetScanRanges(IEnumerable<ScanRange> ranges)
+      {
+         // Mock Controller 可以選擇忽略掃描範圍，因為它主要依賴 Read/Write 觸發記憶體更新
+         // 或可在此處初始化記憶體
       }
    }
 }

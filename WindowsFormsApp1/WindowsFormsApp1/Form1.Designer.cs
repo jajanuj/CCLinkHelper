@@ -9,8 +9,7 @@
 
       private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
       private System.Windows.Forms.GroupBox grpConnectionMode;
-      private System.Windows.Forms.RadioButton rbMockMode;
-      private System.Windows.Forms.RadioButton rbRealMode;
+      private System.Windows.Forms.ComboBox cmbDriverType;
       private System.Windows.Forms.Button btnOpen;
       private System.Windows.Forms.Button btnRead;
       private System.Windows.Forms.Button btnWrite;
@@ -49,8 +48,8 @@
       {
          this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
          this.grpConnectionMode = new System.Windows.Forms.GroupBox();
-         this.rbMockMode = new System.Windows.Forms.RadioButton();
-         this.rbRealMode = new System.Windows.Forms.RadioButton();
+         this.grpConnectionMode = new System.Windows.Forms.GroupBox();
+         this.cmbDriverType = new System.Windows.Forms.ComboBox();
          this.btnOpen = new System.Windows.Forms.Button();
          this.btnRead = new System.Windows.Forms.Button();
          this.btnWrite = new System.Windows.Forms.Button();
@@ -107,37 +106,24 @@
          // 
          // grpConnectionMode
          // 
-         this.grpConnectionMode.Controls.Add(this.rbMockMode);
-         this.grpConnectionMode.Controls.Add(this.rbRealMode);
+         this.grpConnectionMode.Controls.Add(this.cmbDriverType);
          this.grpConnectionMode.Location = new System.Drawing.Point(20, 20);
          this.grpConnectionMode.Margin = new System.Windows.Forms.Padding(10);
          this.grpConnectionMode.Name = "grpConnectionMode";
          this.grpConnectionMode.Size = new System.Drawing.Size(200, 80);
          this.grpConnectionMode.TabIndex = 15;
          this.grpConnectionMode.TabStop = false;
-         this.grpConnectionMode.Text = "連接模式";
+         this.grpConnectionMode.Text = "Driver Type";
          // 
-         // rbMockMode
+         // cmbDriverType
          // 
-         this.rbMockMode.AutoSize = true;
-         this.rbMockMode.Location = new System.Drawing.Point(15, 25);
-         this.rbMockMode.Name = "rbMockMode";
-         this.rbMockMode.Size = new System.Drawing.Size(122, 18);
-         this.rbMockMode.TabIndex = 0;
-         this.rbMockMode.Text = "模擬模式 (Mock)";
-         this.rbMockMode.UseVisualStyleBackColor = true;
-         // 
-         // rbRealMode
-         // 
-         this.rbRealMode.AutoSize = true;
-         this.rbRealMode.Checked = true;
-         this.rbRealMode.Location = new System.Drawing.Point(15, 50);
-         this.rbRealMode.Name = "rbRealMode";
-         this.rbRealMode.Size = new System.Drawing.Size(122, 18);
-         this.rbRealMode.TabIndex = 1;
-         this.rbRealMode.TabStop = true;
-         this.rbRealMode.Text = "實際連接 (Real)";
-         this.rbRealMode.UseVisualStyleBackColor = true;
+         this.cmbDriverType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.cmbDriverType.FormattingEnabled = true;
+         this.cmbDriverType.Location = new System.Drawing.Point(15, 30);
+         this.cmbDriverType.Name = "cmbDriverType";
+         this.cmbDriverType.Size = new System.Drawing.Size(170, 23);
+         this.cmbDriverType.TabIndex = 0;
+         this.cmbDriverType.SelectedIndexChanged += new System.EventHandler(this.cmbDriverType_SelectedIndexChanged);
          // 
          // btnOpen
          // 

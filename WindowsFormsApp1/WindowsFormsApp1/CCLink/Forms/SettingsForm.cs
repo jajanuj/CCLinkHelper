@@ -40,14 +40,7 @@ namespace WindowsFormsApp1.CCLink.Forms
 
       protected virtual void LoadToUI()
       {
-         numPort.Value = Settings.Channel;
-         numNetwork.Value = Settings.NetworkNo;
-         numStation.Value = Settings.StationNo;
-         numTimeout.Value = Settings.TimeoutMs;
-         numRetryCount.Value = Settings.RetryCount;
-         numRetryBackoff.Value = Settings.RetryBackoffMs;
-         cmbEndian.SelectedItem = Settings.Endian ?? "Big";
-         chkIsx64.Checked = Settings.Isx64;
+
 
          dgvRanges.Rows.Clear();
          if (Settings.ScanRanges != null)
@@ -61,15 +54,7 @@ namespace WindowsFormsApp1.CCLink.Forms
 
       protected virtual void btnSave_Click(object sender, EventArgs e)
       {
-         Settings.Channel = (int)numPort.Value;
-         Settings.NetworkNo = (int)numNetwork.Value;
-         Settings.StationNo = (int)numStation.Value;
 
-         Settings.TimeoutMs = (int)numTimeout.Value;
-         Settings.RetryCount = (int)numRetryCount.Value;
-         Settings.RetryBackoffMs = (int)numRetryBackoff.Value;
-         Settings.Endian = cmbEndian.SelectedItem?.ToString() ?? "Big";
-         Settings.Isx64 = chkIsx64.Checked;
 
          var ranges = new List<ScanRange>();
          foreach (DataGridViewRow row in dgvRanges.Rows)

@@ -59,6 +59,11 @@ namespace WindowsFormsApp1.CCLink.Interfaces
       /// </summary>
       short GetWord(string address);
 
+      /// <summary>
+      /// 設定自動掃描範圍。
+      /// </summary>
+      void SetScanRanges(IEnumerable<ScanRange> ranges);
+
       #endregion
    }
 }

@@ -227,6 +227,11 @@ namespace WindowsFormsApp1.CCLink.Controllers
       public bool GetBit(string address) => false;
       public short GetWord(string address) => 0;
 
+      public void SetScanRanges(IEnumerable<ScanRange> ranges)
+      {
+         // MelsecControlCard 目前不支援自動掃描與快取，此方法為介面實作空方法
+      }
+
       public void Dispose()
       {
          if (_pathHandle != 0)

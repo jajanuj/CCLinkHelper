@@ -29,6 +29,15 @@ namespace WindowsFormsApp1.CCLink.Models
          Advice = advice;
       }
 
+      public MelsecException(string message, Exception innerException = null)
+         : base(message, innerException)
+      {
+          ReturnCode = -1;
+          ApiName = "General";
+          Category = MelsecErrorCategory.Transient;
+          Advice = "Check logs.";
+      }
+
       #endregion
 
       #region Properties

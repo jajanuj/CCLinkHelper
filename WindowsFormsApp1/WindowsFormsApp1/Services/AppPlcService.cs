@@ -23,6 +23,8 @@ namespace WindowsFormsApp1.Services
 
       #region Fields
 
+      private readonly AppControllerSettings _settings;
+
       // Common Report Cache
       private readonly object _commonReportLock = new object();
 
@@ -56,18 +58,40 @@ namespace WindowsFormsApp1.Services
 
       #region Constructors
 
-      #region Constructor
-
-      public AppPlcService(ICCLinkController controller, Action<string> logger = null)
+      public AppPlcService(AppControllerSettings settings, Action<string> logger = null)
       {
-         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
+         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
          _logger = logger;
          _syncContext = SynchronizationContext.Current;
+
+         // Factory logic for Controller
+         if (settings.DriverType == MelsecDriverType.Simulator)
+         {
+             var mockAdapter = new CCLink.Adapters.MockMelsecApiAdapter();
+             _controller = new CCLink.Services.MelsecHelper(mockAdapter, settings);
+         }
+         else if (settings.DriverType == MelsecDriverType.MxComponent)
+         {
+             _controller = new CCLink.Adapters.MxComponentAdapter(settings.LogicalStationNumber);
+         }
+         else
+         {
+             // Default MelsecBoard
+             var adapter = new CCLink.Adapters.MelsecApiAdapter();
+             // Note: Channel is set via method calls or not needed for default constructor?
+             // MelsecApiAdapter usually takes channel/station in Open method or config.
+             // Checking MelsecApiAdapter.cs... It has parameterless constructor. And Open(channel, ...)
+             // So here we instantiate it without args.
+             // Use MelsecHelper as the controller implementation
+             var helper = new CCLink.Services.MelsecHelper(adapter, settings);
+             _controller = helper;
+         }
       }
 
-      #endregion
+      public ICCLinkController Controller => _controller;
 
       #endregion
+
 
       #region Properties
 
@@ -425,6 +449,7 @@ namespace WindowsFormsApp1.Services
          _logger?.Invoke($"[AppService] TimeSync started (Trigger: {triggerAddr}, Data: {dataAddr})");
          _timeSyncTask = Task.Run(() => TimeSyncLoopAsync(interval, triggerAddr, dataAddr, _timeSyncCts.Token));
       }
+
 
       public void StopTimeSync()
       {

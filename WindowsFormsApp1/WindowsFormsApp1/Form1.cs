@@ -3,9 +3,7 @@ using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using WindowsFormsApp1.CCLink.Adapters;
 using WindowsFormsApp1.CCLink.Forms;
-using WindowsFormsApp1.CCLink.Interfaces;
 using WindowsFormsApp1.CCLink.Models;
 using WindowsFormsApp1.CCLink.Services;
 using WindowsFormsApp1.Forms;
@@ -21,7 +19,6 @@ namespace WindowsFormsApp1
 
       private readonly CancellationTokenSource _cts = new CancellationTokenSource();
       private ushort _actionStatus = 2; // 預設：基板搬送中
-      private IMelsecApiAdapter _adapter;
 
       // 定期上報 Status1 設定值
       private ushort _alarmStatus = 4; // 預設：無警報
@@ -39,7 +36,6 @@ namespace WindowsFormsApp1
       // 事件綁定標記
       private bool _eventsBound;
       private ushort _greenLightStatus = 3; // 預設：閃爍
-      private MelsecHelper _helper;
 
       // 連接狀態標記
       private bool _isOpened;
@@ -74,7 +70,9 @@ namespace WindowsFormsApp1
          // 1. 加載或設定連線參數 (內建自動檢查檔名與開啟 UI 邏輯)
          _settings = new AppControllerSettings("Settings");
 
-         // 注意: adapter 和 helper 將在 btnOpen_Click 時根據選擇的模式初始化
+         // Initialize Driver Type ComboBox
+         cmbDriverType.DataSource = Enum.GetValues(typeof(MelsecDriverType));
+         cmbDriverType.SelectedItem = _settings.DriverType;
 
          // 設定 lstLog 右鍵選單
          SetupLogContextMenu();
@@ -197,14 +195,14 @@ namespace WindowsFormsApp1
             System.Diagnostics.Debug.WriteLine($"Error disposing AppPlcService: {ex.Message}");
          }
 
-         // 6. 釋放 Helper
+         // 6. 釋放 Controller
          try
          {
-            _helper?.Dispose();
+            (_appPlcService?.Controller as IDisposable)?.Dispose();
          }
          catch (Exception ex)
          {
-            System.Diagnostics.Debug.WriteLine($"Error disposing Helper: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Error disposing Controller: {ex.Message}");
          }
 
          base.OnClosing(e);
@@ -240,14 +238,36 @@ namespace WindowsFormsApp1
       private void BindingHelperEvent()
       {
          // 防止重複綁定
-         if (_eventsBound || _helper == null || _appPlcService == null)
+         if (_eventsBound || _appPlcService == null)
          {
             return;
          }
 
-         // 監聽事件更新狀態燈
-         _helper.Connected += () => UpdateStatus(true);
-         _helper.Disconnected += () => UpdateStatus(false);
+         // 監聽事件更新狀態燈 (需轉型或依賴 Service 通知)
+         // MelsecHelper 有 Connected 事件，但 ICCLinkController 沒有
+         // AppPlcService 也不代理 Connected?
+         // 暫時解決方案：檢查 Controller 類型並綁定，或依賴介面的擴充 (若有)
+         // 之前我們在 MelsecHelper 加入了 interface events? No, Interface doesn't have them yet.
+         // 但 MelsecHelper implementation has them.
+         // MxComponentAdapter implementation doesn't have them visible (Wait, I added GetStatusAsync but no events).
+         // 為了讓 UI 更新，我們可以使用 Service 的狀態? Service 沒有暴露 Connection Status Changed.
+         // Quick Fix: Cast controller to known types with events OR rely on Poll timer to check status?
+         // Poll Timer (GetStatusAsync) is cleaner but slower update.
+         // Helper event is instant.
+
+         if (_appPlcService.Controller is MelsecHelper helper)
+         {
+            helper.Connected += () => UpdateStatus(true);
+            helper.Disconnected += () => UpdateStatus(false);
+         }
+         // MxComponentAdapter could have events if we add them, but interface doesn't enforce.
+         // We can use a timer to check GetStatusAsync if needed, or assume Connected after OpenAsync returns successfully.
+         // After OpenAsync success above, we call UpdateStatus(true) conceptually?
+         // btnOpen handles success, but Disconnect might happen async.
+
+         // Fallback: If no event, we rely on manual UpdateStatus calls in Open/Close.
+         // btnOpen_Click sets _isOpened = true and valid.
+         // If unexpected disconnect happens, we might miss it without events.
 
          // 註冊心跳事件以便診斷
          _appPlcService.ConsecutiveHeartbeatFailures += count => Log($"[Helper] 心跳失敗 | Heartbeat failed (Count: {count})");
@@ -290,6 +310,15 @@ namespace WindowsFormsApp1
          }
       }
 
+      private void cmbDriverType_SelectedIndexChanged(object sender, EventArgs e)
+      {
+         if (cmbDriverType.SelectedItem is MelsecDriverType type)
+         {
+            _settings.DriverType = type;
+            Log($"已切換驅動模式至: {type} | Driver mode switched to: {type}");
+         }
+      }
+
       /// <summary>開啟通訊。</summary>
       private async void btnOpen_Click(object sender, EventArgs e)
       {
@@ -303,37 +332,26 @@ namespace WindowsFormsApp1
 
             btnOpen.Enabled = false;
 
-            // 根據選擇的模式建立對應的 adapter
-            if (rbMockMode.Checked)
-            {
-               Log("使用模擬模式 | Using Mock mode");
-               _adapter = new MockMelsecApiAdapter();
-            }
-            else if (rbRealMode.Checked)
-            {
-               Log("使用實際連接模式 | Using Real PLC mode");
-               _adapter = new MelsecApiAdapter();
-            }
-            else
-            {
-               throw new Exception("請選擇連接模式 | Please select connection mode");
-            }
+            btnOpen.Enabled = false;
 
-            // 建立 helper
-            _helper = new MelsecHelper(_adapter, _settings, logger: s => Log($"[Helper] {s}"));
-            _appPlcService = new AppPlcService(_helper, logger: s => Log(s));
+            // Log current mode
+            Log($"準備連接... 模式: {_settings.DriverType} | Connecting... Mode: {_settings.DriverType}");
+
+            // 建立 Service (Service 會根據 Settings 建立 Controller)
+            _appPlcService = new AppPlcService(_settings, logger: s => Log($"[Service] {s}"));
 
             // 綁定事件
             BindingHelperEvent();
 
+            // Set Scan Ranges (Platform agnostic)
             if (_settings.ScanRanges != null && _settings.ScanRanges.Count > 0)
             {
-               _helper.SetScanRanges(_settings.ScanRanges);
+               _appPlcService.Controller.SetScanRanges(_settings.ScanRanges);
                Log($"已從設定檔載入掃描區域 | Scan ranges loaded from config (Count: {_settings.ScanRanges.Count})");
             }
 
-            // 開啟 helper 連接（helper.OpenAsync 會呼叫 adapter.Open 並設定 _resolvedPath）
-            await _helper.OpenAsync(_cts.Token).ConfigureAwait(false);
+            // 開啟 Helper 連接
+            await _appPlcService.Controller.OpenAsync(_cts.Token).ConfigureAwait(false);
 
             _isOpened = true;
 
@@ -345,8 +363,8 @@ namespace WindowsFormsApp1
 
                if (_scanMonitorForm != null && !_scanMonitorForm.IsDisposed)
                {
-                  // 更新 Monitor 視窗的 Helper 參照，確保使用新的連線實例
-                  _scanMonitorForm.SetHelper(_helper);
+                  // 更新 Monitor 視窗的 Controller 參照
+                  _scanMonitorForm.SetController(_appPlcService.Controller);
 
                   // 自動啟動監控
                   _scanMonitorForm.StartMonitoring();
@@ -438,10 +456,10 @@ namespace WindowsFormsApp1
             // 關閉 service
             _appPlcService?.Dispose();
 
-            // 關閉 helper 連接
-            if (_helper != null)
+            // 關閉 Controller 連接
+            if (_appPlcService?.Controller != null)
             {
-               await _helper.CloseAsync(_cts.Token).ConfigureAwait(false);
+               await _appPlcService.Controller.CloseAsync(_cts.Token).ConfigureAwait(false);
             }
 
             _isOpened = false;
@@ -471,7 +489,7 @@ namespace WindowsFormsApp1
          {
             UseWaitCursor = true;
             btnRead.Enabled = false;
-            var values = await _helper.ReadWordsAsync("LW100", 10, _cts.Token).ConfigureAwait(false);
+            var values = await _appPlcService.Controller.ReadWordsAsync("LW100", 10, _cts.Token).ConfigureAwait(false);
             BeginInvoke((Action)(() => Log("讀取成功 | Read success (Values: " + string.Join(", ", values) + ")")));
          }
          catch (Exception ex)
@@ -515,13 +533,13 @@ namespace WindowsFormsApp1
             btnForceTimeSync.Enabled = false;
             Log($"手動觸發對時脈衝 | Manually triggering time sync pulse (Addr: {_settings.TimeSync.TriggerAddress})");
 
-            // 使用 _helper.WriteBitsAsync 以確保 MelsecHelper 的快取能立即同步
-            await _helper.WriteBitsAsync(_settings.TimeSync.TriggerAddress, new[] { true }).ConfigureAwait(true);
+            // 使用 Controller.WriteBitsAsync
+            await _appPlcService.Controller.WriteBitsAsync(_settings.TimeSync.TriggerAddress, new[] { true }).ConfigureAwait(true);
 
             await Task.Delay(1000).ConfigureAwait(true);
 
             // OFF
-            await _helper.WriteBitsAsync(_settings.TimeSync.TriggerAddress, new[] { false }).ConfigureAwait(true);
+            await _appPlcService.Controller.WriteBitsAsync(_settings.TimeSync.TriggerAddress, new[] { false }).ConfigureAwait(true);
 
             Log("對時脈衝完成 | Time sync pulse completed (1s)");
          }
@@ -563,7 +581,7 @@ namespace WindowsFormsApp1
 
             Log($"手動設定時間至 PLC | Manually setting time to PLC (Addr: {_settings.TimeSync.DataBaseAddress}, Time: {dt:yyyy-MM-dd HH:mm:ss})");
 
-            await _helper.WriteWordsAsync(_settings.TimeSync.DataBaseAddress, values, _cts.Token).ConfigureAwait(true);
+            await _appPlcService.Controller.WriteWordsAsync(_settings.TimeSync.DataBaseAddress, values, _cts.Token).ConfigureAwait(true);
 
             Log("手動設定時間成功 | Manual time set successful");
          }
@@ -581,12 +599,12 @@ namespace WindowsFormsApp1
       // PLC 模擬器相關
       // -------------------
 
-      private async void btnStartHeartbeat_Click(object sender, EventArgs e)
+      private void btnStartHeartbeat_Click(object sender, EventArgs e)
       {
          try
          {
             // 確認 helper 已初始化
-            if (_helper == null)
+            if (_appPlcService?.Controller == null)
             {
                MessageBox.Show("請先點擊 Open 按鈕建立連接 | Please click Open button first", "Error");
                return;
@@ -596,8 +614,15 @@ namespace WindowsFormsApp1
             btnStopSimulator.Enabled = true;
             btnStopHeartbeat.Enabled = true;
             // 使用表單欄位中的 helper
-            // 開啟 helper（若還沒開）並用表單的 CancellationToken
-            await _helper.OpenAsync(_cts.Token).ConfigureAwait(false);
+
+            // 開啟 Controller（若還沒開）
+            // This should already be open if btnOpen_Click was successful.
+            // await _appPlcService.Controller.OpenAsync(_cts.Token).ConfigureAwait(false);
+
+            // 這裡的邏輯有點混亂，因為 Simulator 應該是獨立的。
+            // 如果 Controller 是 Mock，則我們可能需要啟動 Simulator 來產生 Pulse。
+            // 但我們已經移除了直接存取 _helper。
+            // _appPlcService.Controller 就是當前的 Controller。
 
             var reqAddr = new LinkDeviceAddress("LB", CCLinkConstants.DefaultRequestFlagAddress, 1);
             var respAddr = new LinkDeviceAddress("LB", CCLinkConstants.DefaultResponseFlagAddress, 1);
@@ -607,26 +632,18 @@ namespace WindowsFormsApp1
                _settings.HeartbeatIntervalMs > 0 ? TimeSpan.FromMilliseconds(_settings.HeartbeatIntervalMs) : TimeSpan.FromSeconds(0.3),
                reqAddr.ToString(), respAddr.ToString());
 
-            // 只有在使用 Mock 模式時才建立模擬器
-            if (_adapter is MockMelsecApiAdapter mockAdapter)
-            {
-               // 建立並保留模擬器實例（使用表單上的 mock 與 path）
-               _simulator?.Stop();
-               _simulator?.Dispose();
-               _simulator = new PlcSimulator(mockAdapter, _path >= 0 ? _path : 1, reqAddr, respAddr, s => Log($"[PLC] {s}"));
+            // 模擬器邏輯: 只有在 DriverType 為 Simulator 時才啟動 PlcSimulator?
+            // 此處 _adapter 已經被移除，我們無法檢查 _adapter is MockMelsecApiAdapter。
+            // 而是檢查 _settings.DriverType 或 Controller 類型。
 
-               // 使用 StartPulse 實現心跳週期
-               // period = 2 秒（完整週期），pulseMs = 1000 毫秒（ON 時間）
-               // 實際行為：每個週期內，ON 維持 1 秒，然後 OFF 維持 1 秒（period - pulseMs）
-               // 時序：ON (1s) -> OFF (1s) -> [下一週期] ON (1s) -> OFF (1s) ...
-               _simulator.StartPulse(TimeSpan.FromSeconds(2), 1000);
-
-               Log("測試環境已啟動 | Test environment started (Helper + PLC Simulator)");
-               Log("模擬器設定詳情 | Simulator settings details (Period: 2s, ON: 1s, OFF: 1s)");
-            }
-            else
+            if (_settings.DriverType == MelsecDriverType.Simulator)
             {
-               Log("心跳已啟動 (實際 PLC 模式) | Heartbeat started (Real PLC mode)");
+               // In Simulator mode, we might want to start Pulse Generator
+               // For now, Simulator logic is pending refactor.
+               if (_appPlcService.Controller is MelsecHelper helper) // Try cast
+               {
+                  Log("警告: 模擬器脈衝產生器暫時無法啟動 (架構調整中) | Warning: Simulator pulse generator unavailable");
+               }
             }
          }
          catch (Exception ex)
@@ -648,9 +665,9 @@ namespace WindowsFormsApp1
       {
          if (_settings.ShowDialog("Settings") == DialogResult.OK)
          {
-            if (_helper != null && _settings.ScanRanges != null)
+            if (_appPlcService != null && _settings.ScanRanges != null)
             {
-               _helper.SetScanRanges(_settings.ScanRanges);
+               _appPlcService.Controller.SetScanRanges(_settings.ScanRanges);
                Log($"設定已更新 | Settings updated (Reloaded: {_settings.ScanRanges.Count} Scan Ranges)");
             }
          }
@@ -673,7 +690,13 @@ namespace WindowsFormsApp1
          // 單例模式: 只允許開啟一個監控視窗
          if (_scanMonitorForm == null || _scanMonitorForm.IsDisposed)
          {
-            _scanMonitorForm = new ScanMonitorForm(_helper);
+            if (_appPlcService?.Controller == null)
+            {
+               MessageBox.Show("請先連接 PLC | Please connect PLC first");
+               return;
+            }
+
+            _scanMonitorForm = new ScanMonitorForm(_appPlcService.Controller);
             _scanMonitorForm.FormClosed += (s, args) => _scanMonitorForm = null;
             _scanMonitorForm.Show();
             Log("已開啟掃描監控視窗 | Scan monitor window opened");

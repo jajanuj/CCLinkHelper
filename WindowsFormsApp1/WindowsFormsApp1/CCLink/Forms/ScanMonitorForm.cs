@@ -6,7 +6,9 @@ using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using System.IO;
 using WindowsFormsApp1.CCLink.Models;
-using WindowsFormsApp1.CCLink.Services;
+using WindowsFormsApp1.CCLink.Interfaces;
+using WindowsFormsApp1.CCLink.Models;
+
 
 namespace WindowsFormsApp1.CCLink.Forms
 {
@@ -14,7 +16,7 @@ namespace WindowsFormsApp1.CCLink.Forms
    {
       #region Fields
 
-      private MelsecHelper _helper;
+      private ICCLinkController _controller;
       private readonly Timer _updateTimer;
       private readonly List<MonitorItem> _monitorItems = new List<MonitorItem>();
       private bool _isHexFormat = false;
@@ -23,11 +25,11 @@ namespace WindowsFormsApp1.CCLink.Forms
 
       #region Constructors
 
-      public ScanMonitorForm(MelsecHelper helper)
+      public ScanMonitorForm(ICCLinkController controller)
       {
          InitializeComponent();
 
-         _helper = helper ?? throw new ArgumentNullException(nameof(helper));
+         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
          _updateTimer = new Timer { Interval = (int)nudUpdateInterval.Value };
          _updateTimer.Tick += UpdateTimer_Tick;
 
@@ -44,16 +46,15 @@ namespace WindowsFormsApp1.CCLink.Forms
       #region Public Methods
 
       /// <summary>
-      /// 更新 Helper 實例（當重新連線產生新的 Helper 時使用）。
+      /// 更新 Controller 實例（當重新連線產生新的 Controller 時使用）。
       /// </summary>
-      public void SetHelper(MelsecHelper helper)
+      public void SetController(ICCLinkController controller)
       {
-         _helper = helper ?? throw new ArgumentNullException(nameof(helper));
+         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
          
-         // 更新標籤顯示新的 HelperID
-         int helperHashCode = RuntimeHelpers.GetHashCode(_helper);
-         // 保留原本的文字前綴，只更新 ID 部分，或直接重置
-         lblLastUpdate.Text = $"Helper Updated (ID: {helperHashCode})";
+         // 更新標籤顯示新的 ID
+         int hashCode = RuntimeHelpers.GetHashCode(_controller);
+         lblLastUpdate.Text = $"Controller Updated (ID: {hashCode})";
       }
 
       /// <summary>
@@ -82,10 +83,38 @@ namespace WindowsFormsApp1.CCLink.Forms
       {
          _monitorItems.Clear();
 
-         // 從 helper 的設定中取得掃描範圍
-         var settings = _helper.GetType()
-            .GetField("_settings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.GetValue(_helper) as ControllerSettings;
+         // 嘗試從 Controller 中取得設定 (若支援)
+         // 注意：ICCLinkController 未必暴露 ScanRanges，我們需要依賴實作細節或外部傳入
+         // 目前架構下 ScanRanges 存於 Settings，但 monitor 需要知道哪些被掃描
+         // 此處我們使用 Reflection 嘗試讀取 _settings from Controller (if possible) or just show all if we pass settings in
+         
+         // Better approach: ScanMonitorForm creation logic in Form1 passes ranges or we access them via Form1?
+         // Quick fix: Reflection on _controller to find _settings or _userScanRanges
+         
+         var field = _controller.GetType()
+            .GetField("_settings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+         
+         var settings = field?.GetValue(_controller) as ControllerSettings;
+         
+         // Check for AppControllerSettings if above failed (MxComponentAdapter/AppPlcService might not match exactly)
+         if (settings == null)
+         {
+            // Try explicit cast to MelsecHelper or MxComponentAdapter to get ranges?
+            // Actually ScanRanges are set via SetScanRanges internally.
+            // Let's rely on finding "_settings" or pass ranges to Constructor.
+            
+            // Fallback: If controller is MxComponentAdapter, it has _scanRanges
+            var scanField = _controller.GetType().GetField("_scanRanges", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+             if (scanField != null)
+             {
+                 var ranges = scanField.GetValue(_controller) as List<ScanRange>;
+                 if (ranges != null)
+                 {
+                     // Convert to settings-like object for loop below
+                     settings = new ControllerSettings { ScanRanges = ranges };
+                 }
+             }
+         }
 
          if (settings?.ScanRanges == null || settings.ScanRanges.Count == 0)
          {
@@ -214,8 +243,8 @@ namespace WindowsFormsApp1.CCLink.Forms
                 colValIdx = colCurrentValue.Index;
              }
 
-             // [Diagnostic] 記錄 helper 實例的 HashCode
-             int helperHashCode = RuntimeHelpers.GetHashCode(_helper);
+             // [Diagnostic] 記錄 controller 實例的 HashCode
+             int helperHashCode = RuntimeHelpers.GetHashCode(_controller);
              
              foreach (DataGridViewRow row in targetGrid.Rows)
              {
@@ -225,18 +254,23 @@ namespace WindowsFormsApp1.CCLink.Forms
  
                    if (item.IsBit)
                    {
-                      // [Diagnostic] 第一次呼叫時記錄 helper 實例
                       if (row.Index == 0)
                       {
                          lblLastUpdate.Text = $"HelperID: {helperHashCode}";
                       }
                       
-                      bool bitValue = _helper.GetBit(item.Kind, item.Index);
+                      bool bitValue = _controller.GetBit($"{item.Kind}{item.Index:X}"); // Assuming unified hex/kind format in GetBit or standard string address
+                      // Note: GetBit expects full address string e.g. "LB100" or "D100" (Dec).
+                      // MonitorItem stores Index as int. Kind as "LB".
+                      // We need to format it correctly for GetBit.
+                      string addrStr = FormatAddressForGet(item.Kind, item.Index);
+                      bitValue = _controller.GetBit(addrStr);
                       currentValue = bitValue.ToString();
                    }
                    else
                    {
-                      short wordValue = _helper.GetWord(item.Kind, item.Index);
+                      string addrStr = FormatAddressForGet(item.Kind, item.Index);
+                      short wordValue = _controller.GetWord(addrStr);
                       currentValue = wordValue.ToString();
                    }
  
@@ -289,7 +323,7 @@ namespace WindowsFormsApp1.CCLink.Forms
                      return;
                   }
 
-                  await _helper.WriteBitsAsync(item.GetAddress(), new[] { bitValue });
+                  await _controller.WriteBitsAsync(item.GetAddress(), new[] { bitValue });
                   MessageBox.Show($"Successfully wrote {bitValue} to {item.GetAddress()}", "Success",
                      MessageBoxButtons.OK, MessageBoxIcon.Information);
                }
@@ -302,7 +336,7 @@ namespace WindowsFormsApp1.CCLink.Forms
                      return;
                   }
 
-                  await _helper.WriteWordsAsync(item.GetAddress(), new[] { wordValue });
+                  await _controller.WriteWordsAsync(item.GetAddress(), new[] { wordValue });
                   MessageBox.Show($"Successfully wrote {wordValue} to {item.GetAddress()}", "Success",
                      MessageBoxButtons.OK, MessageBoxIcon.Information);
                }
@@ -347,7 +381,7 @@ namespace WindowsFormsApp1.CCLink.Forms
                      {
                         if (bool.TryParse(newValueStr, out bool bitValue))
                         {
-                           await _helper.WriteBitsAsync(item.GetAddress(), new[] { bitValue });
+                           await _controller.WriteBitsAsync(item.GetAddress(), new[] { bitValue });
                            row.Cells[newValColIdx].Value = "";
                            writeCount++;
                         }
@@ -360,7 +394,7 @@ namespace WindowsFormsApp1.CCLink.Forms
                      {
                         if (short.TryParse(newValueStr, out short wordValue))
                         {
-                           await _helper.WriteWordsAsync(item.GetAddress(), new[] { wordValue });
+                           await _controller.WriteWordsAsync(item.GetAddress(), new[] { wordValue });
                            row.Cells[newValColIdx].Value = "";
                            writeCount++;
                         }
@@ -403,12 +437,12 @@ namespace WindowsFormsApp1.CCLink.Forms
       private void btnStartUpdate_Click(object sender, EventArgs e)
       {
          // [Diagnostic] 在啟動前記錄狀態
-         var helperType = _helper.GetType();
-         var memoryField = helperType.GetField("_deviceMemory", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+         var type = _controller.GetType();
+         var memoryField = type.GetField("_deviceMemory", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
          
          if (memoryField != null)
          {
-            var memory = memoryField.GetValue(_helper);
+            var memory = memoryField.GetValue(_controller);
             int count = 0;
             
             if (memory != null)
@@ -420,7 +454,7 @@ namespace WindowsFormsApp1.CCLink.Forms
                }
             }
             
-            lblLastUpdate.Text = $"[Start] MemoryCount={count}, HelperID={RuntimeHelpers.GetHashCode(_helper)}";
+             lblLastUpdate.Text = $"[Start] MemoryCount={count}, HelperID={RuntimeHelpers.GetHashCode(_controller)}";
          }
          
          _updateTimer.Interval = (int)nudUpdateInterval.Value;
@@ -592,10 +626,26 @@ namespace WindowsFormsApp1.CCLink.Forms
 
          public string GetAddress()
          {
-            return $"{Kind}{Index:D4}";
+            // For Write methods, we prefer the unified hex format logic if applicable
+            // But MxComponentAdapter.GetBit uses ParseAddress which handles digit part.
+            // My MonitorItem.Index is int.
+            // If Kind is Hex type, format as Hex.
+            string type = Kind.ToUpper();
+            bool isHex = (type == "X" || type == "Y" || type == "B" || type == "W" || type == "LB" || type == "LW" || type == "SB" || type == "SW");
+            if (isHex) return $"{Kind}{Index:X4}";
+            return $"{Kind}{Index}";
          }
       }
 
       #endregion
+      
+      private string FormatAddressForGet(string kind, int index)
+      {
+          // Reuse MonitorItem.GetAddress logic basically
+          string type = kind.ToUpper();
+          bool isHex = (type == "X" || type == "Y" || type == "B" || type == "W" || type == "LB" || type == "LW" || type == "SB" || type == "SW");
+          if (isHex) return $"{kind}{index:X}"; // No padding or padding ok
+          return $"{kind}{index}";
+      }
    }
 }
