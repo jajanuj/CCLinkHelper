@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.IO;
 using WindowsFormsApp1.CCLink.Models;
@@ -21,6 +22,11 @@ namespace WindowsFormsApp1.CCLink.Forms
       private readonly List<MonitorItem> _monitorItems = new List<MonitorItem>();
       private bool _isHexFormat = false;
 
+      // Win32 API for performance optimization
+      [DllImport("user32.dll")]
+      private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+      private const int WM_SETREDRAW = 0x000B;
+
       #endregion
 
       #region Constructors
@@ -32,6 +38,14 @@ namespace WindowsFormsApp1.CCLink.Forms
          _controller = controller ?? throw new ArgumentNullException(nameof(controller));
          _updateTimer = new Timer { Interval = (int)nudUpdateInterval.Value };
          _updateTimer.Tick += UpdateTimer_Tick;
+
+         // Enable double buffering for DataGridView to reduce flickering
+         typeof(DataGridView).InvokeMember("DoubleBuffered",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.SetProperty,
+            null, dgvMonitor, new object[] { true });
+         typeof(DataGridView).InvokeMember("DoubleBuffered",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.SetProperty,
+            null, dgvFavorites, new object[] { true });
 
          InitializeMonitorItems();
          LoadFavorites();
@@ -126,11 +140,18 @@ namespace WindowsFormsApp1.CCLink.Forms
          foreach (var range in settings.ScanRanges)
          {
             string kind = range.Kind?.ToUpper() ?? "";
-            bool isBit = kind == "LB" || kind == "LX" || kind == "LY";
-            bool isWord = kind == "LW";
+            
+            // Bit 類型裝置：M, X, Y, L, F, B, LB, LX, LY, SB
+            bool isBit = kind == "M" || kind == "X" || kind == "Y" || 
+                         kind == "L" || kind == "F" || kind == "B" ||
+                         kind == "LB" || kind == "LX" || kind == "LY" || kind == "SB";
+            
+            // Word 類型裝置：D, W, R, LW, SW
+            bool isWord = kind == "D" || kind == "W" || kind == "R" || 
+                          kind == "LW" || kind == "SW";
 
             if (!isBit && !isWord)
-               continue;
+               continue;  // 只有不支援的裝置類型才會被跳過
 
             for (int addr = range.Start; addr <= range.End; addr++)
             {
@@ -144,7 +165,7 @@ namespace WindowsFormsApp1.CCLink.Forms
             }
          }
 
-         // 排序: 先按 Kind (LB, LW, LX, LY), 再按 Index
+          // 排序: 先按 Kind (字母順序), 再按 Index (數字順序)
          _monitorItems.Sort((a, b) =>
          {
             int kindCompare = string.Compare(a.Kind, b.Kind, StringComparison.Ordinal);
@@ -160,19 +181,28 @@ namespace WindowsFormsApp1.CCLink.Forms
          dgvMonitor.SuspendLayout();
          try
          {
-            dgvMonitor.Rows.Clear();
+             dgvMonitor.Rows.Clear();
 
-            foreach (var item in _monitorItems)
-            {
-               int rowIndex = dgvMonitor.Rows.Add();
-               var row = dgvMonitor.Rows[rowIndex];
-               row.Cells[colSelect.Index].Value = item.IsFavorite;
-               row.Cells[colAddress.Index].Value = FormatAddress(item.Kind, item.Index);
-               row.Cells[colType.Index].Value = item.Type;
-               row.Cells[colCurrentValue.Index].Value = "-";
-               row.Cells[colNewValue.Index].Value = "";
-               row.Tag = item;
-            }
+             // Batch add rows for better performance
+             var rows = new List<DataGridViewRow>(_monitorItems.Count);
+             foreach (var item in _monitorItems)
+             {
+                var row = new DataGridViewRow();
+                row.CreateCells(dgvMonitor);
+                row.Cells[colSelect.Index].Value = item.IsFavorite;
+                row.Cells[colAddress.Index].Value = FormatAddress(item.Kind, item.Index);
+                row.Cells[colType.Index].Value = item.Type;
+                row.Cells[colCurrentValue.Index].Value = "-";
+                row.Cells[colNewValue.Index].Value = "";
+                row.Tag = item;
+                rows.Add(row);
+             }
+             
+             // Add all rows at once instead of one by one
+             if (rows.Count > 0)
+             {
+                dgvMonitor.Rows.AddRange(rows.ToArray());
+             }
          }
          finally
          {
@@ -246,43 +276,96 @@ namespace WindowsFormsApp1.CCLink.Forms
              // [Diagnostic] 記錄 controller 實例的 HashCode
              int helperHashCode = RuntimeHelpers.GetHashCode(_controller);
              
-             foreach (DataGridViewRow row in targetGrid.Rows)
+             // Suspend drawing to improve performance
+             SendMessage(targetGrid.Handle, WM_SETREDRAW, IntPtr.Zero, IntPtr.Zero);
+             
+             // Check if controller is MelsecHelper (only supports LB/LW/LX/LY)
+             bool isMelsecHelper = _controller.GetType().Name == "MelsecHelper";
+             
+             try
              {
-                if (row.Tag is MonitorItem item)
-                {
-                   object currentValue = null;
- 
-                   if (item.IsBit)
-                   {
-                      if (row.Index == 0)
-                      {
-                         lblLastUpdate.Text = $"HelperID: {helperHashCode}";
-                      }
-                      
-                      bool bitValue = _controller.GetBit($"{item.Kind}{item.Index:X}"); // Assuming unified hex/kind format in GetBit or standard string address
-                      // Note: GetBit expects full address string e.g. "LB100" or "D100" (Dec).
-                      // MonitorItem stores Index as int. Kind as "LB".
-                      // We need to format it correctly for GetBit.
-                      string addrStr = FormatAddressForGet(item.Kind, item.Index);
-                      bitValue = _controller.GetBit(addrStr);
-                      currentValue = bitValue.ToString();
-                   }
-                   else
-                   {
-                      string addrStr = FormatAddressForGet(item.Kind, item.Index);
-                      short wordValue = _controller.GetWord(addrStr);
-                      currentValue = wordValue.ToString();
-                   }
- 
-                   row.Cells[colValIdx].Value = currentValue;
-                }
+                 foreach (DataGridViewRow row in targetGrid.Rows)
+                 {
+                    if (row.Tag is MonitorItem item)
+                    {
+                       object currentValue = null;
+  
+                       // Pre-check: Skip unsupported devices for MelsecHelper to avoid exceptions
+                       if (isMelsecHelper)
+                       {
+                          string kind = item.Kind.ToUpper();
+                          if (kind != "LB" && kind != "LW" && kind != "LX" && kind != "LY")
+                          {
+                             // MelsecHelper doesn't support this device type
+                             currentValue = "N/A";
+                             row.Cells[colValIdx].Value = currentValue;
+                             continue;  // Skip reading, avoid throwing exception
+                          }
+                       }
+  
+                       try
+                       {
+                          if (item.IsBit)
+                          {
+                             if (row.Index == 0)
+                             {
+                                lblLastUpdate.Text = $"HelperID: {helperHashCode}";
+                             }
+                             
+                             // 直接使用 MonitorItem.GetAddress() 方法取得正確格式的位址
+                             bool bitValue = _controller.GetBit(item.GetAddress());
+                             currentValue = bitValue.ToString();
+                          }
+                          else
+                          {
+                             // 直接使用 MonitorItem.GetAddress() 方法
+                             short wordValue = _controller.GetWord(item.GetAddress());
+                             currentValue = wordValue.ToString();
+                          }
+                       }
+                       catch (ArgumentException)
+                       {
+                          // 裝置類型不支援（不應該到這裡，因為上面已經預先檢查）
+                          currentValue = "N/A";
+                       }
+                       catch (MelsecException)
+                       {
+                          // PLC 通訊錯誤
+                          currentValue = "ERROR";
+                       }
+  
+                       row.Cells[colValIdx].Value = currentValue;
+                    }
+                 }
+             }
+             finally
+             {
+                 // Resume drawing and refresh
+                 SendMessage(targetGrid.Handle, WM_SETREDRAW, new IntPtr(1), IntPtr.Zero);
+                 targetGrid.Refresh();
              }
  
              lblLastUpdate.Text = $"Last Update: {DateTime.Now:HH:mm:ss.fff} (HelperID: {helperHashCode})";
           }
+          catch (MelsecException mex)
+          {
+             lblLastUpdate.Text = $"Melsec Error: {mex.Message}";
+             System.Diagnostics.Debug.WriteLine($"[ScanMonitor] Melsec 錯誤: {mex}");
+          }
+          catch (System.Runtime.InteropServices.COMException comEx)
+          {
+             lblLastUpdate.Text = $"COM Error: 0x{comEx.HResult:X8}";
+             System.Diagnostics.Debug.WriteLine($"[ScanMonitor] COM 元件錯誤: {comEx}");
+          }
+          catch (ArgumentException argEx)
+          {
+             lblLastUpdate.Text = $"Address Error: {argEx.ParamName} - {argEx.Message}";
+             System.Diagnostics.Debug.WriteLine($"[ScanMonitor] 位址格式錯誤: {argEx}");
+          }
           catch (Exception ex)
           {
-             lblLastUpdate.Text = $"Update Error: {ex.Message}";
+             lblLastUpdate.Text = $"Update Error: {ex.GetType().Name} - {ex.Message}";
+             System.Diagnostics.Debug.WriteLine($"[ScanMonitor] 未知錯誤: {ex}");
           }
       }
 
@@ -341,10 +424,11 @@ namespace WindowsFormsApp1.CCLink.Forms
                      MessageBoxButtons.OK, MessageBoxIcon.Information);
                }
 
-               // 清除已寫入的新值欄位
-               row.Cells[colNewValue.Index].Value = "";
-               // 立即更新一次以顯示寫入結果
-               UpdateValues();
+
+                // 清除已寫入的新值欄位
+                row.Cells[newValColIdx].Value = "";
+                // 立即更新一次以顯示寫入結果
+                UpdateValues();
             }
          }
          catch (Exception ex)
@@ -639,6 +723,10 @@ namespace WindowsFormsApp1.CCLink.Forms
 
       #endregion
       
+      /// <summary>
+      /// [已過時] 格式化位址字串。請使用 MonitorItem.GetAddress() 方法。
+      /// </summary>
+      [Obsolete("請使用 MonitorItem.GetAddress() 方法")]
       private string FormatAddressForGet(string kind, int index)
       {
           // Reuse MonitorItem.GetAddress logic basically

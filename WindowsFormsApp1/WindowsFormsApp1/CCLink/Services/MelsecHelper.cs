@@ -373,7 +373,14 @@ namespace WindowsFormsApp1.CCLink.Services
             ranges = _userScanRanges.ToList();
          }
 
-         var groups = ranges.GroupBy(r => r.Kind, StringComparer.OrdinalIgnoreCase);
+         // 過濾掉不支援的裝置類型（MelsecHelper 只支援 CC-Link 裝置）
+         var supportedRanges = ranges.Where(r =>
+         {
+            string kind = r.Kind?.ToUpperInvariant() ?? "";
+            return kind == "LB" || kind == "LW" || kind == "LX" || kind == "LY";
+         }).ToList();
+
+         var groups = supportedRanges.GroupBy(r => r.Kind, StringComparer.OrdinalIgnoreCase);
 
          lock (_apiLock)
          {

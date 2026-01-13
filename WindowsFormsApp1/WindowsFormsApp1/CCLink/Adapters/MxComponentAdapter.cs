@@ -243,7 +243,7 @@ namespace WindowsFormsApp1.CCLink.Adapters
                }
                catch (Exception ex)
                {
-                  throw new MelsecException("Error opening Mx Component connection.", ex);
+                  throw new MelsecException($"Error opening Mx Component connection. {ex}", ex);
                }
             }
          }, ct);
@@ -431,8 +431,21 @@ namespace WindowsFormsApp1.CCLink.Adapters
          string type = new string(address.TakeWhile(c => !char.IsDigit(c)).ToArray());
          string numPart = address.Substring(type.Length);
 
-         // Parse numPart as HEX always
-         int val = Convert.ToInt32(numPart, 16);
+         // 根據裝置類型選擇正確的進制
+         string upperType = type.ToUpper();
+         int baseNum;
+         
+         // 10 進制裝置：M, D, L, R
+         if (upperType == "M" || upperType == "D" || upperType == "L" || upperType == "R")
+         {
+             baseNum = 10;  // 10 進制
+         }
+         else  // 16 進制裝置：X, Y, B, W, LB, LW, SB, SW, etc.
+         {
+             baseNum = 16;  // 16 進制
+         }
+         
+         int val = Convert.ToInt32(numPart, baseNum);
          return (type, val);
       }
 

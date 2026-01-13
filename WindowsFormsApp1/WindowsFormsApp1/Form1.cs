@@ -332,8 +332,6 @@ namespace WindowsFormsApp1
 
             btnOpen.Enabled = false;
 
-            btnOpen.Enabled = false;
-
             // Log current mode
             Log($"準備連接... 模式: {_settings.DriverType} | Connecting... Mode: {_settings.DriverType}");
 
