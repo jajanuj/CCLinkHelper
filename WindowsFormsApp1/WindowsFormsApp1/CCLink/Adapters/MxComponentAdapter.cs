@@ -154,7 +154,7 @@ namespace WindowsFormsApp1.CCLink.Adapters
          // range.Start, range.End are integer addresses.
          // Size = End - Start + 1
          int size = range.End - range.Start + 1;
-         string startAddr = FormatMxAddress(range.Kind, range.Start);
+         _ = FormatMxAddress(range.Kind, range.Start);
 
          // Using loop for safety as Block2 array passing is tricky in safe context without helper
          // In real optimized scenario, we'd use int[] buffer and Block read
@@ -181,8 +181,7 @@ namespace WindowsFormsApp1.CCLink.Adapters
          for (int i = 0; i < size; i++)
          {
             string addr = FormatMxAddress(range.Kind, range.Start + i);
-            int val = 0;
-            _plc.GetDevice(addr, out val); // GetDevice returns bit value in int
+            _plc.GetDevice(addr, out int val); // GetDevice returns bit value in int
             data[i] = (short)(val != 0 ? 1 : 0);
          }
 
@@ -434,17 +433,17 @@ namespace WindowsFormsApp1.CCLink.Adapters
          // 根據裝置類型選擇正確的進制
          string upperType = type.ToUpper();
          int baseNum;
-         
+
          // 10 進制裝置：M, D, L, R
          if (upperType == "M" || upperType == "D" || upperType == "L" || upperType == "R")
          {
-             baseNum = 10;  // 10 進制
+            baseNum = 10; // 10 進制
          }
-         else  // 16 進制裝置：X, Y, B, W, LB, LW, SB, SW, etc.
+         else // 16 進制裝置：X, Y, B, W, LB, LW, SB, SW, etc.
          {
-             baseNum = 16;  // 16 進制
+            baseNum = 16; // 16 進制
          }
-         
+
          int val = Convert.ToInt32(numPart, baseNum);
          return (type, val);
       }

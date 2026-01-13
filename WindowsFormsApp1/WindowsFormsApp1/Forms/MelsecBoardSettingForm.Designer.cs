@@ -37,6 +37,15 @@ namespace WindowsFormsApp1.Forms
          this.txtTrigger = new System.Windows.Forms.TextBox();
          this.label13 = new System.Windows.Forms.Label();
          this.txtData = new System.Windows.Forms.TextBox();
+         this.tabTracking = new System.Windows.Forms.TabPage();
+         this.label14 = new System.Windows.Forms.Label();
+         this.txtLoadingRobotAddr = new System.Windows.Forms.TextBox();
+         this.label15 = new System.Windows.Forms.Label();
+         this.txtLoadingStationAddr = new System.Windows.Forms.TextBox();
+         this.label16 = new System.Windows.Forms.Label();
+         this.txtUnloadingRobotAddr = new System.Windows.Forms.TextBox();
+         this.label17 = new System.Windows.Forms.Label();
+         this.txtUnloadingStationAddr = new System.Windows.Forms.TextBox();
 
          this.label5 = new System.Windows.Forms.Label();
          this.numPort = new System.Windows.Forms.NumericUpDown();
@@ -63,6 +72,7 @@ namespace WindowsFormsApp1.Forms
          ((System.ComponentModel.ISupportInitialize)(this.numRetryBackoff)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.numStation)).BeginInit();
          this.tabApp.SuspendLayout();
+         this.tabTracking.SuspendLayout();
          this.tabGeneral.SuspendLayout();
          this.SuspendLayout();
 
@@ -298,6 +308,93 @@ namespace WindowsFormsApp1.Forms
          this.txtData.TabIndex = 7;
 
          // 
+         // tabTracking
+         // 
+         this.tabTracking.Controls.Add(this.label14);
+         this.tabTracking.Controls.Add(this.txtLoadingRobotAddr);
+         this.tabTracking.Controls.Add(this.label15);
+         this.tabTracking.Controls.Add(this.txtLoadingStationAddr);
+         this.tabTracking.Controls.Add(this.label16);
+         this.tabTracking.Controls.Add(this.txtUnloadingRobotAddr);
+         this.tabTracking.Controls.Add(this.label17);
+         this.tabTracking.Controls.Add(this.txtUnloadingStationAddr);
+         this.tabTracking.Location = new System.Drawing.Point(4, 22);
+         this.tabTracking.Name = "tabTracking";
+         this.tabTracking.Padding = new System.Windows.Forms.Padding(3);
+         this.tabTracking.Size = new System.Drawing.Size(368, 394);
+         this.tabTracking.TabIndex = 2;
+         this.tabTracking.Text = "追蹤設定";
+         this.tabTracking.UseVisualStyleBackColor = true;
+
+         // 
+         // label14 (LoadingRobot)
+         // 
+         this.label14.AutoSize = true;
+         this.label14.Location = new System.Drawing.Point(10, 17);
+         this.label14.Name = "label14";
+         this.label14.Size = new System.Drawing.Size(84, 12);
+         this.label14.TabIndex = 0;
+         this.label14.Text = "插框Robot位址:";
+         // 
+         // txtLoadingRobotAddr
+         // 
+         this.txtLoadingRobotAddr.Location = new System.Drawing.Point(120, 15);
+         this.txtLoadingRobotAddr.Name = "txtLoadingRobotAddr";
+         this.txtLoadingRobotAddr.Size = new System.Drawing.Size(100, 22);
+         this.txtLoadingRobotAddr.TabIndex = 1;
+
+         // 
+         // label15 (LoadingStation)
+         // 
+         this.label15.AutoSize = true;
+         this.label15.Location = new System.Drawing.Point(10, 47);
+         this.label15.Name = "label15";
+         this.label15.Size = new System.Drawing.Size(72, 12);
+         this.label15.TabIndex = 2;
+         this.label15.Text = "插框站位址:";
+         // 
+         // txtLoadingStationAddr
+         // 
+         this.txtLoadingStationAddr.Location = new System.Drawing.Point(120, 45);
+         this.txtLoadingStationAddr.Name = "txtLoadingStationAddr";
+         this.txtLoadingStationAddr.Size = new System.Drawing.Size(100, 22);
+         this.txtLoadingStationAddr.TabIndex = 3;
+
+         // 
+         // label16 (UnloadingRobot)
+         // 
+         this.label16.AutoSize = true;
+         this.label16.Location = new System.Drawing.Point(10, 77);
+         this.label16.Name = "label16";
+         this.label16.Size = new System.Drawing.Size(84, 12);
+         this.label16.TabIndex = 4;
+         this.label16.Text = "拆框Robot位址:";
+         // 
+         // txtUnloadingRobotAddr
+         // 
+         this.txtUnloadingRobotAddr.Location = new System.Drawing.Point(120, 75);
+         this.txtUnloadingRobotAddr.Name = "txtUnloadingRobotAddr";
+         this.txtUnloadingRobotAddr.Size = new System.Drawing.Size(100, 22);
+         this.txtUnloadingRobotAddr.TabIndex = 5;
+
+         // 
+         // label17 (UnloadingStation)
+         // 
+         this.label17.AutoSize = true;
+         this.label17.Location = new System.Drawing.Point(10, 107);
+         this.label17.Name = "label17";
+         this.label17.Size = new System.Drawing.Size(72, 12);
+         this.label17.TabIndex = 6;
+         this.label17.Text = "拆框站位址:";
+         // 
+         // txtUnloadingStationAddr
+         // 
+         this.txtUnloadingStationAddr.Location = new System.Drawing.Point(120, 105);
+         this.txtUnloadingStationAddr.Name = "txtUnloadingStationAddr";
+         this.txtUnloadingStationAddr.Size = new System.Drawing.Size(100, 22);
+         this.txtUnloadingStationAddr.TabIndex = 7;
+
+         // 
          // MelsecBoardSettingForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -306,8 +403,9 @@ namespace WindowsFormsApp1.Forms
          this.Name = "MelsecBoardSettingForm";
          this.Text = "MelsecBoardSettingForm";
          
-         // Add inherited tab control page
+         // Add inherited tab control pages
          this.tabControl1.Controls.Add(this.tabApp);
+         this.tabControl1.Controls.Add(this.tabTracking);
 
          ((System.ComponentModel.ISupportInitialize)(this.numHeartbeat)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.numTimeSync)).EndInit();
@@ -319,6 +417,8 @@ namespace WindowsFormsApp1.Forms
          ((System.ComponentModel.ISupportInitialize)(this.numStation)).EndInit();
          this.tabApp.ResumeLayout(false);
          this.tabApp.PerformLayout();
+         this.tabTracking.ResumeLayout(false);
+         this.tabTracking.PerformLayout();
          this.tabGeneral.ResumeLayout(false);
          this.tabGeneral.PerformLayout();
          this.ResumeLayout(false);
@@ -352,5 +452,16 @@ namespace WindowsFormsApp1.Forms
       private System.Windows.Forms.CheckBox chkIsx64;
       private System.Windows.Forms.Label label10;
       private System.Windows.Forms.ComboBox cmbEndian;
+
+      // Tracking Controls
+      private System.Windows.Forms.TabPage tabTracking;
+      private System.Windows.Forms.Label label14;
+      private System.Windows.Forms.TextBox txtLoadingRobotAddr;
+      private System.Windows.Forms.Label label15;
+      private System.Windows.Forms.TextBox txtLoadingStationAddr;
+      private System.Windows.Forms.Label label16;
+      private System.Windows.Forms.TextBox txtUnloadingRobotAddr;
+      private System.Windows.Forms.Label label17;
+      private System.Windows.Forms.TextBox txtUnloadingStationAddr;
    }
 }

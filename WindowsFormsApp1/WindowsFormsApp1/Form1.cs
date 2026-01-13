@@ -861,6 +861,20 @@ namespace WindowsFormsApp1
          StartCommonReporting();
       }
 
+      private void btnTrackingControl_Click(object sender, EventArgs e)
+      {
+         if (_appPlcService == null)
+         {
+            MessageBox.Show("請先連接 PLC | Please connect PLC first", "錯誤");
+            return;
+         }
+
+         using (var form = new Forms.TrackingControlForm(_appPlcService))
+         {
+            form.ShowDialog(this);
+         }
+      }
+
       #endregion
    }
 }

@@ -1,11 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using WindowsFormsApp1.CCLink.Interfaces;
-using WindowsFormsApp1.CCLink.Models;
 using WindowsFormsApp1.Models;
 
 namespace WindowsFormsApp1.Services
@@ -23,13 +21,13 @@ namespace WindowsFormsApp1.Services
 
       #region Fields
 
-      private readonly AppControllerSettings _settings;
-
       // Common Report Cache
       private readonly object _commonReportLock = new object();
 
       private readonly ICCLinkController _controller;
       private readonly Action<string> _logger;
+
+      private readonly AppControllerSettings _settings;
       private readonly SynchronizationContext _syncContext;
 
       // Dispose Flag
@@ -67,33 +65,32 @@ namespace WindowsFormsApp1.Services
          // Factory logic for Controller
          if (settings.DriverType == MelsecDriverType.Simulator)
          {
-             var mockAdapter = new CCLink.Adapters.MockMelsecApiAdapter();
-             _controller = new CCLink.Services.MelsecHelper(mockAdapter, settings);
+            var mockAdapter = new CCLink.Adapters.MockMelsecApiAdapter();
+            _controller = new CCLink.Services.MelsecHelper(mockAdapter, settings);
          }
          else if (settings.DriverType == MelsecDriverType.MxComponent)
          {
-             _controller = new CCLink.Adapters.MxComponentAdapter(settings.LogicalStationNumber);
+            _controller = new CCLink.Adapters.MxComponentAdapter(settings.LogicalStationNumber);
          }
          else
          {
-             // Default MelsecBoard
-             var adapter = new CCLink.Adapters.MelsecApiAdapter();
-             // Note: Channel is set via method calls or not needed for default constructor?
-             // MelsecApiAdapter usually takes channel/station in Open method or config.
-             // Checking MelsecApiAdapter.cs... It has parameterless constructor. And Open(channel, ...)
-             // So here we instantiate it without args.
-             // Use MelsecHelper as the controller implementation
-             var helper = new CCLink.Services.MelsecHelper(adapter, settings);
-             _controller = helper;
+            // Default MelsecBoard
+            var adapter = new CCLink.Adapters.MelsecApiAdapter();
+            // Note: Channel is set via method calls or not needed for default constructor?
+            // MelsecApiAdapter usually takes channel/station in Open method or config.
+            // Checking MelsecApiAdapter.cs... It has parameterless constructor. And Open(channel, ...)
+            // So here we instantiate it without args.
+            // Use MelsecHelper as the controller implementation
+            var helper = new CCLink.Services.MelsecHelper(adapter, settings);
+            _controller = helper;
          }
       }
 
-      public ICCLinkController Controller => _controller;
-
       #endregion
 
-
       #region Properties
+
+      public ICCLinkController Controller => _controller;
 
       public int ConsecutiveHeartbeatFailuresCount { get; private set; }
 
@@ -430,7 +427,7 @@ namespace WindowsFormsApp1.Services
             {
                _logger?.Invoke($"[Heartbeat] 連續失敗 {_heartbeatFailThreshold} 次，已停止心跳監控");
                PostEvent(() => HeartbeatFailed?.Invoke());
-               
+
                // 方案 C：停止心跳循環，讓上層決定如何處理
                _heartbeatCts?.Cancel();
                return;
@@ -449,7 +446,6 @@ namespace WindowsFormsApp1.Services
          _logger?.Invoke($"[AppService] TimeSync started (Trigger: {triggerAddr}, Data: {dataAddr})");
          _timeSyncTask = Task.Run(() => TimeSyncLoopAsync(interval, triggerAddr, dataAddr, _timeSyncCts.Token));
       }
-
 
       public void StopTimeSync()
       {
@@ -536,6 +532,62 @@ namespace WindowsFormsApp1.Services
 
       [DllImport("kernel32.dll", SetLastError = true)]
       private static extern bool SetLocalTime(ref SystemTime lpSystemTime);
+
+      #endregion
+
+      #region Tracking Methods
+
+      /// <summary>
+      /// 讀取指定站點的追蹤資料
+      /// </summary>
+      public async Task<TrackingData> GetTrackingDataAsync(TrackingStation station, CancellationToken ct = default)
+      {
+         string address = _settings.Tracking.GetAddress(station);
+         if (string.IsNullOrWhiteSpace(address))
+         {
+            throw new InvalidOperationException($"站點 {station} 的位址未設定");
+         }
+
+         var rawData = await _controller.ReadWordsAsync(address, 10, ct);
+         return new TrackingData(rawData.ToArray());
+      }
+
+      /// <summary>
+      /// 清除指定站點的追蹤資料 (寫入 0)
+      /// </summary>
+      public async Task ClearTrackingDataAsync(TrackingStation station, CancellationToken ct = default)
+      {
+         string address = _settings.Tracking.GetAddress(station);
+         if (string.IsNullOrWhiteSpace(address))
+         {
+            throw new InvalidOperationException($"站點 {station} 的位址未設定");
+         }
+
+         short[] zeroData = new short[10];
+         await _controller.WriteWordsAsync(address, zeroData, ct);
+         _logger?.Invoke($"[Tracking] 已清除站點 {station} 的追蹤資料 (位址: {address})");
+      }
+
+      /// <summary>
+      /// 寫入追蹤資料至指定站點 (測試用)
+      /// </summary>
+      public async Task WriteTrackingDataAsync(TrackingStation station, TrackingData data, CancellationToken ct = default)
+      {
+         if (data == null)
+         {
+            throw new ArgumentNullException(nameof(data));
+         }
+
+         string address = _settings.Tracking.GetAddress(station);
+         if (string.IsNullOrWhiteSpace(address))
+         {
+            throw new InvalidOperationException($"站點 {station} 的位址未設定");
+         }
+
+         short[] rawData = data.ToRawData();
+         await _controller.WriteWordsAsync(address, rawData, ct);
+         _logger?.Invoke($"[Tracking] 已寫入追蹤資料至站點 {station} (位址: {address})");
+      }
 
       #endregion
 

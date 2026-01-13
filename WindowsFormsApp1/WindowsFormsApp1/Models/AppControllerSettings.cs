@@ -31,6 +31,7 @@ namespace WindowsFormsApp1.Models
             HeartbeatIntervalMs = loaded.HeartbeatIntervalMs;
             TimeSyncIntervalMs = loaded.TimeSyncIntervalMs;
             TimeSync = loaded.TimeSync ?? new TimeSyncSettings();
+            Tracking = loaded.Tracking ?? new TrackingSettings();
          }
          else
          {
@@ -61,6 +62,9 @@ namespace WindowsFormsApp1.Models
       /// <summary>對時位址設定。</summary>
       public TimeSyncSettings TimeSync { get; set; } = new TimeSyncSettings();
 
+      /// <summary>追蹤資料位址設定。</summary>
+      public TrackingSettings Tracking { get; set; } = new TrackingSettings();
+
       #endregion
 
       #region Public Methods
@@ -68,7 +72,7 @@ namespace WindowsFormsApp1.Models
       public override System.Windows.Forms.DialogResult ShowDialog(string configName)
       {
          // 根據驅動類型顯示對應的設定表單
-         System.Windows.Forms.Form form = null;
+         System.Windows.Forms.Form form;
          
          if (DriverType == MelsecDriverType.MxComponent)
          {

@@ -81,11 +81,20 @@
     <Compile Include="Forms\CommonReportSettingsForm.Designer.cs">
       <DependentUpon>CommonReportSettingsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\TrackingControlForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\TrackingControlForm.Designer.cs">
+      <DependentUpon>TrackingControlForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Models\AppControllerSettings.cs" />
     <Compile Include="Models\CommonReportAlarm.cs" />
     <Compile Include="Models\CommonReportStatus1.cs" />
     <Compile Include="Models\CommonReportStatus2.cs" />
     <Compile Include="Models\TimeSyncSettings.cs" />
+    <Compile Include="Models\TrackingData.cs" />
+    <Compile Include="Models\TrackingSettings.cs" />
+    <Compile Include="Models\TrackingStation.cs" />
     <Compile Include="Services\AppPlcService.cs" />
     <Compile Include="CCLink\Services\MelsecHelper.cs" />
     <Compile Include="CCLink\Controllers\MockCCLinkController.cs" />
@@ -126,6 +135,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\MxComponentSettingForm.resx">
       <DependentUpon>MxComponentSettingForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\TrackingControlForm.resx">
+      <DependentUpon>TrackingControlForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

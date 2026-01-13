@@ -62,6 +62,7 @@
          this.btnStopSimulator = new System.Windows.Forms.Button();
          this.btnPlcSettings = new System.Windows.Forms.Button();
          this.btnScanMonitor = new System.Windows.Forms.Button();
+         this.btnTrackingControl = new System.Windows.Forms.Button();
          this.btnStartCommonReporting = new System.Windows.Forms.Button();
          this.btnSetCommonReporting = new System.Windows.Forms.Button();
          this.grpManualTime = new System.Windows.Forms.GroupBox();
@@ -93,6 +94,7 @@
          this.flowLayoutPanel1.Controls.Add(this.btnStopSimulator);
          this.flowLayoutPanel1.Controls.Add(this.btnPlcSettings);
          this.flowLayoutPanel1.Controls.Add(this.btnScanMonitor);
+         this.flowLayoutPanel1.Controls.Add(this.btnTrackingControl);
          this.flowLayoutPanel1.Controls.Add(this.btnStartCommonReporting);
          this.flowLayoutPanel1.Controls.Add(this.btnSetCommonReporting);
          this.flowLayoutPanel1.Controls.Add(this.grpManualTime);
@@ -257,6 +259,17 @@
          this.btnScanMonitor.UseVisualStyleBackColor = true;
          this.btnScanMonitor.Click += new System.EventHandler(this.btnScanMonitor_Click);
          // 
+         // btnTrackingControl
+         // 
+         this.btnTrackingControl.Location = new System.Drawing.Point(20, 212);
+         this.btnTrackingControl.Margin = new System.Windows.Forms.Padding(10);
+         this.btnTrackingControl.Name = "btnTrackingControl";
+         this.btnTrackingControl.Size = new System.Drawing.Size(181, 26);
+         this.btnTrackingControl.TabIndex = 18;
+         this.btnTrackingControl.Text = "追蹤資料管理";
+         this.btnTrackingControl.UseVisualStyleBackColor = true;
+         this.btnTrackingControl.Click += new System.EventHandler(this.btnTrackingControl_Click);
+         // 
          // btnStartCommonReporting
          // 
          this.btnStartCommonReporting.Location = new System.Drawing.Point(324, 166);
@@ -378,6 +391,7 @@
       private System.Windows.Forms.Button btnPlcSettings;
       private System.Windows.Forms.Button btnStopHeartbeat;
       private System.Windows.Forms.Button btnScanMonitor;
+      private System.Windows.Forms.Button btnTrackingControl;
       private System.Windows.Forms.Button btnSetCommonReporting;
       private System.Windows.Forms.GroupBox grpCommonReportStatus1;
       private System.Windows.Forms.NumericUpDown nudAlarmStatus;

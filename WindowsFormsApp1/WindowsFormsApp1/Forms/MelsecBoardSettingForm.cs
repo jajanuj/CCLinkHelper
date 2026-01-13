@@ -38,6 +38,12 @@ namespace WindowsFormsApp1.Forms
             numTimeSync.Value = appSettings.TimeSyncIntervalMs;
             txtTrigger.Text = appSettings.TimeSync?.TriggerAddress ?? "LB0301";
             txtData.Text = appSettings.TimeSync?.DataBaseAddress ?? "LW0000";
+
+            // Tracking Parameters
+            txtLoadingRobotAddr.Text = appSettings.Tracking?.LoadingRobotAddress ?? "LW0000";
+            txtLoadingStationAddr.Text = appSettings.Tracking?.LoadingStationAddress ?? "LW0010";
+            txtUnloadingRobotAddr.Text = appSettings.Tracking?.UnloadingRobotAddress ?? "LW0020";
+            txtUnloadingStationAddr.Text = appSettings.Tracking?.UnloadingStationAddress ?? "LW0030";
          }
       }
 
@@ -63,6 +69,12 @@ namespace WindowsFormsApp1.Forms
             appSettings.TimeSyncIntervalMs = (int)numTimeSync.Value;
             appSettings.TimeSync.TriggerAddress = txtTrigger.Text?.Trim() ?? "LB0301";
             appSettings.TimeSync.DataBaseAddress = txtData.Text?.Trim() ?? "LW0000";
+
+            // Tracking Parameters
+            appSettings.Tracking.LoadingRobotAddress = txtLoadingRobotAddr.Text?.Trim() ?? "LW0000";
+            appSettings.Tracking.LoadingStationAddress = txtLoadingStationAddr.Text?.Trim() ?? "LW0010";
+            appSettings.Tracking.UnloadingRobotAddress = txtUnloadingRobotAddr.Text?.Trim() ?? "LW0020";
+            appSettings.Tracking.UnloadingStationAddress = txtUnloadingStationAddr.Text?.Trim() ?? "LW0030";
          }
       }
 
