@@ -28,519 +28,417 @@ namespace WindowsFormsApp1.Forms
         /// </summary>
         private void InitializeComponent()
         {
-            this.grpMonitor = new System.Windows.Forms.GroupBox();
-            this.txtJudgeFlags = new System.Windows.Forms.TextBox();
-            this.txtLotNo = new System.Windows.Forms.TextBox();
-            this.txtLayerCount = new System.Windows.Forms.TextBox();
-            this.txtBoardId = new System.Windows.Forms.TextBox();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.btnRefresh = new System.Windows.Forms.Button();
-            this.txtAddress = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.cmbStation = new System.Windows.Forms.ComboBox();
-            this.lblStation = new System.Windows.Forms.Label();
-            this.grpOperation = new System.Windows.Forms.GroupBox();
-            this.nudJudge3 = new System.Windows.Forms.NumericUpDown();
-            this.nudJudge2 = new System.Windows.Forms.NumericUpDown();
-            this.nudJudge1 = new System.Windows.Forms.NumericUpDown();
-            this.nudLotNum = new System.Windows.Forms.NumericUpDown();
-            this.txtLotChar = new System.Windows.Forms.TextBox();
-            this.nudLayerCount = new System.Windows.Forms.NumericUpDown();
-            this.nudBoardId3 = new System.Windows.Forms.NumericUpDown();
-            this.nudBoardId2 = new System.Windows.Forms.NumericUpDown();
-            this.nudBoardId1 = new System.Windows.Forms.NumericUpDown();
-            this.label12 = new System.Windows.Forms.Label();
-            this.label11 = new System.Windows.Forms.Label();
-            this.label10 = new System.Windows.Forms.Label();
-            this.label9 = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.label7 = new System.Windows.Forms.Label();
-            this.btnWriteTest = new System.Windows.Forms.Button();
-            this.label6 = new System.Windows.Forms.Label();
-            this.btnClear = new System.Windows.Forms.Button();
-            this.grpQuickWrite = new System.Windows.Forms.GroupBox();
-            this.btnQuickLoadingRobot = new System.Windows.Forms.Button();
-            this.btnQuickLoading = new System.Windows.Forms.Button();
-            this.btnQuickUnloading = new System.Windows.Forms.Button();
-            this.btnQuickUnloadingRobot = new System.Windows.Forms.Button();
-            this.grpLog = new System.Windows.Forms.GroupBox();
-            this.rtbLog = new System.Windows.Forms.RichTextBox();
-            this.grpMonitor.SuspendLayout();
-            this.grpOperation.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudJudge3)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudJudge2)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudJudge1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudLotNum)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudLayerCount)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudBoardId3)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudBoardId2)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudBoardId1)).BeginInit();
-            this.grpQuickWrite.SuspendLayout();
-            this.grpLog.SuspendLayout();
-            this.SuspendLayout();
-            // 
-            // grpMonitor
-            // 
-            this.grpMonitor.Controls.Add(this.txtJudgeFlags);
-            this.grpMonitor.Controls.Add(this.txtLotNo);
-            this.grpMonitor.Controls.Add(this.txtLayerCount);
-            this.grpMonitor.Controls.Add(this.txtBoardId);
-            this.grpMonitor.Controls.Add(this.label5);
-            this.grpMonitor.Controls.Add(this.label4);
-            this.grpMonitor.Controls.Add(this.label3);
-            this.grpMonitor.Controls.Add(this.label2);
-            this.grpMonitor.Controls.Add(this.btnRefresh);
-            this.grpMonitor.Controls.Add(this.txtAddress);
-            this.grpMonitor.Controls.Add(this.label1);
-            this.grpMonitor.Controls.Add(this.cmbStation);
-            this.grpMonitor.Controls.Add(this.lblStation);
-            this.grpMonitor.Location = new System.Drawing.Point(12, 12);
-            this.grpMonitor.Name = "grpMonitor";
-            this.grpMonitor.Size = new System.Drawing.Size(560, 200);
-            this.grpMonitor.TabIndex = 0;
-            this.grpMonitor.TabStop = false;
-            this.grpMonitor.Text = "站點監控 (Station Monitor)";
-            // 
-            // txtJudgeFlags
-            // 
-            this.txtJudgeFlags.Location = new System.Drawing.Point(100, 162);
-            this.txtJudgeFlags.Name = "txtJudgeFlags";
-            this.txtJudgeFlags.ReadOnly = true;
-            this.txtJudgeFlags.Size = new System.Drawing.Size(440, 22);
-            this.txtJudgeFlags.TabIndex = 12;
-            // 
-            // txtLotNo
-            // 
-            this.txtLotNo.Location = new System.Drawing.Point(100, 134);
-            this.txtLotNo.Name = "txtLotNo";
-            this.txtLotNo.ReadOnly = true;
-            this.txtLotNo.Size = new System.Drawing.Size(440, 22);
-            this.txtLotNo.TabIndex = 11;
-            // 
-            // txtLayerCount
-            // 
-            this.txtLayerCount.Location = new System.Drawing.Point(100, 106);
-            this.txtLayerCount.Name = "txtLayerCount";
-            this.txtLayerCount.ReadOnly = true;
-            this.txtLayerCount.Size = new System.Drawing.Size(440, 22);
-            this.txtLayerCount.TabIndex = 10;
-            // 
-            // txtBoardId
-            // 
-            this.txtBoardId.Location = new System.Drawing.Point(100, 78);
-            this.txtBoardId.Name = "txtBoardId";
-            this.txtBoardId.ReadOnly = true;
-            this.txtBoardId.Size = new System.Drawing.Size(440, 22);
-            this.txtBoardId.TabIndex = 9;
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(16, 165);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(72, 12);
-            this.label5.TabIndex = 8;
-            this.label5.Text = "判斷旗標:";
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(16, 137);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(48, 12);
-            this.label4.TabIndex = 7;
-            this.label4.Text = "批號:";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(16, 109);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(48, 12);
-            this.label3.TabIndex = 6;
-            this.label3.Text = "層數:";
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(16, 81);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(72, 12);
-            this.label2.TabIndex = 5;
-            this.label2.Text = "基板序號:";
-            // 
-            // btnRefresh
-            // 
-            this.btnRefresh.Location = new System.Drawing.Point(456, 46);
-            this.btnRefresh.Name = "btnRefresh";
-            this.btnRefresh.Size = new System.Drawing.Size(84, 23);
-            this.btnRefresh.TabIndex = 4;
-            this.btnRefresh.Text = "刷新";
-            this.btnRefresh.UseVisualStyleBackColor = true;
-            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
-            // 
-            // txtAddress
-            // 
-            this.txtAddress.Location = new System.Drawing.Point(100, 47);
-            this.txtAddress.Name = "txtAddress";
-            this.txtAddress.ReadOnly = true;
-            this.txtAddress.Size = new System.Drawing.Size(340, 22);
-            this.txtAddress.TabIndex = 3;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(16, 50);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(48, 12);
-            this.label1.TabIndex = 2;
-            this.label1.Text = "位址:";
-            // 
-            // cmbStation
-            // 
-            this.cmbStation.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbStation.FormattingEnabled = true;
-            this.cmbStation.Location = new System.Drawing.Point(100, 19);
-            this.cmbStation.Name = "cmbStation";
-            this.cmbStation.Size = new System.Drawing.Size(340, 20);
-            this.cmbStation.TabIndex = 1;
-            this.cmbStation.SelectedIndexChanged += new System.EventHandler(this.cmbStation_SelectedIndexChanged);
-            // 
-            // lblStation
-            // 
-            this.lblStation.AutoSize = true;
-            this.lblStation.Location = new System.Drawing.Point(16, 22);
-            this.lblStation.Name = "lblStation";
-            this.lblStation.Size = new System.Drawing.Size(48, 12);
-            this.lblStation.TabIndex = 0;
-            this.lblStation.Text = "站點:";
-            // 
-            // grpOperation
-            // 
-            this.grpOperation.Controls.Add(this.nudJudge3);
-            this.grpOperation.Controls.Add(this.nudJudge2);
-            this.grpOperation.Controls.Add(this.nudJudge1);
-            this.grpOperation.Controls.Add(this.nudLotNum);
-            this.grpOperation.Controls.Add(this.txtLotChar);
-            this.grpOperation.Controls.Add(this.nudLayerCount);
-            this.grpOperation.Controls.Add(this.nudBoardId3);
-            this.grpOperation.Controls.Add(this.nudBoardId2);
-            this.grpOperation.Controls.Add(this.nudBoardId1);
-            this.grpOperation.Controls.Add(this.label12);
-            this.grpOperation.Controls.Add(this.label11);
-            this.grpOperation.Controls.Add(this.label10);
-            this.grpOperation.Controls.Add(this.label9);
-            this.grpOperation.Controls.Add(this.label8);
-            this.grpOperation.Controls.Add(this.label7);
-            this.grpOperation.Controls.Add(this.btnWriteTest);
-            this.grpOperation.Controls.Add(this.label6);
-            this.grpOperation.Controls.Add(this.btnClear);
-            this.grpOperation.Location = new System.Drawing.Point(12, 218);
-            this.grpOperation.Name = "grpOperation";
-            this.grpOperation.Size = new System.Drawing.Size(560, 400);
-            this.grpOperation.TabIndex = 1;
-            this.grpOperation.TabStop = false;
-            this.grpOperation.Text = "資料操作 (Data Operation)";
-            // 
-            // nudJudge3
-            // 
-            this.nudJudge3.Location = new System.Drawing.Point(400, 213);
-            this.nudJudge3.Maximum = new decimal(new int[] {
+         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TrackingControlForm));
+         this.grpMonitor = new System.Windows.Forms.GroupBox();
+         this.lblReasonCode = new System.Windows.Forms.Label();
+         this.txtJudgeFlags = new System.Windows.Forms.TextBox();
+         this.cboReasonCode = new System.Windows.Forms.ComboBox();
+         this.txtLotNo = new System.Windows.Forms.TextBox();
+         this.txtLayerCount = new System.Windows.Forms.TextBox();
+         this.txtBoardId = new System.Windows.Forms.TextBox();
+         this.label5 = new System.Windows.Forms.Label();
+         this.label4 = new System.Windows.Forms.Label();
+         this.label3 = new System.Windows.Forms.Label();
+         this.label2 = new System.Windows.Forms.Label();
+         this.btnRefresh = new System.Windows.Forms.Button();
+         this.txtAddress = new System.Windows.Forms.TextBox();
+         this.label1 = new System.Windows.Forms.Label();
+         this.cmbStation = new System.Windows.Forms.ComboBox();
+         this.lblStation = new System.Windows.Forms.Label();
+         this.grpOperation = new System.Windows.Forms.GroupBox();
+         this.nudJudge3 = new System.Windows.Forms.NumericUpDown();
+         this.nudJudge2 = new System.Windows.Forms.NumericUpDown();
+         this.nudJudge1 = new System.Windows.Forms.NumericUpDown();
+         this.nudLotNum = new System.Windows.Forms.NumericUpDown();
+         this.txtLotChar = new System.Windows.Forms.TextBox();
+         this.nudLayerCount = new System.Windows.Forms.NumericUpDown();
+         this.nudBoardId3 = new System.Windows.Forms.NumericUpDown();
+         this.nudBoardId2 = new System.Windows.Forms.NumericUpDown();
+         this.nudBoardId1 = new System.Windows.Forms.NumericUpDown();
+         this.label12 = new System.Windows.Forms.Label();
+         this.label11 = new System.Windows.Forms.Label();
+         this.label10 = new System.Windows.Forms.Label();
+         this.label9 = new System.Windows.Forms.Label();
+         this.label8 = new System.Windows.Forms.Label();
+         this.label7 = new System.Windows.Forms.Label();
+         this.btnWriteTest = new System.Windows.Forms.Button();
+         this.label6 = new System.Windows.Forms.Label();
+         this.btnClear = new System.Windows.Forms.Button();
+         this.grpQuickWrite = new System.Windows.Forms.GroupBox();
+         this.btnQuickLoadingRobot = new System.Windows.Forms.Button();
+         this.btnQuickLoading = new System.Windows.Forms.Button();
+         this.btnQuickUnloading = new System.Windows.Forms.Button();
+         this.btnQuickUnloadingRobot = new System.Windows.Forms.Button();
+         this.grpLog = new System.Windows.Forms.GroupBox();
+         this.rtbLog = new System.Windows.Forms.RichTextBox();
+         this.grpMonitor.SuspendLayout();
+         this.grpOperation.SuspendLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.nudJudge3)).BeginInit();
+         ((System.ComponentModel.ISupportInitialize)(this.nudJudge2)).BeginInit();
+         ((System.ComponentModel.ISupportInitialize)(this.nudJudge1)).BeginInit();
+         ((System.ComponentModel.ISupportInitialize)(this.nudLotNum)).BeginInit();
+         ((System.ComponentModel.ISupportInitialize)(this.nudLayerCount)).BeginInit();
+         ((System.ComponentModel.ISupportInitialize)(this.nudBoardId3)).BeginInit();
+         ((System.ComponentModel.ISupportInitialize)(this.nudBoardId2)).BeginInit();
+         ((System.ComponentModel.ISupportInitialize)(this.nudBoardId1)).BeginInit();
+         this.grpQuickWrite.SuspendLayout();
+         this.grpLog.SuspendLayout();
+         this.SuspendLayout();
+         // 
+         // grpMonitor
+         // 
+         this.grpMonitor.Controls.Add(this.lblReasonCode);
+         this.grpMonitor.Controls.Add(this.txtJudgeFlags);
+         this.grpMonitor.Controls.Add(this.cboReasonCode);
+         this.grpMonitor.Controls.Add(this.txtLotNo);
+         this.grpMonitor.Controls.Add(this.txtLayerCount);
+         this.grpMonitor.Controls.Add(this.txtBoardId);
+         this.grpMonitor.Controls.Add(this.label5);
+         this.grpMonitor.Controls.Add(this.label4);
+         this.grpMonitor.Controls.Add(this.label3);
+         this.grpMonitor.Controls.Add(this.label2);
+         this.grpMonitor.Controls.Add(this.btnRefresh);
+         this.grpMonitor.Controls.Add(this.txtAddress);
+         this.grpMonitor.Controls.Add(this.label1);
+         this.grpMonitor.Controls.Add(this.cmbStation);
+         this.grpMonitor.Controls.Add(this.lblStation);
+         resources.ApplyResources(this.grpMonitor, "grpMonitor");
+         this.grpMonitor.Name = "grpMonitor";
+         this.grpMonitor.TabStop = false;
+         // 
+         // lblReasonCode
+         // 
+         resources.ApplyResources(this.lblReasonCode, "lblReasonCode");
+         this.lblReasonCode.Name = "lblReasonCode";
+         // 
+         // txtJudgeFlags
+         // 
+         resources.ApplyResources(this.txtJudgeFlags, "txtJudgeFlags");
+         this.txtJudgeFlags.Name = "txtJudgeFlags";
+         this.txtJudgeFlags.ReadOnly = true;
+         // 
+         // cboReasonCode
+         // 
+         this.cboReasonCode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.cboReasonCode.FormattingEnabled = true;
+         this.cboReasonCode.Items.AddRange(new object[] {
+            resources.GetString("cboReasonCode.Items"),
+            resources.GetString("cboReasonCode.Items1"),
+            resources.GetString("cboReasonCode.Items2")});
+         resources.ApplyResources(this.cboReasonCode, "cboReasonCode");
+         this.cboReasonCode.Name = "cboReasonCode";
+         // 
+         // txtLotNo
+         // 
+         resources.ApplyResources(this.txtLotNo, "txtLotNo");
+         this.txtLotNo.Name = "txtLotNo";
+         this.txtLotNo.ReadOnly = true;
+         // 
+         // txtLayerCount
+         // 
+         resources.ApplyResources(this.txtLayerCount, "txtLayerCount");
+         this.txtLayerCount.Name = "txtLayerCount";
+         this.txtLayerCount.ReadOnly = true;
+         // 
+         // txtBoardId
+         // 
+         resources.ApplyResources(this.txtBoardId, "txtBoardId");
+         this.txtBoardId.Name = "txtBoardId";
+         this.txtBoardId.ReadOnly = true;
+         // 
+         // label5
+         // 
+         resources.ApplyResources(this.label5, "label5");
+         this.label5.Name = "label5";
+         // 
+         // label4
+         // 
+         resources.ApplyResources(this.label4, "label4");
+         this.label4.Name = "label4";
+         // 
+         // label3
+         // 
+         resources.ApplyResources(this.label3, "label3");
+         this.label3.Name = "label3";
+         // 
+         // label2
+         // 
+         resources.ApplyResources(this.label2, "label2");
+         this.label2.Name = "label2";
+         // 
+         // btnRefresh
+         // 
+         resources.ApplyResources(this.btnRefresh, "btnRefresh");
+         this.btnRefresh.Name = "btnRefresh";
+         this.btnRefresh.UseVisualStyleBackColor = true;
+         this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
+         // 
+         // txtAddress
+         // 
+         resources.ApplyResources(this.txtAddress, "txtAddress");
+         this.txtAddress.Name = "txtAddress";
+         this.txtAddress.ReadOnly = true;
+         // 
+         // label1
+         // 
+         resources.ApplyResources(this.label1, "label1");
+         this.label1.Name = "label1";
+         // 
+         // cmbStation
+         // 
+         this.cmbStation.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.cmbStation.FormattingEnabled = true;
+         resources.ApplyResources(this.cmbStation, "cmbStation");
+         this.cmbStation.Name = "cmbStation";
+         this.cmbStation.SelectedIndexChanged += new System.EventHandler(this.cmbStation_SelectedIndexChanged);
+         // 
+         // lblStation
+         // 
+         resources.ApplyResources(this.lblStation, "lblStation");
+         this.lblStation.Name = "lblStation";
+         // 
+         // grpOperation
+         // 
+         this.grpOperation.Controls.Add(this.nudJudge3);
+         this.grpOperation.Controls.Add(this.nudJudge2);
+         this.grpOperation.Controls.Add(this.nudJudge1);
+         this.grpOperation.Controls.Add(this.nudLotNum);
+         this.grpOperation.Controls.Add(this.txtLotChar);
+         this.grpOperation.Controls.Add(this.nudLayerCount);
+         this.grpOperation.Controls.Add(this.nudBoardId3);
+         this.grpOperation.Controls.Add(this.nudBoardId2);
+         this.grpOperation.Controls.Add(this.nudBoardId1);
+         this.grpOperation.Controls.Add(this.label12);
+         this.grpOperation.Controls.Add(this.label11);
+         this.grpOperation.Controls.Add(this.label10);
+         this.grpOperation.Controls.Add(this.label9);
+         this.grpOperation.Controls.Add(this.label8);
+         this.grpOperation.Controls.Add(this.label7);
+         this.grpOperation.Controls.Add(this.btnWriteTest);
+         this.grpOperation.Controls.Add(this.label6);
+         this.grpOperation.Controls.Add(this.btnClear);
+         resources.ApplyResources(this.grpOperation, "grpOperation");
+         this.grpOperation.Name = "grpOperation";
+         this.grpOperation.TabStop = false;
+         // 
+         // nudJudge3
+         // 
+         resources.ApplyResources(this.nudJudge3, "nudJudge3");
+         this.nudJudge3.Maximum = new decimal(new int[] {
             65535,
             0,
             0,
             0});
-            this.nudJudge3.Name = "nudJudge3";
-            this.nudJudge3.Size = new System.Drawing.Size(140, 22);
-            this.nudJudge3.TabIndex = 21;
-            // 
-            // nudJudge2
-            // 
-            this.nudJudge2.Location = new System.Drawing.Point(220, 213);
-            this.nudJudge2.Maximum = new decimal(new int[] {
+         this.nudJudge3.Name = "nudJudge3";
+         // 
+         // nudJudge2
+         // 
+         resources.ApplyResources(this.nudJudge2, "nudJudge2");
+         this.nudJudge2.Maximum = new decimal(new int[] {
             65535,
             0,
             0,
             0});
-            this.nudJudge2.Name = "nudJudge2";
-            this.nudJudge2.Size = new System.Drawing.Size(140, 22);
-            this.nudJudge2.TabIndex = 20;
-            // 
-            // nudJudge1
-            // 
-            this.nudJudge1.Location = new System.Drawing.Point(40, 213);
-            this.nudJudge1.Maximum = new decimal(new int[] {
+         this.nudJudge2.Name = "nudJudge2";
+         // 
+         // nudJudge1
+         // 
+         resources.ApplyResources(this.nudJudge1, "nudJudge1");
+         this.nudJudge1.Maximum = new decimal(new int[] {
             65535,
             0,
             0,
             0});
-            this.nudJudge1.Name = "nudJudge1";
-            this.nudJudge1.Size = new System.Drawing.Size(140, 22);
-            this.nudJudge1.TabIndex = 19;
-            // 
-            // nudLotNum
-            // 
-            this.nudLotNum.Location = new System.Drawing.Point(100, 186);
-            this.nudLotNum.Maximum = new decimal(new int[] {
+         this.nudJudge1.Name = "nudJudge1";
+         // 
+         // nudLotNum
+         // 
+         resources.ApplyResources(this.nudLotNum, "nudLotNum");
+         this.nudLotNum.Maximum = new decimal(new int[] {
             -1,
             0,
             0,
             0});
-            this.nudLotNum.Name = "nudLotNum";
-            this.nudLotNum.Size = new System.Drawing.Size(440, 22);
-            this.nudLotNum.TabIndex = 18;
-            // 
-            // txtLotChar
-            // 
-            this.txtLotChar.Location = new System.Drawing.Point(100, 158);
-            this.txtLotChar.MaxLength = 1;
-            this.txtLotChar.Name = "txtLotChar";
-            this.txtLotChar.Size = new System.Drawing.Size(440, 22);
-            this.txtLotChar.TabIndex = 17;
-            // 
-            // nudLayerCount
-            // 
-            this.nudLayerCount.Location = new System.Drawing.Point(100, 130);
-            this.nudLayerCount.Maximum = new decimal(new int[] {
+         this.nudLotNum.Name = "nudLotNum";
+         // 
+         // txtLotChar
+         // 
+         resources.ApplyResources(this.txtLotChar, "txtLotChar");
+         this.txtLotChar.Name = "txtLotChar";
+         // 
+         // nudLayerCount
+         // 
+         resources.ApplyResources(this.nudLayerCount, "nudLayerCount");
+         this.nudLayerCount.Maximum = new decimal(new int[] {
             65535,
             0,
             0,
             0});
-            this.nudLayerCount.Name = "nudLayerCount";
-            this.nudLayerCount.Size = new System.Drawing.Size(440, 22);
-            this.nudLayerCount.TabIndex = 16;
-            // 
-            // nudBoardId3
-            // 
-            this.nudBoardId3.Location = new System.Drawing.Point(400, 102);
-            this.nudBoardId3.Maximum = new decimal(new int[] {
+         this.nudLayerCount.Name = "nudLayerCount";
+         // 
+         // nudBoardId3
+         // 
+         resources.ApplyResources(this.nudBoardId3, "nudBoardId3");
+         this.nudBoardId3.Maximum = new decimal(new int[] {
             65535,
             0,
             0,
             0});
-            this.nudBoardId3.Name = "nudBoardId3";
-            this.nudBoardId3.Size = new System.Drawing.Size(140, 22);
-            this.nudBoardId3.TabIndex = 15;
-            // 
-            // nudBoardId2
-            // 
-            this.nudBoardId2.Location = new System.Drawing.Point(220, 102);
-            this.nudBoardId2.Maximum = new decimal(new int[] {
+         this.nudBoardId3.Name = "nudBoardId3";
+         // 
+         // nudBoardId2
+         // 
+         resources.ApplyResources(this.nudBoardId2, "nudBoardId2");
+         this.nudBoardId2.Maximum = new decimal(new int[] {
             65535,
             0,
             0,
             0});
-            this.nudBoardId2.Name = "nudBoardId2";
-            this.nudBoardId2.Size = new System.Drawing.Size(140, 22);
-            this.nudBoardId2.TabIndex = 14;
-            // 
-            // nudBoardId1
-            // 
-            this.nudBoardId1.Location = new System.Drawing.Point(40, 102);
-            this.nudBoardId1.Maximum = new decimal(new int[] {
+         this.nudBoardId2.Name = "nudBoardId2";
+         // 
+         // nudBoardId1
+         // 
+         resources.ApplyResources(this.nudBoardId1, "nudBoardId1");
+         this.nudBoardId1.Maximum = new decimal(new int[] {
             65535,
             0,
             0,
             0});
-            this.nudBoardId1.Name = "nudBoardId1";
-            this.nudBoardId1.Size = new System.Drawing.Size(140, 22);
-            this.nudBoardId1.TabIndex = 13;
-            // 
-            // label12
-            // 
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(16, 215);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(72, 12);
-            this.label12.TabIndex = 12;
-            this.label12.Text = "判斷旗標:";
-            // 
-            // label11
-            // 
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(16, 188);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(84, 12);
-            this.label11.TabIndex = 11;
-            this.label11.Text = "批號(數字):";
-            // 
-            // label10
-            // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(16, 161);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(84, 12);
-            this.label10.TabIndex = 10;
-            this.label10.Text = "批號(字元):";
-            // 
-            // label9
-            // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(16, 132);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(48, 12);
-            this.label9.TabIndex = 9;
-            this.label9.Text = "層數:";
-            // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(16, 104);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(72, 12);
-            this.label8.TabIndex = 8;
-            this.label8.Text = "基板序號:";
-            // 
-            // label7
-            // 
-            this.label7.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.label7.Location = new System.Drawing.Point(18, 74);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(522, 2);
-            this.label7.TabIndex = 7;
-            // 
-            // btnWriteTest
-            // 
-            this.btnWriteTest.Location = new System.Drawing.Point(18, 241);
-            this.btnWriteTest.Name = "btnWriteTest";
-            this.btnWriteTest.Size = new System.Drawing.Size(522, 28);
-            this.btnWriteTest.TabIndex = 6;
-            this.btnWriteTest.Text = "寫入測試資料 (Write Test Data)";
-            this.btnWriteTest.UseVisualStyleBackColor = true;
-            this.btnWriteTest.Click += new System.EventHandler(this.btnWriteTest_Click);
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Font = new System.Drawing.Font("新細明體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.label6.Location = new System.Drawing.Point(16, 53);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(181, 12);
-            this.label6.TabIndex = 5;
-            this.label6.Text = "---------- 測試區 ----------";
-            // 
-            // btnClear
-            // 
-            this.btnClear.BackColor = System.Drawing.Color.LightCoral;
-            this.btnClear.Font = new System.Drawing.Font("新細明體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btnClear.Location = new System.Drawing.Point(18, 19);
-            this.btnClear.Name = "btnClear";
-            this.btnClear.Size = new System.Drawing.Size(522, 28);
-            this.btnClear.TabIndex = 0;
-            this.btnClear.Text = "清除追蹤資料 (Clear Data)";
-            this.btnClear.UseVisualStyleBackColor = false;
-            this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
-            // 
-            // grpQuickWrite
-            // 
-            this.grpQuickWrite.Controls.Add(this.btnQuickLoadingRobot);
-            this.grpQuickWrite.Controls.Add(this.btnQuickLoading);
-            this.grpQuickWrite.Controls.Add(this.btnQuickUnloading);
-            this.grpQuickWrite.Controls.Add(this.btnQuickUnloadingRobot);
-            this.grpQuickWrite.Location = new System.Drawing.Point(12, 624);
-            this.grpQuickWrite.Name = "grpQuickWrite";
-            this.grpQuickWrite.Size = new System.Drawing.Size(560, 90);
-            this.grpQuickWrite.TabIndex = 3;
-            this.grpQuickWrite.TabStop = false;
-            this.grpQuickWrite.Text = "快速寫入 (Quick Write)";
-            // 
-            // btnQuickLoadingRobot
-            // 
-            this.btnQuickLoadingRobot.BackColor = System.Drawing.Color.LightGreen;
-            this.btnQuickLoadingRobot.Location = new System.Drawing.Point(18, 22);
-            this.btnQuickLoadingRobot.Name = "btnQuickLoadingRobot";
-            this.btnQuickLoadingRobot.Size = new System.Drawing.Size(130, 55);
-            this.btnQuickLoadingRobot.TabIndex = 0;
-            this.btnQuickLoadingRobot.Text = "插框手臂站\r\n(004, L04, A1234)";
-            this.btnQuickLoadingRobot.UseVisualStyleBackColor = false;
-            this.btnQuickLoadingRobot.Click += new System.EventHandler(this.btnQuickLoadingRobot_Click);
-            // 
-            // btnQuickLoading
-            // 
-            this.btnQuickLoading.BackColor = System.Drawing.Color.LightGreen;
-            this.btnQuickLoading.Location = new System.Drawing.Point(158, 22);
-            this.btnQuickLoading.Name = "btnQuickLoading";
-            this.btnQuickLoading.Size = new System.Drawing.Size(130, 55);
-            this.btnQuickLoading.TabIndex = 1;
-            this.btnQuickLoading.Text = "插框站\r\n(003, L03, A1234)";
-            this.btnQuickLoading.UseVisualStyleBackColor = false;
-            this.btnQuickLoading.Click += new System.EventHandler(this.btnQuickLoading_Click);
-            // 
-            // btnQuickUnloading
-            // 
-            this.btnQuickUnloading.BackColor = System.Drawing.Color.LightGreen;
-            this.btnQuickUnloading.Location = new System.Drawing.Point(298, 22);
-            this.btnQuickUnloading.Name = "btnQuickUnloading";
-            this.btnQuickUnloading.Size = new System.Drawing.Size(130, 55);
-            this.btnQuickUnloading.TabIndex = 2;
-            this.btnQuickUnloading.Text = "拆框站\r\n(002, L02, A1234)";
-            this.btnQuickUnloading.UseVisualStyleBackColor = false;
-            this.btnQuickUnloading.Click += new System.EventHandler(this.btnQuickUnloading_Click);
-            // 
-            // btnQuickUnloadingRobot
-            // 
-            this.btnQuickUnloadingRobot.BackColor = System.Drawing.Color.LightGreen;
-            this.btnQuickUnloadingRobot.Location = new System.Drawing.Point(438, 22);
-            this.btnQuickUnloadingRobot.Name = "btnQuickUnloadingRobot";
-            this.btnQuickUnloadingRobot.Size = new System.Drawing.Size(110, 55);
-            this.btnQuickUnloadingRobot.TabIndex = 3;
-            this.btnQuickUnloadingRobot.Text = "拆框手臂站\r\n(001, L01)";
-            this.btnQuickUnloadingRobot.UseVisualStyleBackColor = false;
-            this.btnQuickUnloadingRobot.Click += new System.EventHandler(this.btnQuickUnloadingRobot_Click);
-            // 
-            // grpLog
-            // 
-            this.grpLog.Controls.Add(this.rtbLog);
-            this.grpLog.Location = new System.Drawing.Point(12, 720);
-            this.grpLog.Name = "grpLog";
-            this.grpLog.Size = new System.Drawing.Size(560, 150);
-            this.grpLog.TabIndex = 2;
-            this.grpLog.TabStop = false;
-            this.grpLog.Text = "日誌 (Log)";
-            // 
-            // rtbLog
-            // 
-            this.rtbLog.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.rtbLog.Location = new System.Drawing.Point(3, 18);
-            this.rtbLog.Name = "rtbLog";
-            this.rtbLog.ReadOnly = true;
-            this.rtbLog.Size = new System.Drawing.Size(554, 129);
-            this.rtbLog.TabIndex = 0;
-            this.rtbLog.Text = "";
-            // 
-            // TrackingControlForm
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(584, 882);
-            this.Controls.Add(this.grpQuickWrite);
-            this.Controls.Add(this.grpLog);
-            this.Controls.Add(this.grpOperation);
-            this.Controls.Add(this.grpMonitor);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.Name = "TrackingControlForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "追蹤資料管理 (Tracking Data Management)";
-            this.grpMonitor.ResumeLayout(false);
-            this.grpMonitor.PerformLayout();
-            this.grpOperation.ResumeLayout(false);
-            this.grpOperation.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudJudge3)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudJudge2)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudJudge1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudLotNum)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudLayerCount)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudBoardId3)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudBoardId2)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudBoardId1)).EndInit();
-            this.grpQuickWrite.ResumeLayout(false);
-            this.grpLog.ResumeLayout(false);
-            this.ResumeLayout(false);
+         this.nudBoardId1.Name = "nudBoardId1";
+         // 
+         // label12
+         // 
+         resources.ApplyResources(this.label12, "label12");
+         this.label12.Name = "label12";
+         // 
+         // label11
+         // 
+         resources.ApplyResources(this.label11, "label11");
+         this.label11.Name = "label11";
+         // 
+         // label10
+         // 
+         resources.ApplyResources(this.label10, "label10");
+         this.label10.Name = "label10";
+         // 
+         // label9
+         // 
+         resources.ApplyResources(this.label9, "label9");
+         this.label9.Name = "label9";
+         // 
+         // label8
+         // 
+         resources.ApplyResources(this.label8, "label8");
+         this.label8.Name = "label8";
+         // 
+         // label7
+         // 
+         this.label7.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+         resources.ApplyResources(this.label7, "label7");
+         this.label7.Name = "label7";
+         // 
+         // btnWriteTest
+         // 
+         resources.ApplyResources(this.btnWriteTest, "btnWriteTest");
+         this.btnWriteTest.Name = "btnWriteTest";
+         this.btnWriteTest.UseVisualStyleBackColor = true;
+         this.btnWriteTest.Click += new System.EventHandler(this.btnWriteTest_Click);
+         // 
+         // label6
+         // 
+         resources.ApplyResources(this.label6, "label6");
+         this.label6.Name = "label6";
+         // 
+         // btnClear
+         // 
+         this.btnClear.BackColor = System.Drawing.Color.LightCoral;
+         resources.ApplyResources(this.btnClear, "btnClear");
+         this.btnClear.Name = "btnClear";
+         this.btnClear.UseVisualStyleBackColor = false;
+         this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
+         // 
+         // grpQuickWrite
+         // 
+         this.grpQuickWrite.Controls.Add(this.btnQuickLoadingRobot);
+         this.grpQuickWrite.Controls.Add(this.btnQuickLoading);
+         this.grpQuickWrite.Controls.Add(this.btnQuickUnloading);
+         this.grpQuickWrite.Controls.Add(this.btnQuickUnloadingRobot);
+         resources.ApplyResources(this.grpQuickWrite, "grpQuickWrite");
+         this.grpQuickWrite.Name = "grpQuickWrite";
+         this.grpQuickWrite.TabStop = false;
+         // 
+         // btnQuickLoadingRobot
+         // 
+         this.btnQuickLoadingRobot.BackColor = System.Drawing.Color.LightGreen;
+         resources.ApplyResources(this.btnQuickLoadingRobot, "btnQuickLoadingRobot");
+         this.btnQuickLoadingRobot.Name = "btnQuickLoadingRobot";
+         this.btnQuickLoadingRobot.UseVisualStyleBackColor = false;
+         this.btnQuickLoadingRobot.Click += new System.EventHandler(this.btnQuickLoadingRobot_Click);
+         // 
+         // btnQuickLoading
+         // 
+         this.btnQuickLoading.BackColor = System.Drawing.Color.LightGreen;
+         resources.ApplyResources(this.btnQuickLoading, "btnQuickLoading");
+         this.btnQuickLoading.Name = "btnQuickLoading";
+         this.btnQuickLoading.UseVisualStyleBackColor = false;
+         this.btnQuickLoading.Click += new System.EventHandler(this.btnQuickLoading_Click);
+         // 
+         // btnQuickUnloading
+         // 
+         this.btnQuickUnloading.BackColor = System.Drawing.Color.LightGreen;
+         resources.ApplyResources(this.btnQuickUnloading, "btnQuickUnloading");
+         this.btnQuickUnloading.Name = "btnQuickUnloading";
+         this.btnQuickUnloading.UseVisualStyleBackColor = false;
+         this.btnQuickUnloading.Click += new System.EventHandler(this.btnQuickUnloading_Click);
+         // 
+         // btnQuickUnloadingRobot
+         // 
+         this.btnQuickUnloadingRobot.BackColor = System.Drawing.Color.LightGreen;
+         resources.ApplyResources(this.btnQuickUnloadingRobot, "btnQuickUnloadingRobot");
+         this.btnQuickUnloadingRobot.Name = "btnQuickUnloadingRobot";
+         this.btnQuickUnloadingRobot.UseVisualStyleBackColor = false;
+         this.btnQuickUnloadingRobot.Click += new System.EventHandler(this.btnQuickUnloadingRobot_Click);
+         // 
+         // grpLog
+         // 
+         this.grpLog.Controls.Add(this.rtbLog);
+         resources.ApplyResources(this.grpLog, "grpLog");
+         this.grpLog.Name = "grpLog";
+         this.grpLog.TabStop = false;
+         // 
+         // rtbLog
+         // 
+         resources.ApplyResources(this.rtbLog, "rtbLog");
+         this.rtbLog.Name = "rtbLog";
+         this.rtbLog.ReadOnly = true;
+         // 
+         // TrackingControlForm
+         // 
+         resources.ApplyResources(this, "$this");
+         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+         this.Controls.Add(this.grpQuickWrite);
+         this.Controls.Add(this.grpLog);
+         this.Controls.Add(this.grpOperation);
+         this.Controls.Add(this.grpMonitor);
+         this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+         this.MaximizeBox = false;
+         this.MinimizeBox = false;
+         this.Name = "TrackingControlForm";
+         this.grpMonitor.ResumeLayout(false);
+         this.grpMonitor.PerformLayout();
+         this.grpOperation.ResumeLayout(false);
+         this.grpOperation.PerformLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.nudJudge3)).EndInit();
+         ((System.ComponentModel.ISupportInitialize)(this.nudJudge2)).EndInit();
+         ((System.ComponentModel.ISupportInitialize)(this.nudJudge1)).EndInit();
+         ((System.ComponentModel.ISupportInitialize)(this.nudLotNum)).EndInit();
+         ((System.ComponentModel.ISupportInitialize)(this.nudLayerCount)).EndInit();
+         ((System.ComponentModel.ISupportInitialize)(this.nudBoardId3)).EndInit();
+         ((System.ComponentModel.ISupportInitialize)(this.nudBoardId2)).EndInit();
+         ((System.ComponentModel.ISupportInitialize)(this.nudBoardId1)).EndInit();
+         this.grpQuickWrite.ResumeLayout(false);
+         this.grpLog.ResumeLayout(false);
+         this.ResumeLayout(false);
 
         }
 
@@ -586,5 +484,7 @@ namespace WindowsFormsApp1.Forms
         private System.Windows.Forms.Button btnQuickLoading;
         private System.Windows.Forms.Button btnQuickUnloading;
         private System.Windows.Forms.Button btnQuickUnloadingRobot;
-    }
+      private System.Windows.Forms.ComboBox cboReasonCode;
+      private System.Windows.Forms.Label lblReasonCode;
+   }
 }

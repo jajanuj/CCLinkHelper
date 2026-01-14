@@ -42,11 +42,13 @@ namespace WindowsFormsApp1.Services
       private string _heartbeatRequestAddr;
       private string _heartbeatResponseAddr;
       private Task _heartbeatTask;
+      private DateTime? _t1Watchdog = null; // T1 計時器：Response ON 後開始計時
       private CommonReportAlarm _lastCommonReportAlarm;
       private CommonReportStatus1 _lastCommonReportStatus1;
       private CommonReportStatus2 _lastCommonReportStatus2;
-      private bool? _lastObservedRequest;
-      private bool? _lastObservedResponse;
+      private bool? _lastObservedRequest = null;
+      private bool? _lastObservedResponse = null;
+      private bool? _lastOnlineMode = null; // 追蹤上次的 OnlineMode 狀態（null=首次執行）
       private bool _lastTimeSyncTrigger;
       private CancellationTokenSource _linkReportCts;
       private int _linkReportStep;
@@ -111,6 +113,8 @@ namespace WindowsFormsApp1.Services
       #endregion
 
       #region Properties
+
+      public bool OnlineMode { get; set; } = false;
 
       public ICCLinkController Controller => _controller;
 
@@ -534,20 +538,52 @@ namespace WindowsFormsApp1.Services
          bool ok = true;
          bool handshakeCompleted = false;
 
+         // 檢查 OnlineMode 狀態變更（包含首次執行）
+         if (!_lastOnlineMode.HasValue || OnlineMode != _lastOnlineMode.Value)
+         {
+            if (OnlineMode)
+            {
+               _logger?.Invoke($"[Heartbeat] 進入連線模式，開始心跳監控 | Enter Online Mode, starting heartbeat");
+               // 可選擇在此重置心跳狀態變數
+               ConsecutiveHeartbeatFailuresCount = 0;
+            }
+            else
+            {
+               _logger?.Invoke($"[Heartbeat] 離開連線模式，暫停心跳監控 | Exit Online Mode, pausing heartbeat");
+               // 重置觀察狀態，確保下次進入時能正確偵測
+               _lastObservedRequest = null;
+               _lastObservedResponse = null;
+            }
+
+            _lastOnlineMode = OnlineMode;
+         }
+
+         // 若不在連線模式，則不執行後續心跳邏輯
+         if (!OnlineMode)
+         {
+            return;
+         }
+
          // Use Cached GetBit from Controller
          bool requestOn = _controller.GetBit(_heartbeatRequestAddr);
          bool responseOn = _controller.GetBit(_heartbeatResponseAddr);
 
+         // 計算當前狀態
+         // Bit 0: Response (0=OFF, 1=ON)
+         // Bit 1: Request (0=OFF, 1=ON) -> value 2
          int state = (requestOn ? 2 : 0) | (responseOn ? 1 : 0);
+
+         // 檢查狀態是否改變
+         // 如果 _lastObservedRequest/Response 為 null (首次運行或重置後)，視為狀態改變
          int lastState = (_lastObservedRequest ?? false ? 2 : 0) | (_lastObservedResponse ?? false ? 1 : 0);
          bool stateChanged = !(_lastObservedRequest.HasValue && _lastObservedResponse.HasValue) || state != lastState;
 
          if (stateChanged || state == 0)
          {
-            _handshakeWatchdog = DateTime.UtcNow;
+            _handshakeWatchdog = DateTime.UtcNow; // Keep this line from original
             if (stateChanged)
             {
-               // _logger?.Invoke($"[Heartbeat] State Changed: {lastState} -> {state}");
+               _logger?.Invoke($"[Heartbeat] State Changed: {lastState} -> {state}");
             }
          }
          else
@@ -592,11 +628,35 @@ namespace WindowsFormsApp1.Services
                break;
 
             case 3: // (1,1) PC Responded
+               // 當從狀態 2 (1,0) 進入狀態 3 (1,1) 時，開始 T1 計時
+               if (lastState == 2)
+               {
+                  _t1Watchdog = DateTime.UtcNow;
+                  _logger?.Invoke("[Heartbeat] PC Responded (1,1), T1 timer started");
+               }
+               else if (_t1Watchdog.HasValue)
+               {
+                  // 檢查 T1 逾時：從 Response ON 後，Request 仍然沒有 OFF
+                  var t1Elapsed = DateTime.UtcNow - _t1Watchdog.Value;
+                  var t1Timeout = _heartbeatInterval.TotalMilliseconds * 2; // T1 逾時設定（可調整）
+                  
+                  if (t1Elapsed.TotalMilliseconds > t1Timeout)
+                  {
+                     _logger?.Invoke($"[Heartbeat] T1 Timeout: PLC 未在 {t1Timeout}ms 內清除 Request | T1 Timeout: PLC did not clear Request within {t1Timeout}ms");
+                     ok = false;
+                     _t1Watchdog = null; // 重置計時器
+                  }
+               }
+
                _lastObservedRequest = true;
                _lastObservedResponse = true;
+
                break;
 
             case 1: // (0,1) PLC Cleared Request
+               // 清除 T1 計時器：已成功從 (1,1) 進入 (0,1)
+               _t1Watchdog = null;
+               
                if (lastState == 3)
                {
                   _logger?.Invoke("[Heartbeat] PLC Cleared Request, Clearing Response (0,1)");
@@ -632,10 +692,7 @@ namespace WindowsFormsApp1.Services
             {
                _logger?.Invoke($"[Heartbeat] 連續失敗 {_heartbeatFailThreshold} 次，已停止心跳監控");
                PostEvent(() => HeartbeatFailed?.Invoke());
-
-               // 方案 C：停止心跳循環，讓上層決定如何處理
                _heartbeatCts?.Cancel();
-               return;
             }
          }
       }
@@ -743,24 +800,33 @@ namespace WindowsFormsApp1.Services
       #region Tracking Methods
 
       /// <summary>
-      /// 讀取指定站點的追蹤資料
+      /// 讀取指定站點的排出資料（追蹤資料 + 排出理由）
+      /// </summary>
+      public async Task<MoveOutData> GetMoveOutDataAsync(TrackingStation station, CancellationToken ct = default)
+      {
+         string address = _settings.Tracking.GetAddress(station);
+         if (string.IsNullOrWhiteSpace(address))
+         {
+            throw new InvalidOperationException($"站點 {station} 的位址未設定");
+         }
+
+         var rawData = await _controller.ReadWordsAsync(address, 11, ct);
+         return MoveOutData.FromRawData(rawData.ToArray());
+      }
+
+      /// <summary>
+      /// 讀取指定站點的追蹤資料（僅 10 words，向下相容）
       /// </summary>
       public async Task<TrackingData> GetTrackingDataAsync(TrackingStation station, CancellationToken ct = default)
       {
-         string address = _settings.Tracking.GetAddress(station);
-         if (string.IsNullOrWhiteSpace(address))
-         {
-            throw new InvalidOperationException($"站點 {station} 的位址未設定");
-         }
-
-         var rawData = await _controller.ReadWordsAsync(address, 10, ct);
-         return new TrackingData(rawData.ToArray());
+         var moveOutData = await GetMoveOutDataAsync(station, ct);
+         return moveOutData.TrackingData;
       }
 
       /// <summary>
-      /// 清除指定站點的追蹤資料 (寫入 0)
+      /// 清除指定站點的排出資料（寫入 0，包含 11 words）
       /// </summary>
-      public async Task ClearTrackingDataAsync(TrackingStation station, CancellationToken ct = default)
+      public async Task ClearMoveOutDataAsync(TrackingStation station, CancellationToken ct = default)
       {
          string address = _settings.Tracking.GetAddress(station);
          if (string.IsNullOrWhiteSpace(address))
@@ -768,15 +834,23 @@ namespace WindowsFormsApp1.Services
             throw new InvalidOperationException($"站點 {station} 的位址未設定");
          }
 
-         short[] zeroData = new short[10];
+         short[] zeroData = new short[11];
          await _controller.WriteWordsAsync(address, zeroData, ct);
-         _logger?.Invoke($"[Tracking] 已清除站點 {station} 的追蹤資料 (位址: {address})");
+         _logger?.Invoke($"[Tracking] 已清除站點 {station} 的排出資料 (位址: {address})");
       }
 
       /// <summary>
-      /// 寫入追蹤資料至指定站點 (測試用)
+      /// 清除指定站點的追蹤資料（寫入 0，僅 10 words，向下相容）
       /// </summary>
-      public async Task WriteTrackingDataAsync(TrackingStation station, TrackingData data, CancellationToken ct = default)
+      public async Task ClearTrackingDataAsync(TrackingStation station, CancellationToken ct = default)
+      {
+         await ClearMoveOutDataAsync(station, ct);
+      }
+
+      /// <summary>
+      /// 寫入排出資料至指定站點（追蹤資料 + 排出理由，11 words）
+      /// </summary>
+      public async Task WriteMoveOutDataAsync(TrackingStation station, MoveOutData data, CancellationToken ct = default)
       {
          if (data == null)
          {
@@ -791,7 +865,20 @@ namespace WindowsFormsApp1.Services
 
          short[] rawData = data.ToRawData();
          await _controller.WriteWordsAsync(address, rawData, ct);
-         _logger?.Invoke($"[Tracking] 已寫入追蹤資料至站點 {station} (位址: {address})");
+         _logger?.Invoke($"[Tracking] 已寫入排出資料至站點 {station} (位址: {address}, 理由碼: {data.ReasonCode})");
+      }
+
+      /// <summary>
+      /// 寫入追蹤資料至指定站點（僅 10 words，向下相容）
+      /// </summary>
+      public async Task WriteTrackingDataAsync(TrackingStation station, TrackingData data, CancellationToken ct = default)
+      {
+         var moveOutData = new MoveOutData
+         {
+            TrackingData = data,
+            ReasonCode = 0
+         };
+         await WriteMoveOutDataAsync(station, moveOutData, ct);
       }
 
       #endregion

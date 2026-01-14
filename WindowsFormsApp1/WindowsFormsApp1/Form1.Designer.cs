@@ -61,10 +61,14 @@
          this.grpLinkReport = new System.Windows.Forms.GroupBox();
          this.cboLinkReportTestMode = new System.Windows.Forms.ComboBox();
          this.lblLinkReportTestMode = new System.Windows.Forms.Label();
+         this.grpConnectMode = new System.Windows.Forms.GroupBox();
+         this.rbtnOnline = new System.Windows.Forms.RadioButton();
+         this.rbtnOffline = new System.Windows.Forms.RadioButton();
          this.flowLayoutPanel1.SuspendLayout();
          this.grpConnectionMode.SuspendLayout();
          this.grpManualTime.SuspendLayout();
          this.grpLinkReport.SuspendLayout();
+         this.grpConnectMode.SuspendLayout();
          this.SuspendLayout();
          // 
          // flowLayoutPanel1
@@ -92,6 +96,7 @@
          this.flowLayoutPanel1.Controls.Add(this.btnSendLinkData);
          this.flowLayoutPanel1.Controls.Add(this.grpManualTime);
          this.flowLayoutPanel1.Controls.Add(this.grpLinkReport);
+         this.flowLayoutPanel1.Controls.Add(this.grpConnectMode);
          this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
          this.flowLayoutPanel1.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
@@ -425,6 +430,41 @@
          this.lblLinkReportTestMode.TabIndex = 1;
          this.lblLinkReportTestMode.Text = "測試模式";
          // 
+         // grpConnectMode
+         // 
+         this.grpConnectMode.Controls.Add(this.rbtnOffline);
+         this.grpConnectMode.Controls.Add(this.rbtnOnline);
+         this.grpConnectMode.Location = new System.Drawing.Point(539, 251);
+         this.grpConnectMode.Name = "grpConnectMode";
+         this.grpConnectMode.Size = new System.Drawing.Size(112, 87);
+         this.grpConnectMode.TabIndex = 23;
+         this.grpConnectMode.TabStop = false;
+         this.grpConnectMode.Text = "連線模式";
+         // 
+         // rbtnOnline
+         // 
+         this.rbtnOnline.AutoSize = true;
+         this.rbtnOnline.Location = new System.Drawing.Point(17, 25);
+         this.rbtnOnline.Name = "rbtnOnline";
+         this.rbtnOnline.Size = new System.Drawing.Size(67, 18);
+         this.rbtnOnline.TabIndex = 0;
+         this.rbtnOnline.Text = "Online";
+         this.rbtnOnline.UseVisualStyleBackColor = true;
+         this.rbtnOnline.CheckedChanged += new System.EventHandler(this.Online_CheckedChanged);
+         // 
+         // rbtnOffline
+         // 
+         this.rbtnOffline.AutoSize = true;
+         this.rbtnOffline.Checked = true;
+         this.rbtnOffline.Location = new System.Drawing.Point(17, 49);
+         this.rbtnOffline.Name = "rbtnOffline";
+         this.rbtnOffline.Size = new System.Drawing.Size(74, 18);
+         this.rbtnOffline.TabIndex = 1;
+         this.rbtnOffline.TabStop = true;
+         this.rbtnOffline.Text = "Offline";
+         this.rbtnOffline.UseVisualStyleBackColor = true;
+         this.rbtnOffline.CheckedChanged += new System.EventHandler(this.Offline_CheckedChanged);
+         // 
          // Form1
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -441,6 +481,8 @@
          this.grpManualTime.ResumeLayout(false);
          this.grpLinkReport.ResumeLayout(false);
          this.grpLinkReport.PerformLayout();
+         this.grpConnectMode.ResumeLayout(false);
+         this.grpConnectMode.PerformLayout();
          this.ResumeLayout(false);
          this.PerformLayout();
 
@@ -491,6 +533,9 @@
       private System.Windows.Forms.GroupBox grpLinkReport;
       private System.Windows.Forms.ComboBox cboLinkReportTestMode;
       private System.Windows.Forms.Label lblLinkReportTestMode;
+      private System.Windows.Forms.GroupBox grpConnectMode;
+      private System.Windows.Forms.RadioButton rbtnOffline;
+      private System.Windows.Forms.RadioButton rbtnOnline;
    }
 }
 

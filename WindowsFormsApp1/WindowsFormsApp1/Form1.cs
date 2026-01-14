@@ -97,6 +97,15 @@ namespace WindowsFormsApp1
 
       #endregion
 
+      #region Properties
+
+      /// <summary>
+      /// 當前是否為 Online 模式
+      /// </summary>
+      public bool IsOnlineMode => rbtnOnline.Checked;
+
+      #endregion
+
       #region Public Methods
 
       public void UpdateStatus(bool connected)
@@ -163,7 +172,7 @@ namespace WindowsFormsApp1
          if (_settings.DriverType == MelsecDriverType.Simulator && _simulator != null)
          {
             // 設定測試模式 (可在執行期間動態修改 _simulator.TestMode)
-            _simulator.TestMode = (LinkReportTestMode)cboLinkReportTestMode.SelectedIndex;
+            _simulator.TestMode = (TestMode)cboLinkReportTestMode.SelectedIndex;
 
             // 啟動連結報告模擬模式：模擬 LCS 自動回應 EQ 的請求
             _simulator.StartLinkReportMode();
@@ -693,20 +702,14 @@ namespace WindowsFormsApp1
                _settings.HeartbeatIntervalMs > 0 ? TimeSpan.FromMilliseconds(_settings.HeartbeatIntervalMs) : TimeSpan.FromSeconds(0.3),
                reqAddr.ToString(), respAddr.ToString());
 
-            // 模擬器邏輯: 只有在 DriverType 為 Simulator 時才啟動 PlcSimulator?
-            // 此處 _adapter 已經被移除，我們無法檢查 _adapter is MockMelsecApiAdapter。
-            // 而是檢查 _settings.DriverType 或 Controller 類型。
-
-            if (_settings.DriverType == MelsecDriverType.Simulator)
+            // 在 Simulator 模式下，自動啟動 Simulator 以模擬 LCS 回應
+            if (_settings.DriverType == MelsecDriverType.Simulator && _simulator != null)
             {
-               // 舊的心跳脈衝模式已註解
-               //_simulator.StartPulse(TimeSpan.FromMilliseconds(1000), 100);
-               // In Simulator mode, we might want to start Pulse Generator
-               // For now, Simulator logic is pending refactor.
-               if (_appPlcService.Controller is MelsecHelper helper) // Try cast
-               {
-                  Log("警告: 模擬器脈衝產生器暫時無法啟動 (架構調整中) | Warning: Simulator pulse generator unavailable");
-               }
+               // 設定測試模式 (可在執行期間動態修改 _simulator.TestMode)
+               _simulator.TestMode = (TestMode)cboLinkReportTestMode.SelectedIndex;
+
+               _simulator.StartPulse(reqAddr, respAddr, TimeSpan.FromSeconds(1), 500);
+               Log("已啟動 Simulator. | Simulator started");
             }
          }
          catch (Exception ex)
@@ -977,13 +980,13 @@ namespace WindowsFormsApp1
                RecipeNo = (ushort)_currentRecipeNo
             };
 
-            Log($"[UI] 嘗試發送測試資料... ID: {data.BoardId}");
+            Log($"[UI btnSendLinkData] 嘗試發送測試資料... ID: {data.BoardId}");
             bool success = await _appPlcService.SendLinkReportAsync(data);
-            Log($"[UI] 發送請求結果: {(success ? "已接受" : "拒絕")}");
+            Log($"[UI btnSendLinkData] 發送請求結果: {(success ? "已接受" : "拒絕")}");
          }
          catch (Exception ex)
          {
-            Log($"[UI] 發送資料發生例外: {ex.Message}");
+            Log($"[UI btnSendLinkData] 發送資料發生例外: {ex.Message}");
          }
          finally
          {
@@ -995,8 +998,26 @@ namespace WindowsFormsApp1
       {
          if (_simulator != null)
          {
-            _simulator.TestMode = (LinkReportTestMode)cboLinkReportTestMode.SelectedIndex;
+            _simulator.TestMode = (TestMode)cboLinkReportTestMode.SelectedIndex;
             Log($"已切換 Simulator 連結報告測試模式至: {_simulator.TestMode}");
+         }
+      }
+
+      private void Online_CheckedChanged(object sender, EventArgs e)
+      {
+         if (rbtnOnline.Checked && _appPlcService != null)
+         {
+            _appPlcService.OnlineMode = true;
+            Log("已切換至 Online 模式 | Switched to Online mode");
+         }
+      }
+
+      private void Offline_CheckedChanged(object sender, EventArgs e)
+      {
+         if (rbtnOffline.Checked && _appPlcService != null)
+         {
+            _appPlcService.OnlineMode = false;
+            Log("已切換至 Offline 模式 | Switched to Offline mode");
          }
       }
 

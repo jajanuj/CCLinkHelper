@@ -14,8 +14,8 @@
       public const int DEV_LY = 22;
 
       // 預設位址（可由上層覆寫）
-      public const int DefaultRequestFlagAddress = 0x0300;  // LB0300
-      public const int DefaultResponseFlagAddress = 0x0100; // LB0100
+      public const int DefaultRequestFlagAddress = 0x0100;  // LB0100
+      public const int DefaultResponseFlagAddress = 0x0300; // LB0300
       public const int DefaultRequestDataAddress = 0x0400;  // LW0400
       public const int DefaultRequestDataLength = 7;        // Year..Week 共 7 個 UINT16
 

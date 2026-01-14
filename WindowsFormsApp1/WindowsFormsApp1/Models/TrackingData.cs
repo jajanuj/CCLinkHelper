@@ -115,6 +115,19 @@ namespace WindowsFormsApp1.Models
       /// </summary>
       public string FormatLotNo() => $"{(char)LotNoChar}{LotNoNum:D8}";
 
+      /// <summary>
+      /// 從 PLC 原始資料建立 TrackingData
+      /// </summary>
+      public static TrackingData FromRawData(short[] data)
+      {
+         if (data == null || data.Length < 10)
+         {
+            return new TrackingData();
+         }
+
+         return new TrackingData(data);
+      }
+
       #endregion
    }
 }

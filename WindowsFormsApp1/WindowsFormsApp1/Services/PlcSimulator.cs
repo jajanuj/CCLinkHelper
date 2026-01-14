@@ -7,9 +7,9 @@ using WindowsFormsApp1.CCLink.Models;
 namespace WindowsFormsApp1.Services
 {
    /// <summary>
-   /// 連結報告測試模式
+   /// 測試模式
    /// </summary>
-   public enum LinkReportTestMode
+   public enum TestMode
    {
       /// <summary>正常模式：完整握手流程</summary>
       Normal = 0,
@@ -70,9 +70,9 @@ namespace WindowsFormsApp1.Services
       #region Properties
 
       /// <summary>
-      /// 測試模式（可動態切換）
+      /// 測試模式
       /// </summary>
-      public LinkReportTestMode TestMode { get; set; } = LinkReportTestMode.Normal;
+      public TestMode TestMode { get; set; } = TestMode.Normal;
 
       public int MonitorIntervalMs
       {
@@ -95,23 +95,21 @@ namespace WindowsFormsApp1.Services
       /// <summary>
       /// 手動設定 request flag（true 設為 1，false 設為 0）。
       /// </summary>
-      public void SetRequest(bool on)
+      public void SetRequest(LinkDeviceAddress address, bool on)
       {
          try
          {
-            int devCode = MapDeviceCode(_requestAddr.Kind);
+            int devCode = MapDeviceCode(address.Kind);
             if (on)
             {
-               // 使用 (1, 1) 表示位元模式 | Use (1, 1) for bit mode
-               _api.DevSetEx(_path, 1, 1, devCode, _requestAddr.Start);
+               _api.DevSetEx(_path, 1, 1, devCode, address.Start);
             }
             else
             {
-               // 使用 (1, 1) 表示位元模式 | Use (1, 1) for bit mode
-               _api.DevRstEx(_path, 1, 1, devCode, _requestAddr.Start);
+               _api.DevRstEx(_path, 1, 1, devCode, address.Start);
             }
 
-            _logger?.Invoke($"模擬 PLC 設定請求位元 | Simulator setting request flag (Device: {_requestAddr.Kind} 0x{_requestAddr.Start:X4}, Value: {(on ? 1 : 0)})");
+            _logger?.Invoke($"模擬 PLC 設定請求位元 | Simulator setting request flag (Device: {address.Kind} 0x{address.Start:X4}, Value: {(on ? 1 : 0)})");
             RequestChanged?.Invoke(on);
          }
          catch (Exception ex)
@@ -123,7 +121,7 @@ namespace WindowsFormsApp1.Services
       /// <summary>
       /// 啟動週期性 pulse 模式：每個週期先將 request 設為 1，維持 pulseMs，然後清為 0，週期為 period。
       /// </summary>
-      public void StartPulse(TimeSpan period, int pulseMs)
+      public void StartPulse(LinkDeviceAddress addrRequest, LinkDeviceAddress addrResponse, TimeSpan period, int pulseMs)
       {
          if (period.TotalMilliseconds <= 0)
          {
@@ -144,65 +142,73 @@ namespace WindowsFormsApp1.Services
 
             _task = Task.Run(async () =>
             {
-               // 初始化：確保 request 為 0
-               try
-               {
-                  bool requestOn = GetBit(_requestAddr);
-                  if (requestOn)
-                  {
-                     _logger?.Invoke($"模擬 PLC 初始化清除 | Simulator initializing, clearing residual request flag");
-                     SetRequest(false);
-                     await Task.Delay(100, ct).ConfigureAwait(false);
-                  }
+               _logger?.Invoke($"模擬 PLC 啟動成功 | Simulator initialized, starting heartbeat cycle");
 
-                  _logger?.Invoke($"模擬 PLC 啟動成功 | Simulator initialized, starting heartbeat cycle");
-               }
-               catch (Exception ex)
-               {
-                  _logger?.Invoke($"模擬 PLC 初始化例外 | Exception during simulator initialization (Error: {ex.Message})");
-               }
+               int step = 0; // 初始狀態
 
-               var count = 0;
-
-               // 主要心跳循環
-               //while (!ct.IsCancellationRequested && count <= 2)
                while (!ct.IsCancellationRequested)
                {
                   try
                   {
-                     DateTime cycleStart = DateTime.UtcNow;
-
-                     // 步驟 1: 確認 request 為 0（等待上一次的 request 被清除）
-                     bool requestOn = GetBit(_requestAddr);
-                     if (requestOn)
+                     switch (step)
                      {
-                        _logger?.Invoke($"模擬 PLC 等待請求清除 | Simulator request bit still ON, waiting for clear");
-                        await Task.Delay(100, ct).ConfigureAwait(false);
-                        continue;
+                        case 0: // 檢查 Request 狀態 - 確保初始為 OFF
+                           bool requestOn = GetBit(addrRequest);
+                           if (requestOn)
+                           {
+                              _logger?.Invoke($"模擬 PLC 初始化清除 | Simulator initializing, clearing residual request flag");
+                              SetRequest(addrRequest, false);
+                              await Task.Delay(100, ct).ConfigureAwait(false);
+                           }
+                           else
+                           {
+                              step = 10; // 進入準備發送狀態
+                           }
+
+                           break;
+
+                        case 10: // 設定 Request ON (模擬 PLC 發出心跳請求)
+                           SetRequest(addrRequest, true);
+                           step = 20; // 進入 ON 維持期
+                           break;
+
+                        case 20: // 維持 Request ON 一段時間 (Pulse Width)
+                           await Task.Delay(pulseMs, ct).ConfigureAwait(false);
+                           step = 30; // 準備清除
+                           break;
+
+                        case 30: // 清除 Request OFF
+                           if (TestMode == TestMode.T1Timeout)
+                           {
+                              _logger?.Invoke($"模擬 PLC T1 測試模式：保持 Request ON 不清除 | Simulator T1 Test Mode: Keeping Request ON");
+                              step = 40; // 直接進入等待週期剩餘時間
+                              break;
+                           }
+
+                           SetRequest(addrRequest, false);
+                           step = 40; // 進入 OFF 等待期 (週期剩餘時間)
+                           break;
+
+                        case 40: // 等待週期剩餘時間
+                           // 計算 OFF 時間 = 總週期 - Pulse 時間
+                           // 為簡化，這裡直接使用剩餘時間。
+                           // 若需要精確週期控制，可調整 sleep 時間。
+                           // 這裡簡單假設 duty cycle，等待 remaining time
+                           var waitTime = (int)(period.TotalMilliseconds - pulseMs);
+                           if (waitTime > 0)
+                           {
+                              await Task.Delay(waitTime, ct).ConfigureAwait(false);
+                           }
+
+                           step = 10; // 回到發送 Request
+                           break;
                      }
 
-                     // 步驟 2: 設定 request ON (模擬 PLC 發出心跳請求)
-                     SetRequest(true);
-
-                     // 步驟 3: 維持 request ON 一段時間
-                     await Task.Delay(pulseMs, ct).ConfigureAwait(false);
-
-                     // 步驟 4: 清除 request (模擬 PLC 清除請求)
-                     //SetRequest(false);
-
-                     count++;
-
-                     // 步驟 5: 等待剩餘的週期時間
-                     TimeSpan elapsed = DateTime.UtcNow - cycleStart;
-                     TimeSpan remaining = period - elapsed;
-                     if (remaining > TimeSpan.Zero)
+                     // 每個 loop 短暫 sleep 避免 CPU 滿載 (視需要)
+                     // 由於上述步驟已有 delay，這邊設為極短或移除
+                     if (step == 0)
                      {
-                        await Task.Delay(remaining, ct).ConfigureAwait(false);
-                     }
-                     else if (remaining < TimeSpan.Zero)
-                     {
-                        _logger?.Invoke(
-                           $"模擬 PLC 週期超時 | Simulator cycle duration exceeded (Actual: {elapsed.TotalMilliseconds:F0}ms, Config: {period.TotalMilliseconds:F0}ms)");
+                        await Task.Delay(50, ct).ConfigureAwait(false);
                      }
                   }
                   catch (TaskCanceledException)
@@ -211,16 +217,9 @@ namespace WindowsFormsApp1.Services
                   }
                   catch (Exception ex)
                   {
-                     _logger?.Invoke($"模擬 PLC 脈衝執行例外 | Exception in simulator pulse execution (Error: {ex.Message})");
-                     // 發生錯誤時等待一下再繼續
-                     try
-                     {
-                        await Task.Delay(500, ct).ConfigureAwait(false);
-                     }
-                     catch
-                     {
-                        break;
-                     }
+                     _logger?.Invoke($"模擬 PLC 脈衝執行例外 | Exception: {ex.Message}");
+                     await Task.Delay(500, ct).ConfigureAwait(false);
+                     step = 0; // 重置
                   }
                }
 
@@ -276,7 +275,7 @@ namespace WindowsFormsApp1.Services
                            _logger?.Invoke($"[模擬 PLC] 偵測到 EQ Request ON | Detected EQ Request ON (Addr: {_requestAddr})");
 
                            // T1 測試模式：不回覆 Response
-                           if (TestMode == LinkReportTestMode.T1Timeout)
+                           if (TestMode == TestMode.T1Timeout)
                            {
                               _logger?.Invoke($"[模擬 PLC] T1 測試模式：不回覆 Response | T1 Test: No Response");
                               // 停留在這一步，不進入下一步，或者可以回到 0 等待下一次（視需求而定，這裡選擇等待直到 Request 消失或其他重置條件）
@@ -300,7 +299,7 @@ namespace WindowsFormsApp1.Services
 
                         case 40: // 檢查是否需要維持或清除
                            // T2 測試模式：回覆 Response ON 後不清除
-                           if (TestMode == LinkReportTestMode.T2Timeout)
+                           if (TestMode == TestMode.T2Timeout)
                            {
                               _logger?.Invoke($"[模擬 PLC] T2 測試模式：Response ON 將持續維持 | T2 Test: Response will stay ON");
                               step = 888; // 進入完成/凍結狀態

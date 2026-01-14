@@ -95,6 +95,7 @@
     <Compile Include="Models\CommonReportStatus1.cs" />
     <Compile Include="Models\CommonReportStatus2.cs" />
     <Compile Include="Models\LinkReportData.cs" />
+    <Compile Include="Models\MoveOutData.cs" />
     <Compile Include="Models\TimeSyncSettings.cs" />
     <Compile Include="Models\TrackingData.cs" />
     <Compile Include="Models\TrackingSettings.cs" />
@@ -139,6 +140,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\MxComponentSettingForm.resx">
       <DependentUpon>MxComponentSettingForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\TrackingControlForm.ja.resx">
+      <DependentUpon>TrackingControlForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\TrackingControlForm.resx">
       <DependentUpon>TrackingControlForm.cs</DependentUpon>
