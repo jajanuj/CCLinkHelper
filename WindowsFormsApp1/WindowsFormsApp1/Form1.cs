@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WindowsFormsApp1.CCLink.Adapters;
 using WindowsFormsApp1.CCLink.Forms;
 using WindowsFormsApp1.CCLink.Models;
 using WindowsFormsApp1.CCLink.Services;
@@ -50,6 +51,7 @@ namespace WindowsFormsApp1
       // 掃描監控視窗 (單例)
       private ScanMonitorForm _scanMonitorForm;
       private AppControllerSettings _settings;
+      private MockMelsecApiAdapter _sharedMockAdapter; // 共享的 Mock Adapter（用於 Simulator 模式）
 
       // PLC 模擬器
       private PlcSimulator _simulator;
@@ -66,6 +68,7 @@ namespace WindowsFormsApp1
       public Form1()
       {
          InitializeComponent();
+         InitializeComboBox();
 
          // 1. 加載或設定連線參數 (內建自動檢查檔名與開啟 UI 邏輯)
          _settings = new AppControllerSettings("Settings");
@@ -79,6 +82,17 @@ namespace WindowsFormsApp1
 
          // 初始狀態為未連接
          UpdateStatus(false);
+
+         // 預先建立共享的 Mock Adapter（僅在 Simulator 模式使用）
+         // 這樣 Simulator 和 AppPlcService 才能共享同一個記憶體狀態
+         _sharedMockAdapter = new MockMelsecApiAdapter();
+
+         // 注意：連結報告流程中，Simulator 扮演 LCS 角色
+         // - Request 地址 (LB0307): EQ 發送的請求
+         // - Response 地址 (LB0108): LCS (Simulator) 回應的訊號
+         var reqAddr = new LinkDeviceAddress("LB", 0x0307, 1);  // EQ Request
+         var respAddr = new LinkDeviceAddress("LB", 0x0108, 1); // LCS Response
+         _simulator = new PlcSimulator(_sharedMockAdapter, 1, reqAddr, respAddr, msg => Log($"[Simulator] {msg}"));
       }
 
       #endregion
@@ -137,6 +151,24 @@ namespace WindowsFormsApp1
 
       public void StartLinkDataReporting()
       {
+         if (_appPlcService == null)
+         {
+            return;
+         }
+
+         _appPlcService.StartLinkDataReporting(TimeSpan.FromMilliseconds(200));
+         Log("已啟動連結資料回報監控 | Link data reporting monitoring started");
+
+         // 在 Simulator 模式下，自動啟動 Simulator 以模擬 LCS 回應
+         if (_settings.DriverType == MelsecDriverType.Simulator && _simulator != null)
+         {
+            // 設定測試模式 (可在執行期間動態修改 _simulator.TestMode)
+            _simulator.TestMode = (LinkReportTestMode)cboLinkReportTestMode.SelectedIndex;
+
+            // 啟動連結報告模擬模式：模擬 LCS 自動回應 EQ 的請求
+            _simulator.StartLinkReportMode();
+            Log("已啟動 Simulator 連結報告模式 (LCS 自動回應) | Simulator Link Report mode started");
+         }
       }
 
       #endregion
@@ -169,7 +201,7 @@ namespace WindowsFormsApp1
             if (_scanMonitorForm != null && !_scanMonitorForm.IsDisposed)
             {
                _scanMonitorForm.Close();
-               _scanMonitorForm.Dispose();
+               _scanMonitorForm?.Dispose();
                _scanMonitorForm = null;
             }
          }
@@ -215,6 +247,11 @@ namespace WindowsFormsApp1
       #endregion
 
       #region Private Methods
+
+      private void InitializeComboBox()
+      {
+         cboLinkReportTestMode.SelectedIndex = 0;
+      }
 
       private ushort GetCurrentControlStatus() => _controlStatus;
       private ushort GetCurrentWaitingStatus() => _waitingStatus;
@@ -278,6 +315,9 @@ namespace WindowsFormsApp1
          _appPlcService.HeartbeatFailed += () => Log("[Helper] 心跳中斷 | Heartbeat failed");
          _appPlcService.HeartbeatSucceeded += () => Log("[Helper] 心跳成功 | Heartbeat success");
 
+         // 註冊連結報告事件
+         _appPlcService.LinkReportCompleted += (data, success, msg) => { Log($"[LinkReport] ID: {data.BoardId} | 結果: {(success ? "成功" : "失敗")} | 訊息: {msg}"); };
+
          _eventsBound = true;
       }
 
@@ -339,8 +379,27 @@ namespace WindowsFormsApp1
             // Log current mode
             Log($"準備連接... 模式: {_settings.DriverType} | Connecting... Mode: {_settings.DriverType}");
 
-            // 建立 Service (Service 會根據 Settings 建立 Controller)
-            _appPlcService = new AppPlcService(_settings, logger: s => Log($"[Service] {s}"));
+            // 建立 Service
+            // 若為 Simulator 模式，需使用共享的 MockAdapter 以便與 PlcSimulator 共享記憶體
+            if (_settings.DriverType == MelsecDriverType.Simulator)
+            {
+               // 使用共享 Adapter 建立 AppPlcService
+               var sharedSettings = new AppControllerSettings("Settings")
+               {
+                  DriverType = MelsecDriverType.Simulator,
+                  ScanRanges = _settings.ScanRanges,
+                  HeartbeatIntervalMs = _settings.HeartbeatIntervalMs,
+                  TimeSyncIntervalMs = _settings.TimeSyncIntervalMs,
+                  TimeSync = _settings.TimeSync
+               };
+
+               _appPlcService = new AppPlcService(sharedSettings, _sharedMockAdapter, logger: s => Log($"[Service] {s}"));
+            }
+            else
+            {
+               // 一般模式：由 AppPlcService 自行建立 Controller
+               _appPlcService = new AppPlcService(_settings, logger: s => Log($"[Service] {s}"));
+            }
 
             // 綁定事件
             BindingHelperEvent();
@@ -640,6 +699,8 @@ namespace WindowsFormsApp1
 
             if (_settings.DriverType == MelsecDriverType.Simulator)
             {
+               // 舊的心跳脈衝模式已註解
+               //_simulator.StartPulse(TimeSpan.FromMilliseconds(1000), 100);
                // In Simulator mode, we might want to start Pulse Generator
                // For now, Simulator logic is pending refactor.
                if (_appPlcService.Controller is MelsecHelper helper) // Try cast
@@ -876,6 +937,66 @@ namespace WindowsFormsApp1
          using (var form = new Forms.TrackingControlForm(_appPlcService))
          {
             form.ShowDialog(this);
+         }
+      }
+
+      private void btnStartLinkReport_Click(object sender, EventArgs e)
+      {
+         StartLinkDataReporting();
+      }
+
+      private void btnStopLinkReport_Click(object sender, EventArgs e)
+      {
+         _appPlcService?.StopLinkDataReporting();
+         Log("已停止連結資料回報監控 | Link data reporting monitoring stopped");
+
+         // 在 Simulator 模式下，同時停止 Simulator
+         if (_settings.DriverType == MelsecDriverType.Simulator && _simulator != null)
+         {
+            _simulator.Stop();
+            Log("已停止 Simulator | Simulator stopped");
+         }
+      }
+
+      private async void btnSendLinkData_Click(object sender, EventArgs e)
+      {
+         if (_appPlcService == null)
+         {
+            MessageBox.Show("請先連接 PLC | Please connect PLC first");
+            return;
+         }
+
+         try
+         {
+            btnSendLinkData.Enabled = false;
+            var data = new LinkReportData
+            {
+               BoardId = "TEST_BOARD_" + DateTime.Now.ToString("HHmmss"),
+               StartTime = DateTime.Now.AddMinutes(-5),
+               EndTime = DateTime.Now,
+               RecipeNo = (ushort)_currentRecipeNo
+            };
+
+            Log($"[UI] 嘗試發送測試資料... ID: {data.BoardId}");
+            bool success = await _appPlcService.SendLinkReportAsync(data);
+            Log($"[UI] 發送請求結果: {(success ? "已接受" : "拒絕")}");
+         }
+         catch (Exception ex)
+         {
+            Log($"[UI] 發送資料發生例外: {ex.Message}");
+         }
+         finally
+         {
+            btnSendLinkData.Enabled = true;
+         }
+      }
+
+      private void cboLinkReportTestMode_SelectedIndexChanged(object sender, EventArgs e)
+      {
+         if (_simulator != null)
+         {
+            _simulator.TestMode = (LinkReportTestMode)cboLinkReportTestMode.SelectedIndex;
+            Log($"已切換 Simulator 連結報告測試模式至: {_simulator.TestMode}");
          }
       }
 

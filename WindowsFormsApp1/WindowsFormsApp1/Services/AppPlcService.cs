@@ -90,6 +90,24 @@ namespace WindowsFormsApp1.Services
          }
       }
 
+      /// <summary>
+      /// 構造函數重載：接受外部 Adapter（用於 Simulator 模式共享 MockAdapter）
+      /// </summary>
+      public AppPlcService(AppControllerSettings settings, IMelsecApiAdapter customAdapter, Action<string> logger = null)
+      {
+         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+         _logger = logger;
+         _syncContext = SynchronizationContext.Current;
+
+         if (customAdapter == null)
+         {
+            throw new ArgumentNullException(nameof(customAdapter));
+         }
+
+         // 使用外部提供的 Adapter
+         _controller = new CCLink.Services.MelsecHelper(customAdapter, settings);
+      }
+
       #endregion
 
       #region Properties
@@ -272,11 +290,70 @@ namespace WindowsFormsApp1.Services
 
       #region Link Report Methods
 
-      public void StartLinkDataReporting(TimeSpan interval)
+      // 地址常數 (PascalCase)
+      private const string AddrLinkReportRequestFlag = "LB0307";  // EQ -> LCS
+      private const string AddrLinkReportResponseFlag = "LB0108"; // LCS -> EQ
+      private const string AddrLinkReportDataStart = "LW139E";
+
+      // Link Report Fields
+      private CTimer _linkReportTimer = new CTimer();
+      private uint _linkReportT1Timeout = 5000;
+      private uint _linkReportT2Timeout = 5000;
+      private LinkReportData _pendingLinkReport;
+      private TaskCompletionSource<bool> _linkReportTcs;
+
+      // Link Report Event
+      public event Action<LinkReportData, bool, string> LinkReportCompleted;
+
+      /// <summary>
+      /// 發送關聯數據回報至 LCS
+      /// </summary>
+      public async Task<bool> SendLinkReportAsync(LinkReportData data)
       {
+         if (data == null)
+         {
+            throw new ArgumentNullException(nameof(data));
+         }
+
+         // 檢查是否已有待處理的報告
+         if (_pendingLinkReport != null || _linkReportStep != 0)
+         {
+            _logger?.Invoke("[LinkReport] 警告：前一筆回報尚未完成，無法發送新報告。");
+            return false;
+         }
+
+         _linkReportTcs = new TaskCompletionSource<bool>();
+         _pendingLinkReport = data;
+
+         return await _linkReportTcs.Task;
+      }
+
+      public void StartLinkDataReporting(TimeSpan interval, uint t1Timeout = 5000, uint t2Timeout = 5000)
+      {
+         _linkReportT1Timeout = t1Timeout;
+         _linkReportT2Timeout = t2Timeout;
+
          _linkReportCts = new CancellationTokenSource();
          _linkReportTask = Task.Run(() => LinkReportFlowAsync(_linkReportCts.Token, interval));
-         _logger?.Invoke($"[AppService] Heartbeat started (Interval: {interval.TotalMilliseconds}ms)");
+         _logger?.Invoke($"[AppService] LinkReport started (Interval: {interval.TotalMilliseconds}ms, T1: {t1Timeout}ms, T2: {t2Timeout}ms)");
+      }
+
+      public void StopLinkDataReporting()
+      {
+         if (_linkReportCts != null)
+         {
+            _linkReportCts.Cancel();
+            try
+            {
+               _linkReportTask?.Wait(500);
+            }
+            catch
+            {
+            }
+
+            _linkReportCts.Dispose();
+            _linkReportCts = null;
+         }
       }
 
       private async Task LinkReportFlowAsync(CancellationToken ct, TimeSpan interval)
@@ -300,73 +377,96 @@ namespace WindowsFormsApp1.Services
          }
       }
 
-      CTimer _linkReportTimer = new CTimer();
-      private uint _linkReportT1Timeout = 1000;
-      private uint _linkReportT2Timeout = 1000;
-      private string _linkReportRequestAddr;
-      private string _linkReportResponseAddr;
-
-      private void Log(string message) => _logger?.Invoke(message);
-
       private async Task RunLinkReportFlow(CancellationToken ct)
       {
-         while (!_linkReportCts.IsCancellationRequested)
+         bool requestOn = _controller.GetBit(AddrLinkReportRequestFlag);
+         bool responseOn = _controller.GetBit(AddrLinkReportResponseFlag);
+
+         switch (_linkReportStep)
          {
-            bool requestOn = _controller.GetBit(_linkReportRequestAddr);
-            bool responseOn = _controller.GetBit(_linkReportResponseAddr);
-
-            switch (_linkReportStep)
+            case 0: // Idle - 等待回報請求
             {
-               case 0:
+               if (_pendingLinkReport != null && !requestOn && !responseOn)
                {
-                  Log($"[LinkReport] FlowStep: {_linkReportStep} |");
-                  _linkReportStep = 10;
-                  break;
-               }
-               case 10:
-               {
-                  await _controller.WriteBitsAsync(_heartbeatResponseAddr, new[] { true }, ct);
-                  Log($"[LinkReport] FlowStep: {_linkReportStep} | 發送關聯數據請求旗標({_linkReportRequestAddr}) On");
-                  _linkReportStep = 20;
-                  break;
-               }
-               case 20:
-               {
-                  if (requestOn)
+                  try
                   {
-                     Log($"[LinkReport] FlowStep: {_linkReportStep} | 讀取關聯數據請求旗標({_linkReportRequestAddr}) On");
-                     _linkReportStep = 30;
+                     _logger?.Invoke($"[LinkReport] 開始回報 - BoardID: {_pendingLinkReport.BoardId}");
+
+                     // 1. 寫入數據
+                     var rawData = _pendingLinkReport.ToRawData();
+                     await _controller.WriteWordsAsync(AddrLinkReportDataStart, rawData, ct);
+
+                     // 2. 設置 Request Flag ON
+                     await _controller.WriteBitsAsync(AddrLinkReportRequestFlag, new[] { true }, ct);
+                     _logger?.Invoke($"[LinkReport] Request Flag ({AddrLinkReportRequestFlag}) ON");
+
                      _linkReportTimer.Reset();
+                     _linkReportStep = 10;
                   }
-
-                  break;
-               }
-
-               //判斷T1逾時
-               case 30:
-               {
-                  if (responseOn)
+                  catch (Exception ex)
                   {
-                     Log($"[LinkReport] FlowStep: {_linkReportStep} | 讀取關聯數據回應旗標({_linkReportResponseAddr}) On");
-                     _linkReportStep = 40;
-                     break;
+                     _logger?.Invoke($"[LinkReport] 寫入數據失敗: {ex.Message}");
+                     CompleteLinkReport(false, $"寫入數據失敗: {ex.Message}");
                   }
-
-                  if (_linkReportTimer.On(_linkReportT1Timeout))
-                  {
-                     Log($"[LinkReport] FlowStep: {_linkReportStep} | 讀取關聯數據回應旗標({_linkReportResponseAddr}) T1逾時");
-                     //todo: T1逾時處理
-                  }
-
-                  break;
                }
 
-               case 40:
+               break;
+            }
+
+            case 10: // 等待 LCS Response ON
+            {
+               if (responseOn)
                {
-                  break;
+                  _logger?.Invoke($"[LinkReport] Response Flag ({AddrLinkReportResponseFlag}) ON");
+
+                  // 3. 清除 Request Flag
+                  await _controller.WriteBitsAsync(AddrLinkReportRequestFlag, new[] { false }, ct);
+                  _logger?.Invoke($"[LinkReport] Request Flag ({AddrLinkReportRequestFlag}) OFF");
+
+                  _linkReportTimer.Reset();
+                  _linkReportStep = 20;
                }
+               else if (_linkReportTimer.On(_linkReportT1Timeout))
+               {
+                  _logger?.Invoke("[LinkReport] T1 逾時 - LCS 未回應");
+                  await _controller.WriteBitsAsync(AddrLinkReportRequestFlag, new[] { false }, ct);
+                  CompleteLinkReport(false, "T1 逾時");
+               }
+
+               break;
+            }
+
+            case 20: // 等待 LCS Response OFF
+            {
+               if (!responseOn)
+               {
+                  _logger?.Invoke($"[LinkReport] Response Flag ({AddrLinkReportResponseFlag}) OFF - 完成");
+                  CompleteLinkReport(true, "成功");
+               }
+               else if (_linkReportTimer.On(_linkReportT2Timeout))
+               {
+                  _logger?.Invoke("[LinkReport] T2 逾時 - LCS 未清除 Response");
+                  CompleteLinkReport(false, "T2 逾時");
+               }
+
+               break;
             }
          }
+      }
+
+      private void CompleteLinkReport(bool success, string message)
+      {
+         var data = _pendingLinkReport;
+         _pendingLinkReport = null;
+         _linkReportStep = 0;
+
+         // 通知等待者
+         _linkReportTcs?.TrySetResult(success);
+
+         // 觸發事件
+         PostEvent(() => LinkReportCompleted?.Invoke(data, success, message));
+
+         _logger?.Invoke($"[LinkReport] 回報完成 - {(success ? "成功" : "失敗")}: {message}");
       }
 
       #endregion
@@ -725,6 +825,7 @@ namespace WindowsFormsApp1.Services
          _disposed = true;
          StopHeartbeat();
          StopTimeSync();
+         StopLinkDataReporting();
       }
 
       #endregion

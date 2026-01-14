@@ -16,13 +16,15 @@ namespace WindowsFormsApp1.CCLink.Adapters
       private readonly Dictionary<int, short> _bits = new Dictionary<int, short>();
       private readonly object _lock = new object();
       private readonly Dictionary<int, short> _words = new Dictionary<int, short>();
+      private readonly System.Action<string> _logger;
 
       #endregion
 
       #region Constructors
 
-      public MockMelsecApiAdapter()
+      public MockMelsecApiAdapter(System.Action<string> logger = null)
       {
+         _logger = logger;
       }
 
       #endregion
@@ -53,11 +55,15 @@ namespace WindowsFormsApp1.CCLink.Adapters
             {
                if (devType == CCLinkConstants.DEV_LB)
                {
-                  _bits[devNo + i] = data[i];
+                  int addr = devNo + i;
+                  _bits[addr] = data[i];
+                  _logger?.Invoke($"[MockAdapter] SendEx: Bit LB{addr:X4} = {data[i]}");
                }
                else
                {
-                  _words[devNo + i] = data[i];
+                  int addr = devNo + i;
+                  _words[addr] = data[i];
+                  _logger?.Invoke($"[MockAdapter] SendEx: Word LW{addr:X4} = {data[i]}");
                }
             }
 
@@ -129,6 +135,7 @@ namespace WindowsFormsApp1.CCLink.Adapters
          lock (_lock)
          {
             _bits[devNo] = 1;
+            _logger?.Invoke($"[MockAdapter] DevSetEx: LB{devNo:X4} = 1");
 
             return 0;
          }
@@ -139,6 +146,7 @@ namespace WindowsFormsApp1.CCLink.Adapters
          lock (_lock)
          {
             _bits[devNo] = 0;
+            _logger?.Invoke($"[MockAdapter] DevRstEx: LB{devNo:X4} = 0");
 
             return 0;
          }

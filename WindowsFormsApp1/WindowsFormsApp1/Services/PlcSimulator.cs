@@ -7,6 +7,21 @@ using WindowsFormsApp1.CCLink.Models;
 namespace WindowsFormsApp1.Services
 {
    /// <summary>
+   /// 連結報告測試模式
+   /// </summary>
+   public enum LinkReportTestMode
+   {
+      /// <summary>正常模式：完整握手流程</summary>
+      Normal = 0,
+
+      /// <summary>T1 逾時測試：收到 Request ON 後不回覆 Response</summary>
+      T1Timeout = 1,
+
+      /// <summary>T2 逾時測試：回覆 Response ON 後不清除</summary>
+      T2Timeout = 2
+   }
+
+   /// <summary>
    /// 簡易 PLC 模擬器：可定期或手動在指定 request flag 上產生 pulse/toggle，並監控 response flag 的變化。
    /// 此模擬器直接使用 IMelsecApiAdapter 寫入/讀取位元（LB/LW 等），與 MelsecHelper 可一起搭配測試心跳流程。
    /// </summary>
@@ -53,6 +68,11 @@ namespace WindowsFormsApp1.Services
       #endregion
 
       #region Properties
+
+      /// <summary>
+      /// 測試模式（可動態切換）
+      /// </summary>
+      public LinkReportTestMode TestMode { get; set; } = LinkReportTestMode.Normal;
 
       public int MonitorIntervalMs
       {
@@ -168,7 +188,7 @@ namespace WindowsFormsApp1.Services
                      await Task.Delay(pulseMs, ct).ConfigureAwait(false);
 
                      // 步驟 4: 清除 request (模擬 PLC 清除請求)
-                     SetRequest(false);
+                     //SetRequest(false);
 
                      count++;
 
@@ -206,6 +226,165 @@ namespace WindowsFormsApp1.Services
 
                _logger?.Invoke($"模擬 PLC 心跳已停止 | Simulator heartbeat cycle stopped");
             }, ct);
+         }
+      }
+
+      /// <summary>
+      /// 啟動連結報告模擬模式：監控 EQ 發出的 Request，並自動發送 Response。
+      /// 適用於模擬 LCS 端的行為。
+      /// </summary>
+      public void StartLinkReportMode()
+      {
+         lock (_syncLock)
+         {
+            Stop(); // 確保完全停止
+
+            _cts = new CancellationTokenSource();
+            var ct = _cts.Token;
+
+            _task = Task.Run(async () =>
+            {
+               _logger?.Invoke($"模擬 PLC 連結報告模式啟動 | Simulator Link Report mode started");
+
+               bool lastRequestState = false;
+               int step = 0;              // 初始狀態
+               int responseDelayMs = 100; // 固定延遲
+
+               while (!ct.IsCancellationRequested)
+               {
+                  try
+                  {
+                     switch (step)
+                     {
+                        case 0: // 預備狀態 / 檢查 Request 狀態
+                           bool requestOn = GetBit(_requestAddr);
+                           if (requestOn && !lastRequestState)
+                           {
+                              // 偵測到上升沿
+                              step = 20;
+                           }
+                           else if (!requestOn)
+                           {
+                              step = 0; // 持續監控
+                           }
+
+                           // 更新最後狀態以便偵測上升沿
+                           lastRequestState = requestOn;
+                           break;
+
+                        case 20: // 檢測到 Request 上升沿（OFF -> ON）
+                           _logger?.Invoke($"[模擬 PLC] 偵測到 EQ Request ON | Detected EQ Request ON (Addr: {_requestAddr})");
+
+                           // T1 測試模式：不回覆 Response
+                           if (TestMode == LinkReportTestMode.T1Timeout)
+                           {
+                              _logger?.Invoke($"[模擬 PLC] T1 測試模式：不回覆 Response | T1 Test: No Response");
+                              // 停留在這一步，不進入下一步，或者可以回到 0 等待下一次（視需求而定，這裡選擇等待直到 Request 消失或其他重置條件）
+                              // 為了能夠重置，我們檢查若 Request 變回 OFF 則重置
+                              step = 888;
+                           }
+                           else
+                           {
+                              step = 30; // 進入延遲回應
+                           }
+
+                           break;
+
+                        case 30: // 延遲後發送 Response ON
+                           await Task.Delay(responseDelayMs, ct).ConfigureAwait(false);
+                           SetResponse(true);
+                           _logger?.Invoke($"[模擬 PLC] 已回應 Response ON | Sent Response ON (Addr: {_responseAddr})");
+
+                           step = 40; // 等待 Request OFF
+                           break;
+
+                        case 40: // 檢查是否需要維持或清除
+                           // T2 測試模式：回覆 Response ON 後不清除
+                           if (TestMode == LinkReportTestMode.T2Timeout)
+                           {
+                              _logger?.Invoke($"[模擬 PLC] T2 測試模式：Response ON 將持續維持 | T2 Test: Response will stay ON");
+                              step = 888; // 進入完成/凍結狀態
+                           }
+                           else
+                           {
+                              // 正常模式：等待 Request OFF
+                              step = 50;
+                           }
+
+                           break;
+
+                        case 50: // 等待 EQ Request OFF
+                           if (!GetBit(_requestAddr))
+                           {
+                              _logger?.Invoke($"[模擬 PLC] 偵測到 EQ Request OFF | Detected EQ Request OFF");
+                              step = 60; // 準備清除 Response
+                           }
+
+                           break;
+
+                        case 60: // 清除 Response OFF
+                           // 模擬處理/反應時間
+                           await Task.Delay(100, ct).ConfigureAwait(false);
+                           SetResponse(false);
+                           _logger?.Invoke($"[模擬 PLC] 已清除 Response OFF | Cleared Response OFF");
+
+                           step = 0;                 // 回到初始狀態
+                           lastRequestState = false; // 重置狀態
+                           break;
+
+                        case 888: // 特殊狀態：等待 Request OFF 重置
+                           if (!GetBit(_requestAddr))
+                           {
+                              lastRequestState = false;
+                              step = 0; // 當 Request 消失時重置
+                           }
+
+                           break;
+                     }
+
+                     await Task.Delay(50, ct).ConfigureAwait(false);
+                  }
+                  catch (TaskCanceledException)
+                  {
+                     break;
+                  }
+                  catch (Exception ex)
+                  {
+                     _logger?.Invoke($"模擬 PLC 連結報告模式例外 | Exception: {ex.Message}");
+                     await Task.Delay(500, ct).ConfigureAwait(false);
+                     step = 0; // 發生錯誤重置
+                  }
+               }
+
+               _logger?.Invoke($"模擬 PLC 連結報告模式已停止 | Simulator Link Report mode stopped");
+            }, ct);
+         }
+      }
+
+      /// <summary>
+      /// 手動設定 response flag（true 設為 1，false 設為 0）。
+      /// </summary>
+      public void SetResponse(bool on)
+      {
+         try
+         {
+            int devCode = MapDeviceCode(_responseAddr.Kind);
+            if (on)
+            {
+               _api.DevSetEx(_path, 1, 1, devCode, _responseAddr.Start);
+            }
+            else
+            {
+               _api.DevRstEx(_path, 1, 1, devCode, _responseAddr.Start);
+            }
+
+            _logger?.Invoke(
+               $"模擬 PLC 設定回應位元 | Simulator setting response flag (Device: {_responseAddr.Kind} 0x{_responseAddr.Start:X4}, Value: {(on ? 1 : 0)})");
+            ResponseChanged?.Invoke(on);
+         }
+         catch (Exception ex)
+         {
+            _logger?.Invoke($"模擬 PLC 設定回應例外 | Exception while setting simulator response (Error: {ex.Message})");
          }
       }
 

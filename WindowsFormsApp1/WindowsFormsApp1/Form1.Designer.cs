@@ -7,23 +7,7 @@
       /// </summary>
       private System.ComponentModel.IContainer components = null;
 
-      private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
-      private System.Windows.Forms.GroupBox grpConnectionMode;
-      private System.Windows.Forms.ComboBox cmbDriverType;
-      private System.Windows.Forms.Button btnOpen;
-      private System.Windows.Forms.Button btnRead;
-      private System.Windows.Forms.Button btnWrite;
-      private System.Windows.Forms.Button btnClose;
-      private System.Windows.Forms.Button btnStartTimeSync;
-      private System.Windows.Forms.Button btnStopTimeSync;
-      private System.Windows.Forms.Button btnForceTimeSync;
-      private System.Windows.Forms.ListBox lstLog;
-      private System.Windows.Forms.Label lblStatus;
-      private System.Windows.Forms.GroupBox grpManualTime;
-      private System.Windows.Forms.DateTimePicker dtpDate;
-      private System.Windows.Forms.DateTimePicker dtpTime;
-      private System.Windows.Forms.Button btnSetTimeToPlc;
-      private System.Windows.Forms.Button btnSyncFromPc;
+
 
       /// <summary>
       /// 清除任何使用中的資源。
@@ -64,6 +48,9 @@
          this.btnTrackingControl = new System.Windows.Forms.Button();
          this.btnStartCommonReporting = new System.Windows.Forms.Button();
          this.btnSetCommonReporting = new System.Windows.Forms.Button();
+         this.btnStartLinkReport = new System.Windows.Forms.Button();
+         this.btnStopLinkReport = new System.Windows.Forms.Button();
+         this.btnSendLinkData = new System.Windows.Forms.Button();
          this.grpManualTime = new System.Windows.Forms.GroupBox();
          this.dtpDate = new System.Windows.Forms.DateTimePicker();
          this.dtpTime = new System.Windows.Forms.DateTimePicker();
@@ -71,9 +58,13 @@
          this.btnSetTimeToPlc = new System.Windows.Forms.Button();
          this.lstLog = new System.Windows.Forms.ListBox();
          this.lblStatus = new System.Windows.Forms.Label();
+         this.grpLinkReport = new System.Windows.Forms.GroupBox();
+         this.cboLinkReportTestMode = new System.Windows.Forms.ComboBox();
+         this.lblLinkReportTestMode = new System.Windows.Forms.Label();
          this.flowLayoutPanel1.SuspendLayout();
          this.grpConnectionMode.SuspendLayout();
          this.grpManualTime.SuspendLayout();
+         this.grpLinkReport.SuspendLayout();
          this.SuspendLayout();
          // 
          // flowLayoutPanel1
@@ -96,13 +87,17 @@
          this.flowLayoutPanel1.Controls.Add(this.btnTrackingControl);
          this.flowLayoutPanel1.Controls.Add(this.btnStartCommonReporting);
          this.flowLayoutPanel1.Controls.Add(this.btnSetCommonReporting);
+         this.flowLayoutPanel1.Controls.Add(this.btnStartLinkReport);
+         this.flowLayoutPanel1.Controls.Add(this.btnStopLinkReport);
+         this.flowLayoutPanel1.Controls.Add(this.btnSendLinkData);
          this.flowLayoutPanel1.Controls.Add(this.grpManualTime);
+         this.flowLayoutPanel1.Controls.Add(this.grpLinkReport);
          this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
          this.flowLayoutPanel1.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
          this.flowLayoutPanel1.Name = "flowLayoutPanel1";
          this.flowLayoutPanel1.Padding = new System.Windows.Forms.Padding(10);
-         this.flowLayoutPanel1.Size = new System.Drawing.Size(832, 312);
+         this.flowLayoutPanel1.Size = new System.Drawing.Size(832, 358);
          this.flowLayoutPanel1.TabIndex = 0;
          // 
          // grpConnectionMode
@@ -122,7 +117,7 @@
          this.cmbDriverType.FormattingEnabled = true;
          this.cmbDriverType.Location = new System.Drawing.Point(15, 30);
          this.cmbDriverType.Name = "cmbDriverType";
-         this.cmbDriverType.Size = new System.Drawing.Size(170, 23);
+         this.cmbDriverType.Size = new System.Drawing.Size(170, 22);
          this.cmbDriverType.TabIndex = 0;
          this.cmbDriverType.SelectedIndexChanged += new System.EventHandler(this.cmbDriverType_SelectedIndexChanged);
          // 
@@ -260,7 +255,7 @@
          // 
          // btnTrackingControl
          // 
-         this.btnTrackingControl.Location = new System.Drawing.Point(20, 212);
+         this.btnTrackingControl.Location = new System.Drawing.Point(324, 166);
          this.btnTrackingControl.Margin = new System.Windows.Forms.Padding(10);
          this.btnTrackingControl.Name = "btnTrackingControl";
          this.btnTrackingControl.Size = new System.Drawing.Size(181, 26);
@@ -271,7 +266,7 @@
          // 
          // btnStartCommonReporting
          // 
-         this.btnStartCommonReporting.Location = new System.Drawing.Point(324, 166);
+         this.btnStartCommonReporting.Location = new System.Drawing.Point(525, 166);
          this.btnStartCommonReporting.Margin = new System.Windows.Forms.Padding(10);
          this.btnStartCommonReporting.Name = "btnStartCommonReporting";
          this.btnStartCommonReporting.Size = new System.Drawing.Size(181, 26);
@@ -282,7 +277,7 @@
          // 
          // btnSetCommonReporting
          // 
-         this.btnSetCommonReporting.Location = new System.Drawing.Point(525, 166);
+         this.btnSetCommonReporting.Location = new System.Drawing.Point(20, 212);
          this.btnSetCommonReporting.Margin = new System.Windows.Forms.Padding(10);
          this.btnSetCommonReporting.Name = "btnSetCommonReporting";
          this.btnSetCommonReporting.Size = new System.Drawing.Size(181, 26);
@@ -291,13 +286,46 @@
          this.btnSetCommonReporting.UseVisualStyleBackColor = true;
          this.btnSetCommonReporting.Click += new System.EventHandler(this.btnSetCommonReporting_Click);
          // 
+         // btnStartLinkReport
+         // 
+         this.btnStartLinkReport.Location = new System.Drawing.Point(221, 212);
+         this.btnStartLinkReport.Margin = new System.Windows.Forms.Padding(10);
+         this.btnStartLinkReport.Name = "btnStartLinkReport";
+         this.btnStartLinkReport.Size = new System.Drawing.Size(181, 26);
+         this.btnStartLinkReport.TabIndex = 19;
+         this.btnStartLinkReport.Text = "Start Link Report";
+         this.btnStartLinkReport.UseVisualStyleBackColor = true;
+         this.btnStartLinkReport.Click += new System.EventHandler(this.btnStartLinkReport_Click);
+         // 
+         // btnStopLinkReport
+         // 
+         this.btnStopLinkReport.Location = new System.Drawing.Point(422, 212);
+         this.btnStopLinkReport.Margin = new System.Windows.Forms.Padding(10);
+         this.btnStopLinkReport.Name = "btnStopLinkReport";
+         this.btnStopLinkReport.Size = new System.Drawing.Size(181, 26);
+         this.btnStopLinkReport.TabIndex = 20;
+         this.btnStopLinkReport.Text = "Stop Link Report";
+         this.btnStopLinkReport.UseVisualStyleBackColor = true;
+         this.btnStopLinkReport.Click += new System.EventHandler(this.btnStopLinkReport_Click);
+         // 
+         // btnSendLinkData
+         // 
+         this.btnSendLinkData.Location = new System.Drawing.Point(623, 212);
+         this.btnSendLinkData.Margin = new System.Windows.Forms.Padding(10);
+         this.btnSendLinkData.Name = "btnSendLinkData";
+         this.btnSendLinkData.Size = new System.Drawing.Size(181, 26);
+         this.btnSendLinkData.TabIndex = 21;
+         this.btnSendLinkData.Text = "Send Link Data";
+         this.btnSendLinkData.UseVisualStyleBackColor = true;
+         this.btnSendLinkData.Click += new System.EventHandler(this.btnSendLinkData_Click);
+         // 
          // grpManualTime
          // 
          this.grpManualTime.Controls.Add(this.dtpDate);
          this.grpManualTime.Controls.Add(this.dtpTime);
          this.grpManualTime.Controls.Add(this.btnSyncFromPc);
          this.grpManualTime.Controls.Add(this.btnSetTimeToPlc);
-         this.grpManualTime.Location = new System.Drawing.Point(20, 212);
+         this.grpManualTime.Location = new System.Drawing.Point(20, 258);
          this.grpManualTime.Margin = new System.Windows.Forms.Padding(10);
          this.grpManualTime.Name = "grpManualTime";
          this.grpManualTime.Size = new System.Drawing.Size(300, 80);
@@ -347,9 +375,9 @@
          this.lstLog.Dock = System.Windows.Forms.DockStyle.Fill;
          this.lstLog.FormattingEnabled = true;
          this.lstLog.ItemHeight = 12;
-         this.lstLog.Location = new System.Drawing.Point(0, 312);
+         this.lstLog.Location = new System.Drawing.Point(0, 358);
          this.lstLog.Name = "lstLog";
-         this.lstLog.Size = new System.Drawing.Size(832, 114);
+         this.lstLog.Size = new System.Drawing.Size(832, 68);
          this.lstLog.TabIndex = 10;
          // 
          // lblStatus
@@ -362,6 +390,40 @@
          this.lblStatus.TabIndex = 11;
          this.lblStatus.Text = "Status";
          this.lblStatus.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+         // 
+         // grpLinkReport
+         // 
+         this.grpLinkReport.Controls.Add(this.lblLinkReportTestMode);
+         this.grpLinkReport.Controls.Add(this.cboLinkReportTestMode);
+         this.grpLinkReport.Location = new System.Drawing.Point(333, 251);
+         this.grpLinkReport.Name = "grpLinkReport";
+         this.grpLinkReport.Size = new System.Drawing.Size(200, 87);
+         this.grpLinkReport.TabIndex = 22;
+         this.grpLinkReport.TabStop = false;
+         this.grpLinkReport.Text = "連結報告";
+         // 
+         // cboLinkReportTestMode
+         // 
+         this.cboLinkReportTestMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.cboLinkReportTestMode.FormattingEnabled = true;
+         this.cboLinkReportTestMode.Items.AddRange(new object[] {
+            "正常流程",
+            "T1逾時",
+            "T2逾時"});
+         this.cboLinkReportTestMode.Location = new System.Drawing.Point(73, 31);
+         this.cboLinkReportTestMode.Name = "cboLinkReportTestMode";
+         this.cboLinkReportTestMode.Size = new System.Drawing.Size(121, 22);
+         this.cboLinkReportTestMode.TabIndex = 0;
+         this.cboLinkReportTestMode.SelectedIndexChanged += new System.EventHandler(this.cboLinkReportTestMode_SelectedIndexChanged);
+         // 
+         // lblLinkReportTestMode
+         // 
+         this.lblLinkReportTestMode.AutoSize = true;
+         this.lblLinkReportTestMode.Location = new System.Drawing.Point(6, 36);
+         this.lblLinkReportTestMode.Name = "lblLinkReportTestMode";
+         this.lblLinkReportTestMode.Size = new System.Drawing.Size(55, 14);
+         this.lblLinkReportTestMode.TabIndex = 1;
+         this.lblLinkReportTestMode.Text = "測試模式";
          // 
          // Form1
          // 
@@ -376,8 +438,9 @@
          this.flowLayoutPanel1.ResumeLayout(false);
          this.flowLayoutPanel1.PerformLayout();
          this.grpConnectionMode.ResumeLayout(false);
-         this.grpConnectionMode.PerformLayout();
          this.grpManualTime.ResumeLayout(false);
+         this.grpLinkReport.ResumeLayout(false);
+         this.grpLinkReport.PerformLayout();
          this.ResumeLayout(false);
          this.PerformLayout();
 
@@ -385,6 +448,24 @@
 
       #endregion
 
+
+      private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
+      private System.Windows.Forms.GroupBox grpConnectionMode;
+      private System.Windows.Forms.ComboBox cmbDriverType;
+      private System.Windows.Forms.Button btnOpen;
+      private System.Windows.Forms.Button btnRead;
+      private System.Windows.Forms.Button btnWrite;
+      private System.Windows.Forms.Button btnClose;
+      private System.Windows.Forms.Button btnStartTimeSync;
+      private System.Windows.Forms.Button btnStopTimeSync;
+      private System.Windows.Forms.Button btnForceTimeSync;
+      private System.Windows.Forms.ListBox lstLog;
+      private System.Windows.Forms.Label lblStatus;
+      private System.Windows.Forms.GroupBox grpManualTime;
+      private System.Windows.Forms.DateTimePicker dtpDate;
+      private System.Windows.Forms.DateTimePicker dtpTime;
+      private System.Windows.Forms.Button btnSetTimeToPlc;
+      private System.Windows.Forms.Button btnSyncFromPc;
       private System.Windows.Forms.Button btnStartHeartbeat;
       private System.Windows.Forms.Button btnStopSimulator;
       private System.Windows.Forms.Button btnPlcSettings;
@@ -404,6 +485,12 @@
       private System.Windows.Forms.Label lblWaitingStatus;
       private System.Windows.Forms.Label lblControlStatus;
       private System.Windows.Forms.Button btnStartCommonReporting;
+      private System.Windows.Forms.Button btnStartLinkReport;
+      private System.Windows.Forms.Button btnStopLinkReport;
+      private System.Windows.Forms.Button btnSendLinkData;
+      private System.Windows.Forms.GroupBox grpLinkReport;
+      private System.Windows.Forms.ComboBox cboLinkReportTestMode;
+      private System.Windows.Forms.Label lblLinkReportTestMode;
    }
 }
 
