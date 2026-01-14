@@ -135,6 +135,10 @@ namespace WindowsFormsApp1
          }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
       }
 
+      public void StartLinkDataReporting()
+      {
+      }
+
       #endregion
 
       #region Protected Methods

@@ -180,6 +180,58 @@ namespace WindowsFormsApp1.Forms
             }
         }
 
+        private async void btnQuickLoadingRobot_Click(object sender, EventArgs e)
+        {
+            await QuickWriteAsync(TrackingStation.LoadingRobot, 4, 4, 'A', 1234, 114, 114, 114);
+        }
+
+        private async void btnQuickLoading_Click(object sender, EventArgs e)
+        {
+            await QuickWriteAsync(TrackingStation.Loading, 3, 3, 'A', 1234, 113, 113, 113);
+        }
+
+        private async void btnQuickUnloading_Click(object sender, EventArgs e)
+        {
+            await QuickWriteAsync(TrackingStation.Unloading, 2, 2, 'A', 1234, 112, 112, 112);
+        }
+
+        private async void btnQuickUnloadingRobot_Click(object sender, EventArgs e)
+        {
+            await QuickWriteAsync(TrackingStation.UnloadingRobot, 1, 1, 'A', 1234, 111, 111, 111);
+        }
+
+        private async Task QuickWriteAsync(TrackingStation station, ushort boardId, ushort layerCount, 
+            char lotChar, uint lotNum, ushort judge1, ushort judge2, ushort judge3)
+        {
+            try
+            {
+                var data = new TrackingData
+                {
+                    BoardId = new ushort[] { boardId, boardId, boardId },
+                    LayerCount = layerCount,
+                    LotNoChar = (ushort)lotChar,
+                    LotNoNum = lotNum,
+                    JudgeFlag1 = judge1,
+                    JudgeFlag2 = judge2,
+                    JudgeFlag3 = judge3
+                };
+
+                await _service.WriteTrackingDataAsync(station, data, _cts.Token);
+                Log($"快速寫入: 站點 {station} - Board:{boardId:D3}, Layer:{layerCount:D2}, Lot:{lotChar}{lotNum}");
+                
+                // 如果當前選擇的站點就是寫入的站點，自動刷新
+                if (cmbStation.SelectedItem is TrackingStation currentStation && currentStation == station)
+                {
+                    await RefreshDataAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"快速寫入失敗: {ex.Message}");
+                MessageBox.Show($"快速寫入失敗: {ex.Message}", "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         private void Log(string message)
         {
             var text = $"{DateTime.Now:HH:mm:ss} | {message}";

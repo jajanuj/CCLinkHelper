@@ -48,7 +48,6 @@
       {
          this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
          this.grpConnectionMode = new System.Windows.Forms.GroupBox();
-         this.grpConnectionMode = new System.Windows.Forms.GroupBox();
          this.cmbDriverType = new System.Windows.Forms.ComboBox();
          this.btnOpen = new System.Windows.Forms.Button();
          this.btnRead = new System.Windows.Forms.Button();

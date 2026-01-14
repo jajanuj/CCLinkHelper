@@ -61,6 +61,11 @@ namespace WindowsFormsApp1.Forms
             this.btnWriteTest = new System.Windows.Forms.Button();
             this.label6 = new System.Windows.Forms.Label();
             this.btnClear = new System.Windows.Forms.Button();
+            this.grpQuickWrite = new System.Windows.Forms.GroupBox();
+            this.btnQuickLoadingRobot = new System.Windows.Forms.Button();
+            this.btnQuickLoading = new System.Windows.Forms.Button();
+            this.btnQuickUnloading = new System.Windows.Forms.Button();
+            this.btnQuickUnloadingRobot = new System.Windows.Forms.Button();
             this.grpLog = new System.Windows.Forms.GroupBox();
             this.rtbLog = new System.Windows.Forms.RichTextBox();
             this.grpMonitor.SuspendLayout();
@@ -73,6 +78,7 @@ namespace WindowsFormsApp1.Forms
             ((System.ComponentModel.ISupportInitialize)(this.nudBoardId3)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudBoardId2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudBoardId1)).BeginInit();
+            this.grpQuickWrite.SuspendLayout();
             this.grpLog.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -234,7 +240,7 @@ namespace WindowsFormsApp1.Forms
             this.grpOperation.Controls.Add(this.btnClear);
             this.grpOperation.Location = new System.Drawing.Point(12, 218);
             this.grpOperation.Name = "grpOperation";
-            this.grpOperation.Size = new System.Drawing.Size(560, 280);
+            this.grpOperation.Size = new System.Drawing.Size(560, 400);
             this.grpOperation.TabIndex = 1;
             this.grpOperation.TabStop = false;
             this.grpOperation.Text = "資料操作 (Data Operation)";
@@ -428,10 +434,67 @@ namespace WindowsFormsApp1.Forms
             this.btnClear.UseVisualStyleBackColor = false;
             this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
             // 
+            // grpQuickWrite
+            // 
+            this.grpQuickWrite.Controls.Add(this.btnQuickLoadingRobot);
+            this.grpQuickWrite.Controls.Add(this.btnQuickLoading);
+            this.grpQuickWrite.Controls.Add(this.btnQuickUnloading);
+            this.grpQuickWrite.Controls.Add(this.btnQuickUnloadingRobot);
+            this.grpQuickWrite.Location = new System.Drawing.Point(12, 624);
+            this.grpQuickWrite.Name = "grpQuickWrite";
+            this.grpQuickWrite.Size = new System.Drawing.Size(560, 90);
+            this.grpQuickWrite.TabIndex = 3;
+            this.grpQuickWrite.TabStop = false;
+            this.grpQuickWrite.Text = "快速寫入 (Quick Write)";
+            // 
+            // btnQuickLoadingRobot
+            // 
+            this.btnQuickLoadingRobot.BackColor = System.Drawing.Color.LightGreen;
+            this.btnQuickLoadingRobot.Location = new System.Drawing.Point(18, 22);
+            this.btnQuickLoadingRobot.Name = "btnQuickLoadingRobot";
+            this.btnQuickLoadingRobot.Size = new System.Drawing.Size(130, 55);
+            this.btnQuickLoadingRobot.TabIndex = 0;
+            this.btnQuickLoadingRobot.Text = "插框手臂站\r\n(004, L04, A1234)";
+            this.btnQuickLoadingRobot.UseVisualStyleBackColor = false;
+            this.btnQuickLoadingRobot.Click += new System.EventHandler(this.btnQuickLoadingRobot_Click);
+            // 
+            // btnQuickLoading
+            // 
+            this.btnQuickLoading.BackColor = System.Drawing.Color.LightGreen;
+            this.btnQuickLoading.Location = new System.Drawing.Point(158, 22);
+            this.btnQuickLoading.Name = "btnQuickLoading";
+            this.btnQuickLoading.Size = new System.Drawing.Size(130, 55);
+            this.btnQuickLoading.TabIndex = 1;
+            this.btnQuickLoading.Text = "插框站\r\n(003, L03, A1234)";
+            this.btnQuickLoading.UseVisualStyleBackColor = false;
+            this.btnQuickLoading.Click += new System.EventHandler(this.btnQuickLoading_Click);
+            // 
+            // btnQuickUnloading
+            // 
+            this.btnQuickUnloading.BackColor = System.Drawing.Color.LightGreen;
+            this.btnQuickUnloading.Location = new System.Drawing.Point(298, 22);
+            this.btnQuickUnloading.Name = "btnQuickUnloading";
+            this.btnQuickUnloading.Size = new System.Drawing.Size(130, 55);
+            this.btnQuickUnloading.TabIndex = 2;
+            this.btnQuickUnloading.Text = "拆框站\r\n(002, L02, A1234)";
+            this.btnQuickUnloading.UseVisualStyleBackColor = false;
+            this.btnQuickUnloading.Click += new System.EventHandler(this.btnQuickUnloading_Click);
+            // 
+            // btnQuickUnloadingRobot
+            // 
+            this.btnQuickUnloadingRobot.BackColor = System.Drawing.Color.LightGreen;
+            this.btnQuickUnloadingRobot.Location = new System.Drawing.Point(438, 22);
+            this.btnQuickUnloadingRobot.Name = "btnQuickUnloadingRobot";
+            this.btnQuickUnloadingRobot.Size = new System.Drawing.Size(110, 55);
+            this.btnQuickUnloadingRobot.TabIndex = 3;
+            this.btnQuickUnloadingRobot.Text = "拆框手臂站\r\n(001, L01)";
+            this.btnQuickUnloadingRobot.UseVisualStyleBackColor = false;
+            this.btnQuickUnloadingRobot.Click += new System.EventHandler(this.btnQuickUnloadingRobot_Click);
+            // 
             // grpLog
             // 
             this.grpLog.Controls.Add(this.rtbLog);
-            this.grpLog.Location = new System.Drawing.Point(12, 504);
+            this.grpLog.Location = new System.Drawing.Point(12, 720);
             this.grpLog.Name = "grpLog";
             this.grpLog.Size = new System.Drawing.Size(560, 150);
             this.grpLog.TabIndex = 2;
@@ -452,7 +515,8 @@ namespace WindowsFormsApp1.Forms
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(584, 666);
+            this.ClientSize = new System.Drawing.Size(584, 882);
+            this.Controls.Add(this.grpQuickWrite);
             this.Controls.Add(this.grpLog);
             this.Controls.Add(this.grpOperation);
             this.Controls.Add(this.grpMonitor);
@@ -474,6 +538,7 @@ namespace WindowsFormsApp1.Forms
             ((System.ComponentModel.ISupportInitialize)(this.nudBoardId3)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudBoardId2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudBoardId1)).EndInit();
+            this.grpQuickWrite.ResumeLayout(false);
             this.grpLog.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -516,5 +581,10 @@ namespace WindowsFormsApp1.Forms
         private System.Windows.Forms.NumericUpDown nudLayerCount;
         private System.Windows.Forms.NumericUpDown nudBoardId3;
         private System.Windows.Forms.NumericUpDown nudBoardId2;
+        private System.Windows.Forms.GroupBox grpQuickWrite;
+        private System.Windows.Forms.Button btnQuickLoadingRobot;
+        private System.Windows.Forms.Button btnQuickLoading;
+        private System.Windows.Forms.Button btnQuickUnloading;
+        private System.Windows.Forms.Button btnQuickUnloadingRobot;
     }
 }

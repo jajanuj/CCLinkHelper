@@ -3,6 +3,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using GRT.SDK.Framework.Timer;
 using WindowsFormsApp1.CCLink.Interfaces;
 using WindowsFormsApp1.Models;
 
@@ -47,6 +48,9 @@ namespace WindowsFormsApp1.Services
       private bool? _lastObservedRequest;
       private bool? _lastObservedResponse;
       private bool _lastTimeSyncTrigger;
+      private CancellationTokenSource _linkReportCts;
+      private int _linkReportStep;
+      private Task _linkReportTask;
 
       // TimeSync Fields
       private CancellationTokenSource _timeSyncCts;
@@ -261,6 +265,107 @@ namespace WindowsFormsApp1.Services
          catch (Exception ex)
          {
             _logger?.Invoke($"[AppPlcService] Failed to write {logName}: {ex.Message}");
+         }
+      }
+
+      #endregion
+
+      #region Link Report Methods
+
+      public void StartLinkDataReporting(TimeSpan interval)
+      {
+         _linkReportCts = new CancellationTokenSource();
+         _linkReportTask = Task.Run(() => LinkReportFlowAsync(_linkReportCts.Token, interval));
+         _logger?.Invoke($"[AppService] Heartbeat started (Interval: {interval.TotalMilliseconds}ms)");
+      }
+
+      private async Task LinkReportFlowAsync(CancellationToken ct, TimeSpan interval)
+      {
+         while (!ct.IsCancellationRequested && !_disposed)
+         {
+            try
+            {
+               await RunLinkReportFlow(ct);
+               await Task.Delay(interval, ct);
+            }
+            catch (OperationCanceledException)
+            {
+               break;
+            }
+            catch (Exception ex)
+            {
+               _logger?.Invoke($"[LinkReport] Loop Exception: {ex.Message}");
+               await Task.Delay(1000, ct);
+            }
+         }
+      }
+
+      CTimer _linkReportTimer = new CTimer();
+      private uint _linkReportT1Timeout = 1000;
+      private uint _linkReportT2Timeout = 1000;
+      private string _linkReportRequestAddr;
+      private string _linkReportResponseAddr;
+
+      private void Log(string message) => _logger?.Invoke(message);
+
+      private async Task RunLinkReportFlow(CancellationToken ct)
+      {
+         while (!_linkReportCts.IsCancellationRequested)
+         {
+            bool requestOn = _controller.GetBit(_linkReportRequestAddr);
+            bool responseOn = _controller.GetBit(_linkReportResponseAddr);
+
+            switch (_linkReportStep)
+            {
+               case 0:
+               {
+                  Log($"[LinkReport] FlowStep: {_linkReportStep} |");
+                  _linkReportStep = 10;
+                  break;
+               }
+               case 10:
+               {
+                  await _controller.WriteBitsAsync(_heartbeatResponseAddr, new[] { true }, ct);
+                  Log($"[LinkReport] FlowStep: {_linkReportStep} | 發送關聯數據請求旗標({_linkReportRequestAddr}) On");
+                  _linkReportStep = 20;
+                  break;
+               }
+               case 20:
+               {
+                  if (requestOn)
+                  {
+                     Log($"[LinkReport] FlowStep: {_linkReportStep} | 讀取關聯數據請求旗標({_linkReportRequestAddr}) On");
+                     _linkReportStep = 30;
+                     _linkReportTimer.Reset();
+                  }
+
+                  break;
+               }
+
+               //判斷T1逾時
+               case 30:
+               {
+                  if (responseOn)
+                  {
+                     Log($"[LinkReport] FlowStep: {_linkReportStep} | 讀取關聯數據回應旗標({_linkReportResponseAddr}) On");
+                     _linkReportStep = 40;
+                     break;
+                  }
+
+                  if (_linkReportTimer.On(_linkReportT1Timeout))
+                  {
+                     Log($"[LinkReport] FlowStep: {_linkReportStep} | 讀取關聯數據回應旗標({_linkReportResponseAddr}) T1逾時");
+                     //todo: T1逾時處理
+                  }
+
+                  break;
+               }
+
+               case 40:
+               {
+                  break;
+               }
+            }
          }
       }
 
