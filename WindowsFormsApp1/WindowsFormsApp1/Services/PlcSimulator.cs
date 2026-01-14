@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using WindowsFormsApp1.CCLink.Interfaces;
 using WindowsFormsApp1.CCLink.Models;
+using WindowsFormsApp1.Models;
 
 namespace WindowsFormsApp1.Services
 {
@@ -359,6 +360,205 @@ namespace WindowsFormsApp1.Services
             }, ct);
          }
       }
+
+      /// <summary>
+      /// 啟動 Recipe Check 模擬模式：監控裝置端的 Request並自動回應。
+      /// 模擬 MPLC 端的行為。
+      /// </summary>
+      public void StartRecipeCheckMode(RecipeCheckSettings settings = null)
+      {
+         var recipeSettings = settings ?? new RecipeCheckSettings();
+
+         lock (_syncLock)
+         {
+            Stop(); // 確保完全停止
+
+            _cts = new CancellationTokenSource();
+            var ct = _cts.Token;
+
+            _task = Task.Run(async () =>
+            {
+               _logger?.Invoke($"[Recipe Check 模擬器] 已啟動 | Recipe Check Simulator started");
+
+               var random = new Random();
+
+               while (!ct.IsCancellationRequested)
+               {
+                  try
+                  {
+                     // 1. 監聽 Request Flag (LB0303)
+                     bool requestFlag = GetBit(new LinkDeviceAddress { Kind = "LB", Start = 0x0303 });
+
+                     if (requestFlag)
+                     {
+                        _logger?.Invoke($"[Recipe Check 模擬器] 偵測到 Request | Detected Recipe Check Request");
+
+                        // 2. 讀取追蹤資料 (LW6087-6096)
+                        short[] trackingData = await ReadWordsAsync(0x17C7, 10);
+
+                        // 3. 檢查批號首字（offset 4 = LW6091）
+                        bool autoOk = CheckLotNoPrefix(trackingData[4]);
+
+                        bool isOk;
+                        ushort boardThickness;
+                        ushort recipeNo;
+                        string recipeName;
+
+                        if (autoOk)
+                        {
+                           // 批號 P/D 自動 OK
+                           isOk = true;
+                           boardThickness = (ushort)random.Next(100, 500);
+                           recipeNo = 9999;
+                           recipeName = "AUTO_OK_RECIPE";
+                           _logger?.Invoke($"[Recipe Check 模擬器] 批號首字為 P/D，自動判定 OK | Auto OK due to lot prefix");
+                        }
+                        else
+                        {
+                           // 隨機 OK/NG
+                           isOk = random.Next(0, 2) == 1;
+                           boardThickness = (ushort)random.Next(100, 500);
+                           recipeNo = (ushort)random.Next(1, 1000);
+                           recipeName = $"RECIPE_{recipeNo:D4}";
+                           _logger?.Invoke($"[Recipe Check 模擬器] 隨機判定 {(isOk ? "OK" : "NG")} | Random result: {(isOk ? "OK" : "NG")}");
+                        }
+
+                        // 4. 寫入 Response Data
+                        await WriteWordAsync(0x05DA, boardThickness); // LW1498 板厚
+                        _logger?.Invoke($"[Recipe Check 模擬器] 板厚: {boardThickness}");
+
+                        if (recipeSettings.Mode == RecipeCheckMode.Numeric)
+                        {
+                           await WriteWordAsync(0x05DC, recipeNo); // LW1500 Recipe No.
+                           _logger?.Invoke($"[Recipe Check 模擬器] Recipe No.: {recipeNo}");
+                        }
+                        else
+                        {
+                           short[] recipeWords = ConvertStringToWords(recipeName, 50);
+                           await WriteWordsAsync(0x05DE, recipeWords); // LW1502 Recipe Name
+                           _logger?.Invoke($"[Recipe Check 模擬器] Recipe Name: {recipeName}");
+                        }
+
+                        // 5. 設定 Response Flag
+                        if (isOk)
+                        {
+                           SetRequest(new LinkDeviceAddress { Kind = "LB", Start = 0x0103 }, true); // LB0103 OK
+                           _logger?.Invoke($"[Recipe Check 模擬器] 設定 Response OK Flag");
+                        }
+                        else
+                        {
+                           SetRequest(new LinkDeviceAddress { Kind = "LB", Start = 0x0104 }, true); // LB0104 NG
+                           _logger?.Invoke($"[Recipe Check 模擬器] 設定 Response NG Flag");
+                        }
+
+                        // 6. 等待一段時間後清除 Request Flag
+                        await Task.Delay(200, ct).ConfigureAwait(false);
+                        SetRequest(new LinkDeviceAddress { Kind = "LB", Start = 0x0303 }, false);
+                        _logger?.Invoke($"[Recipe Check 模擬器] 已清除 Request Flag");
+                     }
+
+                     await Task.Delay(100, ct).ConfigureAwait(false);
+                  }
+                  catch (TaskCanceledException)
+                  {
+                     break;
+                  }
+                  catch (Exception ex)
+                  {
+                     _logger?.Invoke($"[Recipe Check 模擬器] 例外 | Exception: {ex.Message}");
+                     await Task.Delay(500, ct).ConfigureAwait(false);
+                  }
+               }
+
+               _logger?.Invoke($"[Recipe Check 模擬器] 已停止 | Recipe Check Simulator stopped");
+            }, ct);
+         }
+      }
+
+      /// <summary>
+      /// 檢查批號首字是否為 P 或 D
+      /// </summary>
+      private bool CheckLotNoPrefix(short lotTextPart)
+      {
+         try
+         {
+            // 將 UINT16 轉換為 2 個 ASCII 字元
+            byte[] bytes = BitConverter.GetBytes(lotTextPart);
+            char firstChar = (char)bytes[1]; // 高位元組
+
+            return firstChar == 'P' || firstChar == 'D' ||
+                   firstChar == 'p' || firstChar == 'd';
+         }
+         catch
+         {
+            return false;
+         }
+      }
+
+      /// <summary>
+      /// 讀取多個 Word
+      /// </summary>
+      private async Task<short[]> ReadWordsAsync(int startAddress, int count)
+      {
+         return await Task.Run(() =>
+         {
+            var buffer = new short[count];
+            int size = count * 2;
+            int rc = _api.ReceiveEx(_path, 0, 0, CCLinkConstants.DEV_LW, startAddress, ref size, buffer);
+            if (rc != 0)
+            {
+               throw new Exception($"Read words failed, RC={rc}");
+            }
+            return buffer;
+         });
+      }
+
+      /// <summary>
+      /// 寫入單一 Word
+      /// </summary>
+      private async Task WriteWordAsync(int address, ushort value)
+      {
+         await Task.Run(() =>
+         {
+            var buffer = new short[] { (short)value };
+            _api.SendEx(_path, 0, 0, CCLinkConstants.DEV_LW, address, 1 * 2, buffer);
+         });
+      }
+
+      /// <summary>
+      /// 寫入多個 Word
+      /// </summary>
+      private async Task WriteWordsAsync(int address, short[] values)
+      {
+         await Task.Run(() =>
+         {
+            _api.SendEx(_path, 0, 0, CCLinkConstants.DEV_LW, address, values.Length * 2, values);
+         });
+      }
+
+      /// <summary>
+      /// 將字串轉換為 PLC Word 陣列（ASCII）
+      /// </summary>
+      private short[] ConvertStringToWords(string text, int wordCount)
+      {
+         short[] words = new short[wordCount];
+         if (string.IsNullOrEmpty(text))
+         {
+            return words;
+         }
+
+         byte[] bytes = System.Text.Encoding.ASCII.GetBytes(text);
+
+         for (int i = 0; i < wordCount && i * 2 < bytes.Length; i++)
+         {
+            byte high = i * 2 + 1 < bytes.Length ? bytes[i * 2 + 1] : (byte)0;
+            byte low = bytes[i * 2];
+            words[i] = (short)((high << 8) | low);
+         }
+
+         return words;
+      }
+
 
       /// <summary>
       /// 手動設定 response flag（true 設為 1，false 設為 0）。
