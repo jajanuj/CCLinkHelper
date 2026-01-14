@@ -61,7 +61,7 @@ namespace WindowsFormsApp1.Services
                 // 2. 根據模式寫入 Recipe No. 或 Recipe Name
                 if (_settings.Mode == RecipeCheckMode.Numeric)
                 {
-                    await _controller.WriteWordAsync(_settings.RequestRecipeNoAddress, recipeNo.Value);
+                    await _controller.WriteWordsAsync(_settings.RequestRecipeNoAddress, new short[] { (short)recipeNo.Value });
                     Log($"[Recipe Check] 已寫入 Recipe No.: {recipeNo.Value}");
                 }
                 else
@@ -72,14 +72,14 @@ namespace WindowsFormsApp1.Services
                 }
 
                 // 3. 設定 Request Flag (LB0303)
-                await _controller.WriteBitAsync(_settings.RequestFlagAddress, true);
+                await _controller.WriteBitsAsync(_settings.RequestFlagAddress, new bool[] { true });
                 Log($"[Recipe Check] 已設定 Request Flag: {_settings.RequestFlagAddress}");
 
                 // 4. 等待 Response
                 var response = await WaitForResponseAsync();
 
                 // 5. 清除 Request Flag
-                await _controller.WriteBitAsync(_settings.RequestFlagAddress, false);
+                await _controller.WriteBitsAsync(_settings.RequestFlagAddress, new bool[] { false });
                 Log($"[Recipe Check] 已清除 Request Flag");
 
                 return response;
@@ -106,15 +106,16 @@ namespace WindowsFormsApp1.Services
                 while (!cts.Token.IsCancellationRequested)
                 {
                     // 檢查 Response Flag
-                    bool okFlag = await _controller.ReadBitAsync(_settings.ResponseOkAddress);
-                    bool ngFlag = await _controller.ReadBitAsync(_settings.ResponseNgAddress);
+                    bool okFlag = await _controller.ReadBitsAsync(_settings.ResponseOkAddress);
+                    bool ngFlag = await _controller.ReadBitsAsync(_settings.ResponseNgAddress);
 
                     if (okFlag || ngFlag)
                     {
                         Log($"[Recipe Check] 收到回應：{(okFlag ? "OK" : "NG")}");
 
                         // 讀取 Response Data
-                        ushort boardThickness = await _controller.ReadWordAsync(_settings.ResponseThicknessAddress);
+                        var thicknessResult = await _controller.ReadWordsAsync(_settings.ResponseThicknessAddress, 1);
+                        ushort boardThickness = (ushort)thicknessResult[0];
                         Log($"[Recipe Check] 板厚：{boardThickness}");
 
                         ushort? recipeNo = null;
@@ -122,24 +123,25 @@ namespace WindowsFormsApp1.Services
 
                         if (_settings.Mode == RecipeCheckMode.Numeric)
                         {
-                            recipeNo = await _controller.ReadWordAsync(_settings.ResponseRecipeNoAddress);
+                            var recipeNoResult = await _controller.ReadWordsAsync(_settings.ResponseRecipeNoAddress, 1);
+                            recipeNo = (ushort)recipeNoResult[0];
                             Log($"[Recipe Check] Recipe No.: {recipeNo.Value}");
                         }
                         else
                         {
-                            short[] recipeWords = await _controller.ReadWordsAsync(_settings.ResponseRecipeNameAddress, 50);
-                            recipeName = ConvertWordsToString(recipeWords);
+                            var recipeWordsList = await _controller.ReadWordsAsync(_settings.ResponseRecipeNameAddress, 50);
+                            recipeName = ConvertWordsToString(System.Linq.Enumerable.ToArray(recipeWordsList));
                             Log($"[Recipe Check] Recipe Name: {recipeName}");
                         }
 
                         // 清除 Response Flag
                         if (okFlag)
                         {
-                            await _controller.WriteBitAsync(_settings.ResponseOkAddress, false);
+                            await _controller.WriteBitsAsync(_settings.ResponseOkAddress, new bool[] { false });
                         }
                         if (ngFlag)
                         {
-                            await _controller.WriteBitAsync(_settings.ResponseNgAddress, false);
+                            await _controller.WriteBitsAsync(_settings.ResponseNgAddress, new bool[] { false });
                         }
 
                         return RecipeCheckResponse.CreateSuccessResponse(okFlag, boardThickness, recipeNo, recipeName);

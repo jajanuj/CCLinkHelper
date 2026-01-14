@@ -13,17 +13,25 @@ namespace WindowsFormsApp1.Forms
 
       private readonly CancellationTokenSource _cts = new CancellationTokenSource();
       private readonly AppPlcService _service;
+      private readonly PlcSimulator _simulator;
 
       #endregion
 
       #region Constructors
 
-      public TrackingControlForm(AppPlcService service)
+      public TrackingControlForm(AppPlcService service, PlcSimulator simulator = null)
       {
          _service = service ?? throw new ArgumentNullException(nameof(service));
+         _simulator = simulator;
          InitializeComponent();
          InitializeStationComboBox();
          InitializeReasonCodeComboBox();
+         
+         if (_simulator == null)
+         {
+             grpLcsSimulator.Enabled = false;
+             grpLcsSimulator.Text += " (Not Available - Simulator Mode Only)";
+         }
       }
 
       #endregion
@@ -230,6 +238,62 @@ namespace WindowsFormsApp1.Forms
       private async void btnQuickUnloadingRobot_Click(object sender, EventArgs e)
       {
          await QuickWriteAsync(TrackingStation.UnloadingRobot, 1, 1, 'A', 1234, 111, 111, 111);
+      }
+
+      private async void btnSimDataMaint_Click(object sender, EventArgs e)
+      {
+         if (_simulator == null)
+         {
+            MessageBox.Show("Simulator not available.");
+            return;
+         }
+
+         try
+         {
+            btnSimDataMaint.Enabled = false;
+
+            // Construct TrackingData from UI inputs
+            var data = new TrackingData
+            {
+               BoardId = new ushort[]
+               {
+                  (ushort)nudBoardId1.Value,
+                  (ushort)nudBoardId2.Value,
+                  (ushort)nudBoardId3.Value
+               },
+               LayerCount = (ushort)nudLayerCount.Value,
+               LotNoChar = string.IsNullOrEmpty(txtLotChar.Text) ? (ushort)0 : (ushort)txtLotChar.Text[0],
+               LotNoNum = (uint)nudLotNum.Value,
+               JudgeFlag1 = (ushort)nudJudge1.Value,
+               JudgeFlag2 = (ushort)nudJudge2.Value,
+               JudgeFlag3 = (ushort)nudJudge3.Value
+            };
+
+            int pos = (int)nudSimPos.Value;
+
+            Log($"[Simulator] Sending Maintenance Request for Pos {pos}...");
+            bool output = await _simulator.TriggerTrackingMaintenanceRequest(data, pos);
+
+            if (output)
+            {
+               Log($"[Simulator] Maintenance Request OK.");
+               MessageBox.Show("Maintenance Request OK", "Result", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+               Log($"[Simulator] Maintenance Request Failed/NG.");
+               MessageBox.Show("Maintenance Request Failed or NG", "Result", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+         }
+         catch (Exception ex)
+         {
+            Log($"[Simulator] Request Error: {ex.Message}");
+            MessageBox.Show($"Request Error: {ex.Message}");
+         }
+         finally
+         {
+            btnSimDataMaint.Enabled = true;
+         }
       }
 
       private async Task QuickWriteAsync(TrackingStation station, ushort boardId, ushort layerCount,

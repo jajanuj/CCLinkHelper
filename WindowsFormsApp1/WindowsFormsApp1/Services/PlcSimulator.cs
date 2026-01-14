@@ -387,7 +387,7 @@ namespace WindowsFormsApp1.Services
                   try
                   {
                      // 1. 監聽 Request Flag (LB0303)
-                     bool requestFlag = GetBit(new LinkDeviceAddress { Kind = "LB", Start = 0x0303 });
+                     bool requestFlag = GetBit(new LinkDeviceAddress("LB", 0x0303, 1));
 
                      if (requestFlag)
                      {
@@ -442,18 +442,18 @@ namespace WindowsFormsApp1.Services
                         // 5. 設定 Response Flag
                         if (isOk)
                         {
-                           SetRequest(new LinkDeviceAddress { Kind = "LB", Start = 0x0103 }, true); // LB0103 OK
+                           SetRequest(new LinkDeviceAddress("LB", 0x0103, 1), true); // LB0103 OK
                            _logger?.Invoke($"[Recipe Check 模擬器] 設定 Response OK Flag");
                         }
                         else
                         {
-                           SetRequest(new LinkDeviceAddress { Kind = "LB", Start = 0x0104 }, true); // LB0104 NG
+                           SetRequest(new LinkDeviceAddress("LB", 0x0104, 1), true); // LB0104 NG
                            _logger?.Invoke($"[Recipe Check 模擬器] 設定 Response NG Flag");
                         }
 
                         // 6. 等待一段時間後清除 Request Flag
                         await Task.Delay(200, ct).ConfigureAwait(false);
-                        SetRequest(new LinkDeviceAddress { Kind = "LB", Start = 0x0303 }, false);
+                        SetRequest(new LinkDeviceAddress("LB", 0x0303, 1), false);
                         _logger?.Invoke($"[Recipe Check 模擬器] 已清除 Request Flag");
                      }
 
@@ -521,7 +521,8 @@ namespace WindowsFormsApp1.Services
          await Task.Run(() =>
          {
             var buffer = new short[] { (short)value };
-            _api.SendEx(_path, 0, 0, CCLinkConstants.DEV_LW, address, 1 * 2, buffer);
+            int size = 1 * 2;
+            _api.SendEx(_path, 0, 0, CCLinkConstants.DEV_LW, address, ref size, buffer);
          });
       }
 
@@ -532,7 +533,8 @@ namespace WindowsFormsApp1.Services
       {
          await Task.Run(() =>
          {
-            _api.SendEx(_path, 0, 0, CCLinkConstants.DEV_LW, address, values.Length * 2, values);
+            int size = values.Length * 2;
+            _api.SendEx(_path, 0, 0, CCLinkConstants.DEV_LW, address, ref size, values);
          });
       }
 

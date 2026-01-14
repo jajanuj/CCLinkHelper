@@ -69,10 +69,15 @@ namespace WindowsFormsApp1.Forms
          this.btnQuickLoading = new System.Windows.Forms.Button();
          this.btnQuickUnloading = new System.Windows.Forms.Button();
          this.btnQuickUnloadingRobot = new System.Windows.Forms.Button();
+         this.grpLcsSimulator = new System.Windows.Forms.GroupBox();
+         this.lblSimPos = new System.Windows.Forms.Label();
+         this.nudSimPos = new System.Windows.Forms.NumericUpDown();
+         this.btnSimDataMaint = new System.Windows.Forms.Button();
          this.grpLog = new System.Windows.Forms.GroupBox();
          this.rtbLog = new System.Windows.Forms.RichTextBox();
          this.grpMonitor.SuspendLayout();
          this.grpOperation.SuspendLayout();
+         this.grpLcsSimulator.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.nudJudge3)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.nudJudge2)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.nudJudge1)).BeginInit();
@@ -399,6 +404,50 @@ namespace WindowsFormsApp1.Forms
          this.btnQuickUnloadingRobot.UseVisualStyleBackColor = false;
          this.btnQuickUnloadingRobot.Click += new System.EventHandler(this.btnQuickUnloadingRobot_Click);
          // 
+         // grpLcsSimulator
+         // 
+         this.grpLcsSimulator.Controls.Add(this.btnSimDataMaint);
+         this.grpLcsSimulator.Controls.Add(this.nudSimPos);
+         this.grpLcsSimulator.Controls.Add(this.lblSimPos);
+         this.grpLcsSimulator.Location = new System.Drawing.Point(533, 410); // Adjust location as needed
+         this.grpLcsSimulator.Name = "grpLcsSimulator";
+         this.grpLcsSimulator.Size = new System.Drawing.Size(515, 70);
+         this.grpLcsSimulator.TabIndex = 20;
+         this.grpLcsSimulator.TabStop = false;
+         this.grpLcsSimulator.Text = "LCS 模擬器 / Maintenance Request Simulator";
+         // 
+         // lblSimPos
+         // 
+         this.lblSimPos.AutoSize = true;
+         this.lblSimPos.Location = new System.Drawing.Point(19, 30);
+         this.lblSimPos.Name = "lblSimPos";
+         this.lblSimPos.Size = new System.Drawing.Size(70, 15);
+         this.lblSimPos.TabIndex = 0;
+         this.lblSimPos.Text = "Position No:";
+         // 
+         // nudSimPos
+         // 
+         this.nudSimPos.Location = new System.Drawing.Point(92, 26);
+         this.nudSimPos.Maximum = new decimal(new int[] {
+            999,
+            0,
+            0,
+            0});
+         this.nudSimPos.Name = "nudSimPos";
+         this.nudSimPos.Size = new System.Drawing.Size(80, 25);
+         this.nudSimPos.TabIndex = 1;
+         // 
+         // btnSimDataMaint
+         // 
+         this.btnSimDataMaint.BackColor = System.Drawing.Color.LightSkyBlue;
+         this.btnSimDataMaint.Location = new System.Drawing.Point(200, 21);
+         this.btnSimDataMaint.Name = "btnSimDataMaint";
+         this.btnSimDataMaint.Size = new System.Drawing.Size(180, 35);
+         this.btnSimDataMaint.TabIndex = 2;
+         this.btnSimDataMaint.Text = "發送維護請求 (LCS Request)";
+         this.btnSimDataMaint.UseVisualStyleBackColor = false;
+         this.btnSimDataMaint.Click += new System.EventHandler(this.btnSimDataMaint_Click);
+         // 
          // grpLog
          // 
          this.grpLog.Controls.Add(this.rtbLog);
@@ -417,6 +466,7 @@ namespace WindowsFormsApp1.Forms
          resources.ApplyResources(this, "$this");
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.Controls.Add(this.grpQuickWrite);
+         this.Controls.Add(this.grpLcsSimulator);
          this.Controls.Add(this.grpLog);
          this.Controls.Add(this.grpOperation);
          this.Controls.Add(this.grpMonitor);
@@ -428,6 +478,8 @@ namespace WindowsFormsApp1.Forms
          this.grpMonitor.PerformLayout();
          this.grpOperation.ResumeLayout(false);
          this.grpOperation.PerformLayout();
+         this.grpLcsSimulator.ResumeLayout(false);
+         this.grpLcsSimulator.PerformLayout();
          ((System.ComponentModel.ISupportInitialize)(this.nudJudge3)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.nudJudge2)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.nudJudge1)).EndInit();
@@ -437,6 +489,8 @@ namespace WindowsFormsApp1.Forms
          ((System.ComponentModel.ISupportInitialize)(this.nudBoardId2)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.nudBoardId1)).EndInit();
          this.grpQuickWrite.ResumeLayout(false);
+         this.grpLcsSimulator.ResumeLayout(false);
+         this.grpLcsSimulator.PerformLayout();
          this.grpLog.ResumeLayout(false);
          this.ResumeLayout(false);
 
@@ -486,5 +540,9 @@ namespace WindowsFormsApp1.Forms
         private System.Windows.Forms.Button btnQuickUnloadingRobot;
       private System.Windows.Forms.ComboBox cboReasonCode;
       private System.Windows.Forms.Label lblReasonCode;
+      private System.Windows.Forms.GroupBox grpLcsSimulator;
+      private System.Windows.Forms.NumericUpDown nudSimPos;
+      private System.Windows.Forms.Label lblSimPos;
+      private System.Windows.Forms.Button btnSimDataMaint;
    }
 }
