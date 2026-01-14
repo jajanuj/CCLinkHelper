@@ -797,6 +797,120 @@ namespace WindowsFormsApp1.Services
 
       #endregion
 
+      #region Tracking Data Maintenance Methods
+
+      private readonly string AddrMaintRequestFlag = "LB0106";
+      private readonly string AddrMaintRequestData = "LW05BE"; // Length 10
+      private readonly string AddrMaintRequestPos = "LW05C8";
+      private readonly string AddrMaintResponseOk = "LB0304";
+      private readonly string AddrMaintResponseNg = "LB0305";
+      private readonly string AddrTrackingDataBase = "LW184A"; // Base address for 540 words (54 positions?)
+      private const int TrackingDataSize = 10;
+      private const int MaxPositions = 54; // 540 words / 10 words per pos = 54
+
+      private CancellationTokenSource _maintMonitorCts;
+      private Task _maintMonitorTask;
+
+      public void StartTrackingDataMaintenanceMonitor(TimeSpan interval)
+      {
+         StopTrackingDataMaintenanceMonitor();
+         _maintMonitorCts = new CancellationTokenSource();
+         _maintMonitorTask = Task.Run(() => TrackingDataMaintenanceLoopAsync(interval, _maintMonitorCts.Token));
+         _logger?.Invoke($"[AppService] Tracking Data Maintenance Monitor started");
+      }
+
+      public void StopTrackingDataMaintenanceMonitor()
+      {
+         if (_maintMonitorCts != null)
+         {
+            _maintMonitorCts.Cancel();
+            try { _maintMonitorTask?.Wait(500); } catch { }
+            _maintMonitorCts.Dispose();
+            _maintMonitorCts = null;
+         }
+      }
+
+      private async Task TrackingDataMaintenanceLoopAsync(TimeSpan interval, CancellationToken ct)
+      {
+         while (!ct.IsCancellationRequested && !_disposed)
+         {
+            try
+            {
+               // 1. Monitor Request Flag (LB 0x0106)
+               bool requestOn = _controller.GetBit(AddrMaintRequestFlag);
+
+               if (requestOn)
+               {
+                  _logger?.Invoke("[Maintenance] Request ON detected, processing...");
+
+                  // 2. Read Request Data (Tracking Data 10 words + Position 1 word)
+                  var trackWords = await _controller.ReadWordsAsync(AddrMaintRequestData, TrackingDataSize, ct);
+                  var posWords = await _controller.ReadWordsAsync(AddrMaintRequestPos, 1, ct);
+
+                  if (trackWords.Count == TrackingDataSize && posWords.Count == 1)
+                  {
+                     int pos = (ushort)posWords[0];
+                     
+                     // Validate Position
+                     if (pos >= 0 && pos < MaxPositions) // Assuming 54 positions based on 540 words
+                     {
+                        // 3. Update Device Memory (Write to LW 184A + Offset)
+                        int targetAddr = 0x184A + (pos * TrackingDataSize);
+                        // Convert hex string address for WriteWordsAsync?? 
+                        // The Controller usually takes "LWXXXX" string.
+                        // Need to convert targetAddr integer to Hex string.
+                        string targetAddrStr = $"LW{targetAddr:X4}";
+
+                        await _controller.WriteWordsAsync(targetAddrStr, trackWords.ToArray(), ct);
+                        _logger?.Invoke($"[Maintenance] Updated Position {pos} at {targetAddrStr}");
+
+                        // 4. Response OK (LB 0x0304)
+                        await _controller.WriteBitsAsync(AddrMaintResponseOk, new[] { true }, ct);
+                        _logger?.Invoke("[Maintenance] Response OK Set");
+                     }
+                     else
+                     {
+                        _logger?.Invoke($"[Maintenance] Invalid Position: {pos}");
+                        // Response NG
+                        await _controller.WriteBitsAsync(AddrMaintResponseNg, new[] { true }, ct);
+                     }
+                  }
+                  else
+                  {
+                     _logger?.Invoke("[Maintenance] Read Data Failed");
+                     // Response NG
+                     await _controller.WriteBitsAsync(AddrMaintResponseNg, new[] { true }, ct);
+                  }
+
+                  // 5. Wait for Request OFF
+                  while (!ct.IsCancellationRequested)
+                  {
+                     bool stillOn = _controller.GetBit(AddrMaintRequestFlag);
+                     if (!stillOn)
+                     {
+                        break;
+                     }
+                     await Task.Delay(100, ct);
+                  }
+
+                  // 6. Clear Response Flags
+                  await _controller.WriteBitsAsync(AddrMaintResponseOk, new[] { false }, ct);
+                  await _controller.WriteBitsAsync(AddrMaintResponseNg, new[] { false }, ct);
+                  _logger?.Invoke("[Maintenance] Request Cycle Completed, Responses Cleared");
+               }
+            }
+            catch (Exception ex)
+            {
+               _logger?.Invoke($"[Maintenance] Loop Exception: {ex.Message}");
+               await Task.Delay(1000, ct);
+            }
+
+            await Task.Delay(interval, ct);
+         }
+      }
+
+      #endregion
+
       #region Tracking Methods
 
       /// <summary>

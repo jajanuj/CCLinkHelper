@@ -740,6 +740,76 @@ namespace WindowsFormsApp1.Services
 
       #endregion
 
+      /// <summary>
+      /// 模擬 LCS 發送 "追蹤資料維護" 請求。
+      /// 流程：寫入 Data/Position -> Request ON -> Wait Response -> Request OFF
+      /// </summary>
+      /// <param name="data">Tracking Data (10 words)</param>
+      /// <param name="positionNo">Position No</param>
+      /// <returns>True if Response OK (LB0304), False if Response NG (LB0305) or Timeout</returns>
+      public async Task<bool> TriggerTrackingMaintenanceRequest(TrackingData data, int positionNo)
+      {
+         const int TIMEOUT_MS = 3000;
+         const int REQUEST_FLAG = 0x0106;
+         const int REQUEST_DATA_START = 0x05BE;
+         const int REQUEST_POS_ADDR = 0x05C8;
+         const int RESPONSE_OK = 0x0304;
+         const int RESPONSE_NG = 0x0305;
+
+         try
+         {
+            _logger?.Invoke($"[模擬 LCS] 開始發送維護請求 Position: {positionNo} | Starting Maintenance Request");
+
+            // 1. 寫入 Request Data (Tracking Data 10 Words + Position No 1 Word)
+            short[] trackWords = data.ToRawData();
+            await WriteWordsAsync(REQUEST_DATA_START, trackWords).ConfigureAwait(false);
+            await WriteWordAsync(REQUEST_POS_ADDR, (ushort)positionNo).ConfigureAwait(false);
+
+            // 2. 寫入 Request Flag (LB 0x0106) ON
+            SetRequest(new LinkDeviceAddress("LB", REQUEST_FLAG, 1), true);
+
+            // 3. 等待回應 (Response OK or NG)
+            var cts = new CancellationTokenSource(TIMEOUT_MS);
+            bool isOk = false;
+            bool isNg = false;
+
+            try
+            {
+               await Task.Run(async () =>
+               {
+                  while (!cts.IsCancellationRequested)
+                  {
+                     isOk = GetBit(new LinkDeviceAddress("LB", RESPONSE_OK, 1));
+                     isNg = GetBit(new LinkDeviceAddress("LB", RESPONSE_NG, 1));
+
+                     if (isOk || isNg)
+                     {
+                        break;
+                     }
+
+                     await Task.Delay(50, cts.Token).ConfigureAwait(false);
+                  }
+               }, cts.Token);
+            }
+            catch (TaskCanceledException)
+            {
+               _logger?.Invoke($"[模擬 LCS] 等待回應逾時 | Wait for response timeout");
+               return false;
+            }
+
+            // 4. 清除 Request Flag OFF
+            SetRequest(new LinkDeviceAddress("LB", REQUEST_FLAG, 1), false);
+            _logger?.Invoke($"[模擬 LCS] 收到回應: {(isOk ? "OK" : "NG")}，已清除 Request");
+
+            return isOk;
+         }
+         catch (Exception ex)
+         {
+            _logger?.Invoke($"[模擬 LCS] 發生例外 | Exception: {ex.Message}");
+            return false;
+         }
+      }
+
       public void Dispose()
       {
          if (_disposed)

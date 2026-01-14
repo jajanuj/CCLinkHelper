@@ -69,6 +69,7 @@ namespace WindowsFormsApp1
       {
          InitializeComponent();
          InitializeComboBox();
+         InitializeRecipeCheckButton();
 
          // 1. 加載或設定連線參數 (內建自動檢查檔名與開啟 UI 邏輯)
          _settings = new AppControllerSettings("Settings");
@@ -176,7 +177,8 @@ namespace WindowsFormsApp1
 
             // 啟動連結報告模擬模式：模擬 LCS 自動回應 EQ 的請求
             _simulator.StartLinkReportMode();
-            Log("已啟動 Simulator 連結報告模式 (LCS 自動回應) | Simulator Link Report mode started");
+            _simulator.StartRecipeCheckMode();
+            Log("已啟動 Simulator 連結報告模式 (LCS 自動回應) 與 Recipe Check 模式 | Simulator Link Report & Recipe Check mode started");
          }
       }
 
@@ -260,6 +262,47 @@ namespace WindowsFormsApp1
       private void InitializeComboBox()
       {
          cboLinkReportTestMode.SelectedIndex = 0;
+      }
+
+      private void InitializeRecipeCheckButton()
+      {
+         var btnRecipeCheck = new Button();
+         btnRecipeCheck.Text = "Recipe Check";
+         btnRecipeCheck.Size = new System.Drawing.Size(100, 30);
+         
+         // 嘗試定位在 btnScanMonitor 附近
+         if (btnScanMonitor != null)
+         {
+            // 如果 btnScanMonitor 有 Parent，則加到同一容器
+            if (btnScanMonitor.Parent != null)
+            {
+               btnRecipeCheck.Location = new System.Drawing.Point(btnScanMonitor.Location.X, btnScanMonitor.Location.Y + btnScanMonitor.Height + 10);
+               btnScanMonitor.Parent.Controls.Add(btnRecipeCheck);
+            }
+            else
+            {
+               // Fallback: 加在主表單右下角附近
+               btnRecipeCheck.Location = new System.Drawing.Point(20, 300);
+               this.Controls.Add(btnRecipeCheck);
+            }
+         }
+         else
+         {
+            btnRecipeCheck.Location = new System.Drawing.Point(20, 300);
+            this.Controls.Add(btnRecipeCheck);
+         }
+
+         btnRecipeCheck.Click += (s, e) =>
+         {
+            if (_appPlcService?.Controller == null)
+            {
+               MessageBox.Show("請先連接 PLC | Please connect PLC first");
+               return;
+            }
+
+            var form = new RecipeCheckForm(_appPlcService.Controller);
+            form.Show();
+         };
       }
 
       private ushort GetCurrentControlStatus() => _controlStatus;
@@ -424,6 +467,9 @@ namespace WindowsFormsApp1
             await _appPlcService.Controller.OpenAsync(_cts.Token).ConfigureAwait(false);
 
             _isOpened = true;
+            
+            // 啟動 Maintenance Monitor (Device Logic)
+            _appPlcService.StartTrackingDataMaintenanceMonitor(TimeSpan.FromMilliseconds(200));
 
             BeginInvoke((Action)(() =>
             {
@@ -471,6 +517,8 @@ namespace WindowsFormsApp1
             }
 
             btnClose.Enabled = false;
+            
+            _appPlcService?.StopTrackingDataMaintenanceMonitor();
 
             // 先在 UI 執行緒上停止 Timer 並重置按鈕狀態
             if (_scanMonitorForm != null && !_scanMonitorForm.IsDisposed)
@@ -504,7 +552,7 @@ namespace WindowsFormsApp1
                      var nudInterval = nudIntervalField?.GetValue(_scanMonitorForm) as NumericUpDown;
 
                      if (btnStart != null && btnStop != null)
-                     {
+                  {
                         btnStart.Enabled = true;
                         btnStop.Enabled = false;
 
@@ -932,12 +980,12 @@ namespace WindowsFormsApp1
       private void btnTrackingControl_Click(object sender, EventArgs e)
       {
          if (_appPlcService == null)
-         {
+        {
             MessageBox.Show("請先連接 PLC | Please connect PLC first", "錯誤");
             return;
          }
 
-         using (var form = new Forms.TrackingControlForm(_appPlcService))
+         using (var form = new Forms.TrackingControlForm(_appPlcService, _simulator))
          {
             form.ShowDialog(this);
          }

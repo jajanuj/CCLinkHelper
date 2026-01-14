@@ -101,6 +101,16 @@
     <Compile Include="Models\TrackingSettings.cs" />
     <Compile Include="Models\TrackingStation.cs" />
     <Compile Include="Services\AppPlcService.cs" />
+    <Compile Include="Models\RecipeCheckMode.cs" />
+    <Compile Include="Models\RecipeCheckSettings.cs" />
+    <Compile Include="Models\RecipeCheckResponse.cs" />
+    <Compile Include="Services\RecipeCheckClient.cs" />
+    <Compile Include="Forms\RecipeCheckForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\RecipeCheckForm.Designer.cs">
+      <DependentUpon>RecipeCheckForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="CCLink\Services\MelsecHelper.cs" />
     <Compile Include="CCLink\Controllers\MockCCLinkController.cs" />
     <Compile Include="CCLink\Adapters\MockMelsecApiAdapter.cs" />
