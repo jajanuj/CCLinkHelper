@@ -476,89 +476,92 @@ namespace WindowsFormsApp1.Services
       }
 
       /// <summary>
-      /// 檢查批號首字是否為 P 或 D
+      /// 啟動追蹤資料維護監聽模式：監控裝置端的 Request (LB0506) 並自動回應 (LB0107)。
+      /// 模擬 LCS 端的行為。
       /// </summary>
-      private bool CheckLotNoPrefix(short lotTextPart)
+      public void StartTrackingMaintenanceListenMode()
       {
-         try
-         {
-            // 將 UINT16 轉換為 2 個 ASCII 字元
-            byte[] bytes = BitConverter.GetBytes(lotTextPart);
-            char firstChar = (char)bytes[1]; // 高位元組
+         const int REQUEST_FLAG_ADDR = 0x0506;
+         const int RESPONSE_FLAG_ADDR = 0x0107;
+         const int TRACKING_DATA_START = 0x05BE;
+         const int POS_NO_ADDR = 0x05C8;
 
-            return firstChar == 'P' || firstChar == 'D' ||
-                   firstChar == 'p' || firstChar == 'd';
-         }
-         catch
+         lock (_syncLock)
          {
-            return false;
-         }
-      }
+            Stop(); // 確保完全停止
 
-      /// <summary>
-      /// 讀取多個 Word
-      /// </summary>
-      private async Task<short[]> ReadWordsAsync(int startAddress, int count)
-      {
-         return await Task.Run(() =>
-         {
-            var buffer = new short[count];
-            int size = count * 2;
-            int rc = _api.ReceiveEx(_path, 0, 0, CCLinkConstants.DEV_LW, startAddress, ref size, buffer);
-            if (rc != 0)
+            _cts = new CancellationTokenSource();
+            var ct = _cts.Token;
+
+            _task = Task.Run(async () =>
             {
-               throw new Exception($"Read words failed, RC={rc}");
-            }
-            return buffer;
-         });
-      }
+               _logger?.Invoke($"[追蹤資料維護模擬器] 已啟動 (監聽 LB{REQUEST_FLAG_ADDR:X4}) | Tracking Data Maint. Simulator started");
 
-      /// <summary>
-      /// 寫入單一 Word
-      /// </summary>
-      private async Task WriteWordAsync(int address, ushort value)
-      {
-         await Task.Run(() =>
-         {
-            var buffer = new short[] { (short)value };
-            int size = 1 * 2;
-            _api.SendEx(_path, 0, 0, CCLinkConstants.DEV_LW, address, ref size, buffer);
-         });
-      }
+               while (!ct.IsCancellationRequested)
+               {
+                  try
+                  {
+                     // 1. 監聽 Request Flag (LB0506)
+                     bool requestFlag = GetBit(new LinkDeviceAddress("LB", REQUEST_FLAG_ADDR, 1));
 
-      /// <summary>
-      /// 寫入多個 Word
-      /// </summary>
-      private async Task WriteWordsAsync(int address, short[] values)
-      {
-         await Task.Run(() =>
-         {
-            int size = values.Length * 2;
-            _api.SendEx(_path, 0, 0, CCLinkConstants.DEV_LW, address, ref size, values);
-         });
-      }
+                     if (requestFlag)
+                     {
+                        _logger?.Invoke($"[追蹤資料維護模擬器] 偵測到 Request (LB{REQUEST_FLAG_ADDR:X4}) | Detected Request");
 
-      /// <summary>
-      /// 將字串轉換為 PLC Word 陣列（ASCII）
-      /// </summary>
-      private short[] ConvertStringToWords(string text, int wordCount)
-      {
-         short[] words = new short[wordCount];
-         if (string.IsNullOrEmpty(text))
-         {
-            return words;
+                        // 2. 讀取追蹤資料 (LW05BE-05C7) 與 Position No (LW05C8)
+                        // 資料長度 10 words + 1 word = 讀取 11 words 比較快，或是分開讀
+                        // 這裡分開讀取比較清晰
+                        short[] trackingRaw = await ReadWordsAsync(TRACKING_DATA_START, 10);
+                        short[] posRaw = await ReadWordsAsync(POS_NO_ADDR, 1);
+                        ushort posNo = (ushort)posRaw[0];
+
+                        // 解析一下資料方便 Log
+                        var trackingData = TrackingData.FromRawData(trackingRaw);
+                        _logger?.Invoke(
+                           $"[追蹤資料維護模擬器] 收到資料 | Received Data - Board: {trackingData.FormatBoardId()}, Lot: {trackingData.FormatLotNo()}, Pos: {posNo}");
+
+                        // 3. 模擬處理延遲
+                        await Task.Delay(500, ct).ConfigureAwait(false);
+
+                        // 4. 設定 Response Flag (LB0107) ON
+                        SetResponseWithAddress(RESPONSE_FLAG_ADDR, true);
+                        _logger?.Invoke($"[追蹤資料維護模擬器] 設定 Response ON (LB{RESPONSE_FLAG_ADDR:X4})");
+
+                        // 5. 等待 Request Flag OFF
+                        while (!ct.IsCancellationRequested)
+                        {
+                           bool req = GetBit(new LinkDeviceAddress("LB", REQUEST_FLAG_ADDR, 1));
+                           if (!req)
+                           {
+                              _logger?.Invoke($"[追蹤資料維護模擬器] 偵測到 Request OFF");
+                              break;
+                           }
+
+                           await Task.Delay(100, ct).ConfigureAwait(false);
+                        }
+
+                        // 6. 清除 Response Flag OFF
+                        await Task.Delay(200, ct).ConfigureAwait(false);
+                        SetResponseWithAddress(RESPONSE_FLAG_ADDR, false);
+                        _logger?.Invoke($"[追蹤資料維護模擬器] 清除 Response OFF (LB{RESPONSE_FLAG_ADDR:X4})");
+                     }
+
+                     await Task.Delay(100, ct).ConfigureAwait(false);
+                  }
+                  catch (TaskCanceledException)
+                  {
+                     break;
+                  }
+                  catch (Exception ex)
+                  {
+                     _logger?.Invoke($"[追蹤資料維護模擬器] 例外 | Exception: {ex.Message}");
+                     await Task.Delay(1000, ct).ConfigureAwait(false); // 發生錯誤時稍作等待
+                  }
+               }
+
+               _logger?.Invoke($"[追蹤資料維護模擬器] 已停止 | Stopped");
+            }, ct);
          }
-
-         byte[] bytes = System.Text.Encoding.ASCII.GetBytes(text);
-
-         for (int i = 0; i < wordCount && i * 2 < bytes.Length; i++)
-         {
-            byte high = i * 2 + 1 < bytes.Length ? bytes[i * 2 + 1] : (byte)0;
-            byte low = bytes[i * 2];
-            words[i] = (short)((high << 8) | low);
-         }
-
-         return words;
       }
 
 
@@ -636,9 +639,196 @@ namespace WindowsFormsApp1.Services
          }
       }
 
+      /// <summary>
+      /// 模擬 LCS 發送 "追蹤資料維護" 請求。
+      /// 流程：寫入 Data/Position -> Request ON -> Wait Response -> Request OFF
+      /// </summary>
+      /// <param name="data">Tracking Data (10 words)</param>
+      /// <param name="positionNo">Position No</param>
+      /// <returns>True if Response OK (LB0304), False if Response NG (LB0305) or Timeout</returns>
+      public async Task<bool> TriggerTrackingMaintenanceRequest(TrackingData data, int positionNo)
+      {
+         const int TIMEOUT_MS = 3000;
+         const int REQUEST_FLAG = 0x0106;
+         const int REQUEST_DATA_START = 0x05BE;
+         const int REQUEST_POS_ADDR = 0x05C8;
+         const int RESPONSE_OK = 0x0304;
+         const int RESPONSE_NG = 0x0305;
+
+         try
+         {
+            _logger?.Invoke($"[模擬 LCS] 開始發送維護請求 Position: {positionNo} | Starting Maintenance Request");
+
+            // 1. 寫入 Request Data (Tracking Data 10 Words + Position No 1 Word)
+            short[] trackWords = data.ToRawData();
+            await WriteWordsAsync(REQUEST_DATA_START, trackWords).ConfigureAwait(false);
+            await WriteWordAsync(REQUEST_POS_ADDR, (ushort)positionNo).ConfigureAwait(false);
+
+            // 2. 寫入 Request Flag (LB 0x0106) ON
+            SetRequest(new LinkDeviceAddress("LB", REQUEST_FLAG, 1), true);
+
+            // 3. 等待回應 (Response OK or NG)
+            var cts = new CancellationTokenSource(TIMEOUT_MS);
+            bool isOk = false;
+            bool isNg = false;
+
+            try
+            {
+               await Task.Run(async () =>
+               {
+                  while (!cts.IsCancellationRequested)
+                  {
+                     isOk = GetBit(new LinkDeviceAddress("LB", RESPONSE_OK, 1));
+                     isNg = GetBit(new LinkDeviceAddress("LB", RESPONSE_NG, 1));
+
+                     if (isOk || isNg)
+                     {
+                        break;
+                     }
+
+                     await Task.Delay(50, cts.Token).ConfigureAwait(false);
+                  }
+               }, cts.Token);
+            }
+            catch (TaskCanceledException)
+            {
+               _logger?.Invoke($"[模擬 LCS] 等待回應逾時 | Wait for response timeout");
+               return false;
+            }
+
+            if (TestMode == TestMode.T1Timeout)
+            {
+               _logger?.Invoke($"[模擬 LCS] 測試模式 T1Timeout 啟用 | Test Mode T1Timeout Enabled");
+               return false;
+            }
+
+            // 4. 清除 Request Flag OFF
+            SetRequest(new LinkDeviceAddress("LB", REQUEST_FLAG, 1), false);
+            _logger?.Invoke($"[模擬 LCS] 收到回應: {(isOk ? "OK" : "NG")}，已清除 Request");
+
+            return isOk;
+         }
+         catch (Exception ex)
+         {
+            _logger?.Invoke($"[模擬 LCS] 發生例外 | Exception: {ex.Message}");
+            return false;
+         }
+      }
+
       #endregion
 
       #region Private Methods
+
+      /// <summary>
+      /// 輔助方法：指定位址設定 Response (因為 SetResponse 唯讀 _responseAddr)
+      /// </summary>
+      private void SetResponseWithAddress(int address, bool on)
+      {
+         try
+         {
+            // 假設 Response 都是 LB
+            int devCode = CCLinkConstants.DEV_LB;
+            if (on)
+            {
+               _api.DevSetEx(_path, 1, 1, devCode, address);
+            }
+            else
+            {
+               _api.DevRstEx(_path, 1, 1, devCode, address);
+            }
+         }
+         catch (Exception ex)
+         {
+            _logger?.Invoke($"[模擬器] 設定 Response (LB{address:X4}) 失敗: {ex.Message}");
+         }
+      }
+
+      /// <summary>
+      /// 檢查批號首字是否為 P 或 D
+      /// </summary>
+      private bool CheckLotNoPrefix(short lotTextPart)
+      {
+         try
+         {
+            // 將 UINT16 轉換為 2 個 ASCII 字元
+            byte[] bytes = BitConverter.GetBytes(lotTextPart);
+            char firstChar = (char)bytes[1]; // 高位元組
+
+            return firstChar == 'P' || firstChar == 'D' ||
+                   firstChar == 'p' || firstChar == 'd';
+         }
+         catch
+         {
+            return false;
+         }
+      }
+
+      /// <summary>
+      /// 讀取多個 Word
+      /// </summary>
+      private async Task<short[]> ReadWordsAsync(int startAddress, int count)
+      {
+         return await Task.Run(() =>
+         {
+            var buffer = new short[count];
+            int size = count * 2;
+            int rc = _api.ReceiveEx(_path, 0, 0, CCLinkConstants.DEV_LW, startAddress, ref size, buffer);
+            if (rc != 0)
+            {
+               throw new Exception($"Read words failed, RC={rc}");
+            }
+
+            return buffer;
+         });
+      }
+
+      /// <summary>
+      /// 寫入單一 Word
+      /// </summary>
+      private async Task WriteWordAsync(int address, ushort value)
+      {
+         await Task.Run(() =>
+         {
+            var buffer = new short[] { (short)value };
+            int size = 1 * 2;
+            _api.SendEx(_path, 0, 0, CCLinkConstants.DEV_LW, address, ref size, buffer);
+         });
+      }
+
+      /// <summary>
+      /// 寫入多個 Word
+      /// </summary>
+      private async Task WriteWordsAsync(int address, short[] values)
+      {
+         await Task.Run(() =>
+         {
+            int size = values.Length * 2;
+            _api.SendEx(_path, 0, 0, CCLinkConstants.DEV_LW, address, ref size, values);
+         });
+      }
+
+      /// <summary>
+      /// 將字串轉換為 PLC Word 陣列（ASCII）
+      /// </summary>
+      private short[] ConvertStringToWords(string text, int wordCount)
+      {
+         short[] words = new short[wordCount];
+         if (string.IsNullOrEmpty(text))
+         {
+            return words;
+         }
+
+         byte[] bytes = System.Text.Encoding.ASCII.GetBytes(text);
+
+         for (int i = 0; i < wordCount && i * 2 < bytes.Length; i++)
+         {
+            byte high = i * 2 + 1 < bytes.Length ? bytes[i * 2 + 1] : (byte)0;
+            byte low = bytes[i * 2];
+            words[i] = (short)((high << 8) | low);
+         }
+
+         return words;
+      }
 
       /// <summary>
       /// 讀取指定位址的 bit 狀態
@@ -741,76 +931,6 @@ namespace WindowsFormsApp1.Services
       }
 
       #endregion
-
-      /// <summary>
-      /// 模擬 LCS 發送 "追蹤資料維護" 請求。
-      /// 流程：寫入 Data/Position -> Request ON -> Wait Response -> Request OFF
-      /// </summary>
-      /// <param name="data">Tracking Data (10 words)</param>
-      /// <param name="positionNo">Position No</param>
-      /// <returns>True if Response OK (LB0304), False if Response NG (LB0305) or Timeout</returns>
-      public async Task<bool> TriggerTrackingMaintenanceRequest(TrackingData data, int positionNo)
-      {
-         const int TIMEOUT_MS = 3000;
-         const int REQUEST_FLAG = 0x0106;
-         const int REQUEST_DATA_START = 0x05BE;
-         const int REQUEST_POS_ADDR = 0x05C8;
-         const int RESPONSE_OK = 0x0304;
-         const int RESPONSE_NG = 0x0305;
-
-         try
-         {
-            _logger?.Invoke($"[模擬 LCS] 開始發送維護請求 Position: {positionNo} | Starting Maintenance Request");
-
-            // 1. 寫入 Request Data (Tracking Data 10 Words + Position No 1 Word)
-            short[] trackWords = data.ToRawData();
-            await WriteWordsAsync(REQUEST_DATA_START, trackWords).ConfigureAwait(false);
-            await WriteWordAsync(REQUEST_POS_ADDR, (ushort)positionNo).ConfigureAwait(false);
-
-            // 2. 寫入 Request Flag (LB 0x0106) ON
-            SetRequest(new LinkDeviceAddress("LB", REQUEST_FLAG, 1), true);
-
-            // 3. 等待回應 (Response OK or NG)
-            var cts = new CancellationTokenSource(TIMEOUT_MS);
-            bool isOk = false;
-            bool isNg = false;
-
-            try
-            {
-               await Task.Run(async () =>
-               {
-                  while (!cts.IsCancellationRequested)
-                  {
-                     isOk = GetBit(new LinkDeviceAddress("LB", RESPONSE_OK, 1));
-                     isNg = GetBit(new LinkDeviceAddress("LB", RESPONSE_NG, 1));
-
-                     if (isOk || isNg)
-                     {
-                        break;
-                     }
-
-                     await Task.Delay(50, cts.Token).ConfigureAwait(false);
-                  }
-               }, cts.Token);
-            }
-            catch (TaskCanceledException)
-            {
-               _logger?.Invoke($"[模擬 LCS] 等待回應逾時 | Wait for response timeout");
-               return false;
-            }
-
-            // 4. 清除 Request Flag OFF
-            SetRequest(new LinkDeviceAddress("LB", REQUEST_FLAG, 1), false);
-            _logger?.Invoke($"[模擬 LCS] 收到回應: {(isOk ? "OK" : "NG")}，已清除 Request");
-
-            return isOk;
-         }
-         catch (Exception ex)
-         {
-            _logger?.Invoke($"[模擬 LCS] 發生例外 | Exception: {ex.Message}");
-            return false;
-         }
-      }
 
       public void Dispose()
       {

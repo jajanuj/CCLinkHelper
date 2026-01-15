@@ -269,7 +269,7 @@ namespace WindowsFormsApp1
          var btnRecipeCheck = new Button();
          btnRecipeCheck.Text = "Recipe Check";
          btnRecipeCheck.Size = new System.Drawing.Size(100, 30);
-         
+
          // 嘗試定位在 btnScanMonitor 附近
          if (btnScanMonitor != null)
          {
@@ -467,7 +467,7 @@ namespace WindowsFormsApp1
             await _appPlcService.Controller.OpenAsync(_cts.Token).ConfigureAwait(false);
 
             _isOpened = true;
-            
+
             // 啟動 Maintenance Monitor (Device Logic)
             _appPlcService.StartTrackingDataMaintenanceMonitor(TimeSpan.FromMilliseconds(200));
 
@@ -476,6 +476,10 @@ namespace WindowsFormsApp1
                // 互鎖: 開啟後禁用 Open 按鈕和 RadioButton，啟用 Close 按鈕
                grpConnectionMode.Enabled = false;
                btnClose.Enabled = true;
+
+               // Update Maint Monitor Buttons
+               btnStartMaintMonitor.Enabled = false;
+               btnStopMaintMonitor.Enabled = true;
 
                if (_scanMonitorForm != null && !_scanMonitorForm.IsDisposed)
                {
@@ -517,7 +521,7 @@ namespace WindowsFormsApp1
             }
 
             btnClose.Enabled = false;
-            
+
             _appPlcService?.StopTrackingDataMaintenanceMonitor();
 
             // 先在 UI 執行緒上停止 Timer 並重置按鈕狀態
@@ -552,7 +556,7 @@ namespace WindowsFormsApp1
                      var nudInterval = nudIntervalField?.GetValue(_scanMonitorForm) as NumericUpDown;
 
                      if (btnStart != null && btnStop != null)
-                  {
+                     {
                         btnStart.Enabled = true;
                         btnStop.Enabled = false;
 
@@ -589,6 +593,10 @@ namespace WindowsFormsApp1
                grpConnectionMode.Enabled = true;
                btnOpen.Enabled = true;
                btnClose.Enabled = false;
+
+               // Reset Maint Monitor Buttons
+               btnStartMaintMonitor.Enabled = true;
+               btnStopMaintMonitor.Enabled = false;
             }));
          }
          catch (Exception ex)
@@ -980,15 +988,17 @@ namespace WindowsFormsApp1
       private void btnTrackingControl_Click(object sender, EventArgs e)
       {
          if (_appPlcService == null)
-        {
+         {
             MessageBox.Show("請先連接 PLC | Please connect PLC first", "錯誤");
             return;
          }
 
-         using (var form = new Forms.TrackingControlForm(_appPlcService, _simulator))
-         {
-            form.ShowDialog(this);
-         }
+         var form = new Forms.TrackingControlForm(_appPlcService, _simulator);
+         form.Show(this);
+         // using (var form = new Forms.TrackingControlForm(_appPlcService, _simulator))
+         // {
+         //    form.Show(this);
+         // }
       }
 
       private void btnStartLinkReport_Click(object sender, EventArgs e)
@@ -1067,6 +1077,28 @@ namespace WindowsFormsApp1
             _appPlcService.OnlineMode = false;
             Log("已切換至 Offline 模式 | Switched to Offline mode");
          }
+      }
+
+      private void btnStartMaintMonitor_Click(object sender, EventArgs e)
+      {
+         if (_appPlcService == null || !_isOpened)
+         {
+            MessageBox.Show("請先連接 PLC | Please connect PLC first");
+            return;
+         }
+
+         _appPlcService.StartTrackingDataMaintenanceMonitor(TimeSpan.FromMilliseconds(200));
+         btnStartMaintMonitor.Enabled = false;
+         btnStopMaintMonitor.Enabled = true;
+         Log("維護監控已手動啟動 | Maintenance Monitor started manually");
+      }
+
+      private void btnStopMaintMonitor_Click(object sender, EventArgs e)
+      {
+         _appPlcService?.StopTrackingDataMaintenanceMonitor();
+         btnStartMaintMonitor.Enabled = true;
+         btnStopMaintMonitor.Enabled = false;
+         Log("維護監控已手動停止 | Maintenance Monitor stopped manually");
       }
 
       #endregion

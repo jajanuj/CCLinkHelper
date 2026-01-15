@@ -45,6 +45,8 @@
          this.btnStopSimulator = new System.Windows.Forms.Button();
          this.btnPlcSettings = new System.Windows.Forms.Button();
          this.btnScanMonitor = new System.Windows.Forms.Button();
+         this.btnStopMaintMonitor = new System.Windows.Forms.Button();
+         this.btnStartMaintMonitor = new System.Windows.Forms.Button();
          this.btnTrackingControl = new System.Windows.Forms.Button();
          this.btnStartCommonReporting = new System.Windows.Forms.Button();
          this.btnSetCommonReporting = new System.Windows.Forms.Button();
@@ -97,6 +99,8 @@
          this.flowLayoutPanel1.Controls.Add(this.grpManualTime);
          this.flowLayoutPanel1.Controls.Add(this.grpLinkReport);
          this.flowLayoutPanel1.Controls.Add(this.grpConnectMode);
+         this.flowLayoutPanel1.Controls.Add(this.btnStartMaintMonitor);
+         this.flowLayoutPanel1.Controls.Add(this.btnStopMaintMonitor);
          this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
          this.flowLayoutPanel1.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
@@ -463,7 +467,31 @@
          this.rbtnOffline.TabStop = true;
          this.rbtnOffline.Text = "Offline";
          this.rbtnOffline.UseVisualStyleBackColor = true;
+         this.rbtnOffline.UseVisualStyleBackColor = true;
          this.rbtnOffline.CheckedChanged += new System.EventHandler(this.Offline_CheckedChanged);
+         // 
+         // btnStartMaintMonitor
+         // 
+         this.btnStartMaintMonitor.Location = new System.Drawing.Point(657, 251);
+         this.btnStartMaintMonitor.Margin = new System.Windows.Forms.Padding(10);
+         this.btnStartMaintMonitor.Name = "btnStartMaintMonitor";
+         this.btnStartMaintMonitor.Size = new System.Drawing.Size(186, 26);
+         this.btnStartMaintMonitor.TabIndex = 24;
+         this.btnStartMaintMonitor.Text = "Start Maint Monitor";
+         this.btnStartMaintMonitor.UseVisualStyleBackColor = true;
+         this.btnStartMaintMonitor.Click += new System.EventHandler(this.btnStartMaintMonitor_Click);
+         // 
+         // btnStopMaintMonitor
+         // 
+         this.btnStopMaintMonitor.Enabled = false;
+         this.btnStopMaintMonitor.Location = new System.Drawing.Point(20, 351);
+         this.btnStopMaintMonitor.Margin = new System.Windows.Forms.Padding(10);
+         this.btnStopMaintMonitor.Name = "btnStopMaintMonitor";
+         this.btnStopMaintMonitor.Size = new System.Drawing.Size(186, 26);
+         this.btnStopMaintMonitor.TabIndex = 25;
+         this.btnStopMaintMonitor.Text = "Stop Maint Monitor";
+         this.btnStopMaintMonitor.UseVisualStyleBackColor = true;
+         this.btnStopMaintMonitor.Click += new System.EventHandler(this.btnStopMaintMonitor_Click);
          // 
          // Form1
          // 
@@ -536,6 +564,8 @@
       private System.Windows.Forms.GroupBox grpConnectMode;
       private System.Windows.Forms.RadioButton rbtnOffline;
       private System.Windows.Forms.RadioButton rbtnOnline;
+      private System.Windows.Forms.Button btnStartMaintMonitor;
+      private System.Windows.Forms.Button btnStopMaintMonitor;
    }
 }
 

@@ -42,7 +42,6 @@ namespace WindowsFormsApp1.Services
       private string _heartbeatRequestAddr;
       private string _heartbeatResponseAddr;
       private Task _heartbeatTask;
-      private DateTime? _t1Watchdog = null; // T1 計時器：Response ON 後開始計時
       private CommonReportAlarm _lastCommonReportAlarm;
       private CommonReportStatus1 _lastCommonReportStatus1;
       private CommonReportStatus2 _lastCommonReportStatus2;
@@ -53,6 +52,7 @@ namespace WindowsFormsApp1.Services
       private CancellationTokenSource _linkReportCts;
       private int _linkReportStep;
       private Task _linkReportTask;
+      private DateTime? _t1Watchdog = null; // T1 計時器：Response ON 後開始計時
 
       // TimeSync Fields
       private CancellationTokenSource _timeSyncCts;
@@ -639,7 +639,7 @@ namespace WindowsFormsApp1.Services
                   // 檢查 T1 逾時：從 Response ON 後，Request 仍然沒有 OFF
                   var t1Elapsed = DateTime.UtcNow - _t1Watchdog.Value;
                   var t1Timeout = _heartbeatInterval.TotalMilliseconds * 2; // T1 逾時設定（可調整）
-                  
+
                   if (t1Elapsed.TotalMilliseconds > t1Timeout)
                   {
                      _logger?.Invoke($"[Heartbeat] T1 Timeout: PLC 未在 {t1Timeout}ms 內清除 Request | T1 Timeout: PLC did not clear Request within {t1Timeout}ms");
@@ -656,7 +656,7 @@ namespace WindowsFormsApp1.Services
             case 1: // (0,1) PLC Cleared Request
                // 清除 T1 計時器：已成功從 (1,1) 進入 (0,1)
                _t1Watchdog = null;
-               
+
                if (lastState == 3)
                {
                   _logger?.Invoke("[Heartbeat] PLC Cleared Request, Clearing Response (0,1)");
@@ -799,34 +799,48 @@ namespace WindowsFormsApp1.Services
 
       #region Tracking Data Maintenance Methods
 
-      private readonly string AddrMaintRequestFlag = "LB0106";
-      private readonly string AddrMaintRequestData = "LW05BE"; // Length 10
-      private readonly string AddrMaintRequestPos = "LW05C8";
-      private readonly string AddrMaintResponseOk = "LB0304";
-      private readonly string AddrMaintResponseNg = "LB0305";
-      private readonly string AddrTrackingDataBase = "LW184A"; // Base address for 540 words (54 positions?)
+      private readonly string AddrMaintenanceRequestFlag = "LB0106";
+      private readonly string AddrMaintenanceRequestData = "LW05BE"; // Length 10
+      private readonly string AddrMaintenanceRequestPos = "LW05C8";
+      private readonly string AddrMaintenanceResponseOk = "LB0304";
+      private readonly string AddrMaintenanceResponseNg = "LB0305";
+      private readonly string AddrTrackingDataBase = "LW3BEA"; // Base address for 540 words (54 positions?)
       private const int TrackingDataSize = 10;
       private const int MaxPositions = 54; // 540 words / 10 words per pos = 54
 
-      private CancellationTokenSource _maintMonitorCts;
-      private Task _maintMonitorTask;
+      private CancellationTokenSource _maintenanceMonitorCts;
+      private Task _maintenanceMonitorTask;
+      private CTimer _maintenanceTimer = new CTimer();
+      private int _maintenanceStep;
+      private uint _maintenanceT1Timeout = 5000;
+      private uint _maintenanceT2Timeout = 5000;
 
-      public void StartTrackingDataMaintenanceMonitor(TimeSpan interval)
+      public void StartTrackingDataMaintenanceMonitor(TimeSpan interval, uint t1Timeout = 5000, uint t2Timeout = 5000)
       {
          StopTrackingDataMaintenanceMonitor();
-         _maintMonitorCts = new CancellationTokenSource();
-         _maintMonitorTask = Task.Run(() => TrackingDataMaintenanceLoopAsync(interval, _maintMonitorCts.Token));
-         _logger?.Invoke($"[AppService] Tracking Data Maintenance Monitor started");
+         _maintenanceT1Timeout = t1Timeout;
+         _maintenanceT2Timeout = t2Timeout;
+         _maintenanceStep = 0;
+         _maintenanceMonitorCts = new CancellationTokenSource();
+         _maintenanceMonitorTask = Task.Run(() => TrackingDataMaintenanceLoopAsync(interval, _maintenanceMonitorCts.Token));
+         _logger?.Invoke($"[AppService] Tracking Data Maintenance Monitor started (T1: {t1Timeout}ms)");
       }
 
       public void StopTrackingDataMaintenanceMonitor()
       {
-         if (_maintMonitorCts != null)
+         if (_maintenanceMonitorCts != null)
          {
-            _maintMonitorCts.Cancel();
-            try { _maintMonitorTask?.Wait(500); } catch { }
-            _maintMonitorCts.Dispose();
-            _maintMonitorCts = null;
+            _maintenanceMonitorCts.Cancel();
+            try
+            {
+               _maintenanceMonitorTask?.Wait(500);
+            }
+            catch
+            {
+            }
+
+            _maintenanceMonitorCts.Dispose();
+            _maintenanceMonitorCts = null;
          }
       }
 
@@ -836,66 +850,86 @@ namespace WindowsFormsApp1.Services
          {
             try
             {
+               await RunMaintenanceFlow(ct);
+               await Task.Delay(interval, ct);
+            }
+            catch (OperationCanceledException)
+            {
+               break;
+            }
+            catch (Exception ex)
+            {
+               _logger?.Invoke($"[Maintenance] Loop Exception: {ex.Message}");
+               await Task.Delay(1000, ct);
+            }
+         }
+      }
+
+      private async Task TrackingDataMaintenanceLoopAsync_Old(TimeSpan interval, CancellationToken ct)
+      {
+         while (!ct.IsCancellationRequested && !_disposed)
+         {
+            try
+            {
                // 1. Monitor Request Flag (LB 0x0106)
-               bool requestOn = _controller.GetBit(AddrMaintRequestFlag);
+               bool requestOn = _controller.GetBit(AddrMaintenanceRequestFlag);
 
                if (requestOn)
                {
                   _logger?.Invoke("[Maintenance] Request ON detected, processing...");
 
                   // 2. Read Request Data (Tracking Data 10 words + Position 1 word)
-                  var trackWords = await _controller.ReadWordsAsync(AddrMaintRequestData, TrackingDataSize, ct);
-                  var posWords = await _controller.ReadWordsAsync(AddrMaintRequestPos, 1, ct);
+                  var trackWords = await _controller.ReadWordsAsync(AddrMaintenanceRequestData, TrackingDataSize, ct);
+                  var posWords = await _controller.ReadWordsAsync(AddrMaintenanceRequestPos, 1, ct);
 
                   if (trackWords.Count == TrackingDataSize && posWords.Count == 1)
                   {
                      int pos = (ushort)posWords[0];
-                     
+
                      // Validate Position
                      if (pos >= 0 && pos < MaxPositions) // Assuming 54 positions based on 540 words
                      {
                         // 3. Update Device Memory (Write to LW 184A + Offset)
-                        int targetAddr = 0x184A + (pos * TrackingDataSize);
-                        // Convert hex string address for WriteWordsAsync?? 
-                        // The Controller usually takes "LWXXXX" string.
-                        // Need to convert targetAddr integer to Hex string.
+                        int baseAddr = Convert.ToInt32(AddrTrackingDataBase.Substring(2), 16);
+                        int targetAddr = baseAddr + pos * TrackingDataSize;
                         string targetAddrStr = $"LW{targetAddr:X4}";
 
                         await _controller.WriteWordsAsync(targetAddrStr, trackWords.ToArray(), ct);
                         _logger?.Invoke($"[Maintenance] Updated Position {pos} at {targetAddrStr}");
 
                         // 4. Response OK (LB 0x0304)
-                        await _controller.WriteBitsAsync(AddrMaintResponseOk, new[] { true }, ct);
+                        await _controller.WriteBitsAsync(AddrMaintenanceResponseOk, new[] { true }, ct);
                         _logger?.Invoke("[Maintenance] Response OK Set");
                      }
                      else
                      {
                         _logger?.Invoke($"[Maintenance] Invalid Position: {pos}");
                         // Response NG
-                        await _controller.WriteBitsAsync(AddrMaintResponseNg, new[] { true }, ct);
+                        await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { true }, ct);
                      }
                   }
                   else
                   {
                      _logger?.Invoke("[Maintenance] Read Data Failed");
                      // Response NG
-                     await _controller.WriteBitsAsync(AddrMaintResponseNg, new[] { true }, ct);
+                     await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { true }, ct);
                   }
 
                   // 5. Wait for Request OFF
                   while (!ct.IsCancellationRequested)
                   {
-                     bool stillOn = _controller.GetBit(AddrMaintRequestFlag);
+                     bool stillOn = _controller.GetBit(AddrMaintenanceRequestFlag);
                      if (!stillOn)
                      {
                         break;
                      }
+
                      await Task.Delay(100, ct);
                   }
 
                   // 6. Clear Response Flags
-                  await _controller.WriteBitsAsync(AddrMaintResponseOk, new[] { false }, ct);
-                  await _controller.WriteBitsAsync(AddrMaintResponseNg, new[] { false }, ct);
+                  await _controller.WriteBitsAsync(AddrMaintenanceResponseOk, new[] { false }, ct);
+                  await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { false }, ct);
                   _logger?.Invoke("[Maintenance] Request Cycle Completed, Responses Cleared");
                }
             }
@@ -906,6 +940,176 @@ namespace WindowsFormsApp1.Services
             }
 
             await Task.Delay(interval, ct);
+         }
+      }
+
+      /// <summary>
+      /// 發送追蹤資料維護請求 (Device -> LCS)
+      /// </summary>
+      /// <param name="data">追蹤資料 (10 words)</param>
+      /// <param name="positionNo">位置編號</param>
+      /// <param name="ct">CancellationToken</param>
+      /// <returns>True: 成功 (Response ON), False: 失敗或逾時</returns>
+      private async Task RunMaintenanceFlow(CancellationToken ct)
+      {
+         bool requestOn = _controller.GetBit(AddrMaintenanceRequestFlag);
+
+         switch (_maintenanceStep)
+         {
+            case 0: // Idle - Wait for Request ON
+               if (requestOn)
+               {
+                  _logger?.Invoke("[Maintenance] Request ON detected, processing...");
+
+                  // 2. Read Request Data (Tracking Data 10 words + Position 1 word)
+                  var trackWords = await _controller.ReadWordsAsync(AddrMaintenanceRequestData, TrackingDataSize, ct);
+                  var posWords = await _controller.ReadWordsAsync(AddrMaintenanceRequestPos, 1, ct);
+
+                  if (trackWords.Count == TrackingDataSize && posWords.Count == 1)
+                  {
+                     int pos = (ushort)posWords[0];
+
+                     // Validate Position
+                     if (pos >= 0 && pos < MaxPositions)
+                     {
+                        // 3. Update Device Memory (Write to LW Base + Offset)
+                        int baseAddr = Convert.ToInt32(AddrTrackingDataBase.Substring(2), 16);
+                        int targetAddr = baseAddr + pos * TrackingDataSize;
+                        string targetAddrStr = $"LW{targetAddr:X4}";
+
+                        await _controller.WriteWordsAsync(targetAddrStr, trackWords.ToArray(), ct);
+                        _logger?.Invoke($"[Maintenance] Updated Position {pos} at {targetAddrStr}");
+
+                        // 4. Response OK (LB 0x0304)
+                        await _controller.WriteBitsAsync(AddrMaintenanceResponseOk, new[] { true }, ct);
+                        _logger?.Invoke("[Maintenance] Response OK Set");
+                     }
+                     else
+                     {
+                        _logger?.Invoke($"[Maintenance] Invalid Position: {pos}");
+                        // Response NG
+                        await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { true }, ct);
+                     }
+                  }
+                  else
+                  {
+                     _logger?.Invoke("[Maintenance] Read Data Failed");
+                     // Response NG
+                     await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { true }, ct);
+                  }
+
+                  _maintenanceTimer.Reset();
+                  _maintenanceStep = 10;
+               }
+
+               break;
+
+            case 10: // Wait for Request OFF
+               if (!requestOn)
+               {
+                  _logger?.Invoke("[Maintenance] Request OFF detected, Clearing Responses");
+
+                  // 6. Clear Response Flags
+                  await _controller.WriteBitsAsync(AddrMaintenanceResponseOk, new[] { false }, ct);
+                  await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { false }, ct);
+
+                  _maintenanceStep = 0;
+               }
+               else if (_maintenanceTimer.On(_maintenanceT1Timeout))
+               {
+                  _logger?.Invoke($"[Maintenance] T1 Timeout: Request did not turn OFF within {_maintenanceT1Timeout}ms");
+                  _maintenanceTimer.Reset();
+               }
+
+               break;
+         }
+      }
+
+      public async Task<bool> SendTrackingMaintenanceRequestAsync(TrackingData data, int positionNo, CancellationToken ct = default)
+      {
+         const string REQ_FLAG_ADDR = "LB0506";
+         const string RESP_FLAG_ADDR = "LB0107";
+         const string DATA_ADDR = "LW05BE";
+         const string POS_ADDR = "LW05C8";
+         const int TIMEOUT_MS = 5000;
+
+         try
+         {
+            _logger?.Invoke($"[Maintenance] 開始發送維護請求... Pos:{positionNo}");
+
+            // 1. 寫入資料
+            short[] trackWords = data.ToRawData(); // 10 words
+            await _controller.WriteWordsAsync(DATA_ADDR, trackWords, ct);
+            await _controller.WriteWordsAsync(POS_ADDR, new short[] { (short)positionNo }, ct);
+
+            // 2. 設定 Request Flag ON
+            await _controller.WriteBitsAsync(REQ_FLAG_ADDR, new[] { true }, ct);
+            _logger?.Invoke($"[Maintenance] Set Request Flag ({REQ_FLAG_ADDR}) ON");
+
+            // 3. 等待 Response Flag ON
+            bool success = false;
+            var responseWaitStart = DateTime.UtcNow;
+            while (!ct.IsCancellationRequested)
+            {
+               if ((DateTime.UtcNow - responseWaitStart).TotalMilliseconds > TIMEOUT_MS)
+               {
+                  _logger?.Invoke($"[Maintenance] Timeout waiting for Response ({RESP_FLAG_ADDR})");
+                  break;
+               }
+
+               bool respOn = _controller.GetBit(RESP_FLAG_ADDR);
+               if (respOn)
+               {
+                  _logger?.Invoke($"[Maintenance] Response Flag ({RESP_FLAG_ADDR}) ON Detected");
+                  success = true;
+                  break;
+               }
+
+               await Task.Delay(100, ct);
+            }
+
+            // 4. 清除 Request Flag OFF
+            await _controller.WriteBitsAsync(REQ_FLAG_ADDR, new[] { false }, ct);
+            _logger?.Invoke($"[Maintenance] Set Request Flag ({REQ_FLAG_ADDR}) OFF");
+
+            // 5. 若成功，等待 Response OFF (可選，但在 UI 操作通常希望能確保流程結束)
+            if (success)
+            {
+               var clearWaitStart = DateTime.UtcNow;
+               while (!ct.IsCancellationRequested)
+               {
+                  if ((DateTime.UtcNow - clearWaitStart).TotalMilliseconds > 2000)
+                  {
+                     _logger?.Invoke($"[Maintenance] Warning: LCS did not clear Response ({RESP_FLAG_ADDR})");
+                     break;
+                  }
+
+                  bool respOn = _controller.GetBit(RESP_FLAG_ADDR);
+                  if (!respOn)
+                  {
+                     _logger?.Invoke($"[Maintenance] Response Flag ({RESP_FLAG_ADDR}) OFF Confirmed");
+                     break;
+                  }
+
+                  await Task.Delay(100, ct);
+               }
+            }
+
+            return success;
+         }
+         catch (Exception ex)
+         {
+            _logger?.Invoke($"[Maintenance] Exception: {ex.Message}");
+            // 嘗試重置 Request
+            try
+            {
+               await _controller.WriteBitsAsync(REQ_FLAG_ADDR, new[] { false }, ct);
+            }
+            catch
+            {
+            }
+
+            return false;
          }
       }
 

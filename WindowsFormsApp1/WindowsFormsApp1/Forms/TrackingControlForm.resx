@@ -117,11 +117,215 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="&gt;&gt;lblReasonCode.Name" xml:space="preserve">
+    <value>lblReasonCode</value>
+  </data>
+  <data name="&gt;&gt;lblReasonCode.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblReasonCode.Parent" xml:space="preserve">
+    <value>grpMonitor</value>
+  </data>
+  <data name="&gt;&gt;lblReasonCode.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;txtJudgeFlags.Name" xml:space="preserve">
+    <value>txtJudgeFlags</value>
+  </data>
+  <data name="&gt;&gt;txtJudgeFlags.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;txtJudgeFlags.Parent" xml:space="preserve">
+    <value>grpMonitor</value>
+  </data>
+  <data name="&gt;&gt;txtJudgeFlags.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;cboReasonCode.Name" xml:space="preserve">
+    <value>cboReasonCode</value>
+  </data>
+  <data name="&gt;&gt;cboReasonCode.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cboReasonCode.Parent" xml:space="preserve">
+    <value>grpMonitor</value>
+  </data>
+  <data name="&gt;&gt;cboReasonCode.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;txtLotNo.Name" xml:space="preserve">
+    <value>txtLotNo</value>
+  </data>
+  <data name="&gt;&gt;txtLotNo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;txtLotNo.Parent" xml:space="preserve">
+    <value>grpMonitor</value>
+  </data>
+  <data name="&gt;&gt;txtLotNo.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;txtLayerCount.Name" xml:space="preserve">
+    <value>txtLayerCount</value>
+  </data>
+  <data name="&gt;&gt;txtLayerCount.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;txtLayerCount.Parent" xml:space="preserve">
+    <value>grpMonitor</value>
+  </data>
+  <data name="&gt;&gt;txtLayerCount.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;txtBoardId.Name" xml:space="preserve">
+    <value>txtBoardId</value>
+  </data>
+  <data name="&gt;&gt;txtBoardId.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;txtBoardId.Parent" xml:space="preserve">
+    <value>grpMonitor</value>
+  </data>
+  <data name="&gt;&gt;txtBoardId.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+    <value>label5</value>
+  </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+    <value>grpMonitor</value>
+  </data>
+  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+    <value>label4</value>
+  </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+    <value>grpMonitor</value>
+  </data>
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+    <value>label3</value>
+  </data>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+    <value>grpMonitor</value>
+  </data>
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>grpMonitor</value>
+  </data>
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;btnRefresh.Name" xml:space="preserve">
+    <value>btnRefresh</value>
+  </data>
+  <data name="&gt;&gt;btnRefresh.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnRefresh.Parent" xml:space="preserve">
+    <value>grpMonitor</value>
+  </data>
+  <data name="&gt;&gt;btnRefresh.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;txtAddress.Name" xml:space="preserve">
+    <value>txtAddress</value>
+  </data>
+  <data name="&gt;&gt;txtAddress.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;txtAddress.Parent" xml:space="preserve">
+    <value>grpMonitor</value>
+  </data>
+  <data name="&gt;&gt;txtAddress.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>grpMonitor</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;cmbStation.Name" xml:space="preserve">
+    <value>cmbStation</value>
+  </data>
+  <data name="&gt;&gt;cmbStation.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cmbStation.Parent" xml:space="preserve">
+    <value>grpMonitor</value>
+  </data>
+  <data name="&gt;&gt;cmbStation.ZOrder" xml:space="preserve">
+    <value>13</value>
+  </data>
+  <data name="&gt;&gt;lblStation.Name" xml:space="preserve">
+    <value>lblStation</value>
+  </data>
+  <data name="&gt;&gt;lblStation.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblStation.Parent" xml:space="preserve">
+    <value>grpMonitor</value>
+  </data>
+  <data name="&gt;&gt;lblStation.ZOrder" xml:space="preserve">
+    <value>14</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="grpMonitor.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 12</value>
+  </data>
+  <data name="grpMonitor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>560, 227</value>
+  </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="grpMonitor.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="grpMonitor.Text" xml:space="preserve">
+    <value>站點監控 (Station Monitor)</value>
+  </data>
+  <data name="&gt;&gt;grpMonitor.Name" xml:space="preserve">
+    <value>grpMonitor</value>
+  </data>
+  <data name="&gt;&gt;grpMonitor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;grpMonitor.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;grpMonitor.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
   <data name="lblReasonCode.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="lblReasonCode.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 193</value>
   </data>
@@ -488,29 +692,245 @@
   <data name="&gt;&gt;lblStation.ZOrder" xml:space="preserve">
     <value>14</value>
   </data>
-  <data name="grpMonitor.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 12</value>
+  <data name="&gt;&gt;nudJudge3.Name" xml:space="preserve">
+    <value>nudJudge3</value>
   </data>
-  <data name="grpMonitor.Size" type="System.Drawing.Size, System.Drawing">
-    <value>560, 227</value>
+  <data name="&gt;&gt;nudJudge3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="grpMonitor.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;nudJudge3.Parent" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;nudJudge3.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="grpMonitor.Text" xml:space="preserve">
-    <value>站點監控 (Station Monitor)</value>
+  <data name="&gt;&gt;nudJudge2.Name" xml:space="preserve">
+    <value>nudJudge2</value>
   </data>
-  <data name="&gt;&gt;grpMonitor.Name" xml:space="preserve">
-    <value>grpMonitor</value>
+  <data name="&gt;&gt;nudJudge2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;grpMonitor.Type" xml:space="preserve">
+  <data name="&gt;&gt;nudJudge2.Parent" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;nudJudge2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;nudJudge1.Name" xml:space="preserve">
+    <value>nudJudge1</value>
+  </data>
+  <data name="&gt;&gt;nudJudge1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;nudJudge1.Parent" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;nudJudge1.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;nudLotNum.Name" xml:space="preserve">
+    <value>nudLotNum</value>
+  </data>
+  <data name="&gt;&gt;nudLotNum.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;nudLotNum.Parent" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;nudLotNum.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;txtLotChar.Name" xml:space="preserve">
+    <value>txtLotChar</value>
+  </data>
+  <data name="&gt;&gt;txtLotChar.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;txtLotChar.Parent" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;txtLotChar.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;nudLayerCount.Name" xml:space="preserve">
+    <value>nudLayerCount</value>
+  </data>
+  <data name="&gt;&gt;nudLayerCount.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;nudLayerCount.Parent" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;nudLayerCount.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;nudBoardId3.Name" xml:space="preserve">
+    <value>nudBoardId3</value>
+  </data>
+  <data name="&gt;&gt;nudBoardId3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;nudBoardId3.Parent" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;nudBoardId3.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;nudBoardId2.Name" xml:space="preserve">
+    <value>nudBoardId2</value>
+  </data>
+  <data name="&gt;&gt;nudBoardId2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;nudBoardId2.Parent" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;nudBoardId2.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;nudBoardId1.Name" xml:space="preserve">
+    <value>nudBoardId1</value>
+  </data>
+  <data name="&gt;&gt;nudBoardId1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;nudBoardId1.Parent" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;nudBoardId1.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;label12.Name" xml:space="preserve">
+    <value>label12</value>
+  </data>
+  <data name="&gt;&gt;label12.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label12.Parent" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;label12.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;label11.Name" xml:space="preserve">
+    <value>label11</value>
+  </data>
+  <data name="&gt;&gt;label11.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label11.Parent" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;label11.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;label10.Name" xml:space="preserve">
+    <value>label10</value>
+  </data>
+  <data name="&gt;&gt;label10.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label10.Parent" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;label10.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="&gt;&gt;label9.Name" xml:space="preserve">
+    <value>label9</value>
+  </data>
+  <data name="&gt;&gt;label9.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label9.Parent" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;label9.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;label8.Name" xml:space="preserve">
+    <value>label8</value>
+  </data>
+  <data name="&gt;&gt;label8.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label8.Parent" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;label8.ZOrder" xml:space="preserve">
+    <value>13</value>
+  </data>
+  <data name="&gt;&gt;label7.Name" xml:space="preserve">
+    <value>label7</value>
+  </data>
+  <data name="&gt;&gt;label7.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label7.Parent" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
+    <value>14</value>
+  </data>
+  <data name="&gt;&gt;btnWriteTest.Name" xml:space="preserve">
+    <value>btnWriteTest</value>
+  </data>
+  <data name="&gt;&gt;btnWriteTest.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnWriteTest.Parent" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;btnWriteTest.ZOrder" xml:space="preserve">
+    <value>15</value>
+  </data>
+  <data name="&gt;&gt;label6.Name" xml:space="preserve">
+    <value>label6</value>
+  </data>
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
+    <value>16</value>
+  </data>
+  <data name="&gt;&gt;btnClear.Name" xml:space="preserve">
+    <value>btnClear</value>
+  </data>
+  <data name="&gt;&gt;btnClear.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnClear.Parent" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;btnClear.ZOrder" xml:space="preserve">
+    <value>17</value>
+  </data>
+  <data name="grpOperation.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 283</value>
+  </data>
+  <data name="grpOperation.Size" type="System.Drawing.Size, System.Drawing">
+    <value>560, 278</value>
+  </data>
+  <data name="grpOperation.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="grpOperation.Text" xml:space="preserve">
+    <value>資料操作 (Data Operation)</value>
+  </data>
+  <data name="&gt;&gt;grpOperation.Name" xml:space="preserve">
+    <value>grpOperation</value>
+  </data>
+  <data name="&gt;&gt;grpOperation.Type" xml:space="preserve">
     <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;grpMonitor.Parent" xml:space="preserve">
+  <data name="&gt;&gt;grpOperation.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;grpMonitor.ZOrder" xml:space="preserve">
-    <value>3</value>
+  <data name="&gt;&gt;grpOperation.ZOrder" xml:space="preserve">
+    <value>4</value>
   </data>
   <data name="nudJudge3.Location" type="System.Drawing.Point, System.Drawing">
     <value>400, 213</value>
@@ -941,29 +1361,77 @@
   <data name="&gt;&gt;btnClear.ZOrder" xml:space="preserve">
     <value>17</value>
   </data>
-  <data name="grpOperation.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 283</value>
+  <data name="&gt;&gt;btnQuickLoadingRobot.Name" xml:space="preserve">
+    <value>btnQuickLoadingRobot</value>
   </data>
-  <data name="grpOperation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>560, 335</value>
+  <data name="&gt;&gt;btnQuickLoadingRobot.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="grpOperation.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;btnQuickLoadingRobot.Parent" xml:space="preserve">
+    <value>grpQuickWrite</value>
+  </data>
+  <data name="&gt;&gt;btnQuickLoadingRobot.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;btnQuickLoading.Name" xml:space="preserve">
+    <value>btnQuickLoading</value>
+  </data>
+  <data name="&gt;&gt;btnQuickLoading.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnQuickLoading.Parent" xml:space="preserve">
+    <value>grpQuickWrite</value>
+  </data>
+  <data name="&gt;&gt;btnQuickLoading.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="grpOperation.Text" xml:space="preserve">
-    <value>資料操作 (Data Operation)</value>
+  <data name="&gt;&gt;btnQuickUnloading.Name" xml:space="preserve">
+    <value>btnQuickUnloading</value>
   </data>
-  <data name="&gt;&gt;grpOperation.Name" xml:space="preserve">
-    <value>grpOperation</value>
+  <data name="&gt;&gt;btnQuickUnloading.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;grpOperation.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnQuickUnloading.Parent" xml:space="preserve">
+    <value>grpQuickWrite</value>
+  </data>
+  <data name="&gt;&gt;btnQuickUnloading.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;btnQuickUnloadingRobot.Name" xml:space="preserve">
+    <value>btnQuickUnloadingRobot</value>
+  </data>
+  <data name="&gt;&gt;btnQuickUnloadingRobot.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnQuickUnloadingRobot.Parent" xml:space="preserve">
+    <value>grpQuickWrite</value>
+  </data>
+  <data name="&gt;&gt;btnQuickUnloadingRobot.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="grpQuickWrite.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 828</value>
+  </data>
+  <data name="grpQuickWrite.Size" type="System.Drawing.Size, System.Drawing">
+    <value>560, 90</value>
+  </data>
+  <data name="grpQuickWrite.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="grpQuickWrite.Text" xml:space="preserve">
+    <value>快速寫入 (Quick Write)</value>
+  </data>
+  <data name="&gt;&gt;grpQuickWrite.Name" xml:space="preserve">
+    <value>grpQuickWrite</value>
+  </data>
+  <data name="&gt;&gt;grpQuickWrite.Type" xml:space="preserve">
     <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;grpOperation.Parent" xml:space="preserve">
+  <data name="&gt;&gt;grpQuickWrite.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;grpOperation.ZOrder" xml:space="preserve">
-    <value>2</value>
+  <data name="&gt;&gt;grpQuickWrite.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="btnQuickLoadingRobot.Location" type="System.Drawing.Point, System.Drawing">
     <value>18, 22</value>
@@ -1065,29 +1533,173 @@
   <data name="&gt;&gt;btnQuickUnloadingRobot.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="grpQuickWrite.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 624</value>
+  <data name="&gt;&gt;btnSimDataMaint.Name" xml:space="preserve">
+    <value>btnSimDataMaint</value>
   </data>
-  <data name="grpQuickWrite.Size" type="System.Drawing.Size, System.Drawing">
-    <value>560, 90</value>
+  <data name="&gt;&gt;btnSimDataMaint.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="grpQuickWrite.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+  <data name="&gt;&gt;btnSimDataMaint.Parent" xml:space="preserve">
+    <value>grpLcsSimulator</value>
   </data>
-  <data name="grpQuickWrite.Text" xml:space="preserve">
-    <value>快速寫入 (Quick Write)</value>
+  <data name="&gt;&gt;btnSimDataMaint.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
-  <data name="&gt;&gt;grpQuickWrite.Name" xml:space="preserve">
-    <value>grpQuickWrite</value>
+  <data name="&gt;&gt;nudSimPos.Name" xml:space="preserve">
+    <value>nudSimPos</value>
   </data>
-  <data name="&gt;&gt;grpQuickWrite.Type" xml:space="preserve">
+  <data name="&gt;&gt;nudSimPos.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;nudSimPos.Parent" xml:space="preserve">
+    <value>grpLcsSimulator</value>
+  </data>
+  <data name="&gt;&gt;nudSimPos.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;lblSimPos.Name" xml:space="preserve">
+    <value>lblSimPos</value>
+  </data>
+  <data name="&gt;&gt;lblSimPos.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblSimPos.Parent" xml:space="preserve">
+    <value>grpLcsSimulator</value>
+  </data>
+  <data name="&gt;&gt;lblSimPos.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="grpLcsSimulator.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 567</value>
+  </data>
+  <data name="grpLcsSimulator.Size" type="System.Drawing.Size, System.Drawing">
+    <value>560, 70</value>
+  </data>
+  <data name="grpLcsSimulator.TabIndex" type="System.Int32, mscorlib">
+    <value>20</value>
+  </data>
+  <data name="grpLcsSimulator.Text" xml:space="preserve">
+    <value>LCS 模擬器 / Maintenance Request Simulator</value>
+  </data>
+  <data name="&gt;&gt;grpLcsSimulator.Name" xml:space="preserve">
+    <value>grpLcsSimulator</value>
+  </data>
+  <data name="&gt;&gt;grpLcsSimulator.Type" xml:space="preserve">
     <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;grpQuickWrite.Parent" xml:space="preserve">
+  <data name="&gt;&gt;grpLcsSimulator.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;grpQuickWrite.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;grpLcsSimulator.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="btnSimDataMaint.Location" type="System.Drawing.Point, System.Drawing">
+    <value>200, 21</value>
+  </data>
+  <data name="btnSimDataMaint.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 35</value>
+  </data>
+  <data name="btnSimDataMaint.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="btnSimDataMaint.Text" xml:space="preserve">
+    <value>發送維護請求 (LCS Request)</value>
+  </data>
+  <data name="&gt;&gt;btnSimDataMaint.Name" xml:space="preserve">
+    <value>btnSimDataMaint</value>
+  </data>
+  <data name="&gt;&gt;btnSimDataMaint.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnSimDataMaint.Parent" xml:space="preserve">
+    <value>grpLcsSimulator</value>
+  </data>
+  <data name="&gt;&gt;btnSimDataMaint.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="nudSimPos.Location" type="System.Drawing.Point, System.Drawing">
+    <value>92, 26</value>
+  </data>
+  <data name="nudSimPos.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 22</value>
+  </data>
+  <data name="nudSimPos.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;nudSimPos.Name" xml:space="preserve">
+    <value>nudSimPos</value>
+  </data>
+  <data name="&gt;&gt;nudSimPos.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;nudSimPos.Parent" xml:space="preserve">
+    <value>grpLcsSimulator</value>
+  </data>
+  <data name="&gt;&gt;nudSimPos.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="lblSimPos.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblSimPos.Location" type="System.Drawing.Point, System.Drawing">
+    <value>19, 30</value>
+  </data>
+  <data name="lblSimPos.Size" type="System.Drawing.Size, System.Drawing">
+    <value>62, 12</value>
+  </data>
+  <data name="lblSimPos.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="lblSimPos.Text" xml:space="preserve">
+    <value>Position No:</value>
+  </data>
+  <data name="&gt;&gt;lblSimPos.Name" xml:space="preserve">
+    <value>lblSimPos</value>
+  </data>
+  <data name="&gt;&gt;lblSimPos.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblSimPos.Parent" xml:space="preserve">
+    <value>grpLcsSimulator</value>
+  </data>
+  <data name="&gt;&gt;lblSimPos.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;rtbLog.Name" xml:space="preserve">
+    <value>rtbLog</value>
+  </data>
+  <data name="&gt;&gt;rtbLog.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RichTextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rtbLog.Parent" xml:space="preserve">
+    <value>grpLog</value>
+  </data>
+  <data name="&gt;&gt;rtbLog.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="grpLog.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 999</value>
+  </data>
+  <data name="grpLog.Size" type="System.Drawing.Size, System.Drawing">
+    <value>560, 150</value>
+  </data>
+  <data name="grpLog.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="grpLog.Text" xml:space="preserve">
+    <value>日誌 (Log)</value>
+  </data>
+  <data name="&gt;&gt;grpLog.Name" xml:space="preserve">
+    <value>grpLog</value>
+  </data>
+  <data name="&gt;&gt;grpLog.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;grpLog.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;grpLog.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="rtbLog.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -1117,29 +1729,131 @@
   <data name="&gt;&gt;rtbLog.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="grpLog.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 720</value>
+  <data name="btnSimulatorStopMaintenance.Location" type="System.Drawing.Point, System.Drawing">
+    <value>380, 21</value>
   </data>
-  <data name="grpLog.Size" type="System.Drawing.Size, System.Drawing">
-    <value>560, 150</value>
+  <data name="btnSimulatorStopMaintenance.Size" type="System.Drawing.Size, System.Drawing">
+    <value>95, 35</value>
   </data>
-  <data name="grpLog.TabIndex" type="System.Int32, mscorlib">
+  <data name="btnSimulatorStopMaintenance.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="btnSimulatorStopMaintenance.Text" xml:space="preserve">
+    <value>Simulator Stop</value>
+  </data>
+  <data name="&gt;&gt;btnSimulatorStopMaintenance.Name" xml:space="preserve">
+    <value>btnSimulatorStopMaintenance</value>
+  </data>
+  <data name="&gt;&gt;btnSimulatorStopMaintenance.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnSimulatorStopMaintenance.Parent" xml:space="preserve">
+    <value>grpDeviceMaintenance</value>
+  </data>
+  <data name="&gt;&gt;btnSimulatorStopMaintenance.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="btnDeviceSendMaint.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnDeviceSendMaint.Location" type="System.Drawing.Point, System.Drawing">
+    <value>200, 21</value>
+  </data>
+  <data name="btnDeviceSendMaint.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 35</value>
+  </data>
+  <data name="btnDeviceSendMaint.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="grpLog.Text" xml:space="preserve">
-    <value>日誌 (Log)</value>
+  <data name="btnDeviceSendMaint.Text" xml:space="preserve">
+    <value>發送維護請求 (Device -&gt; LCS)</value>
   </data>
-  <data name="&gt;&gt;grpLog.Name" xml:space="preserve">
-    <value>grpLog</value>
+  <data name="&gt;&gt;btnDeviceSendMaint.Name" xml:space="preserve">
+    <value>btnDeviceSendMaint</value>
   </data>
-  <data name="&gt;&gt;grpLog.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnDeviceSendMaint.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnDeviceSendMaint.Parent" xml:space="preserve">
+    <value>grpDeviceMaintenance</value>
+  </data>
+  <data name="&gt;&gt;btnDeviceSendMaint.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="nudDeviceMaintPos.Location" type="System.Drawing.Point, System.Drawing">
+    <value>92, 26</value>
+  </data>
+  <data name="nudDeviceMaintPos.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 22</value>
+  </data>
+  <data name="nudDeviceMaintPos.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;nudDeviceMaintPos.Name" xml:space="preserve">
+    <value>nudDeviceMaintPos</value>
+  </data>
+  <data name="&gt;&gt;nudDeviceMaintPos.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;nudDeviceMaintPos.Parent" xml:space="preserve">
+    <value>grpDeviceMaintenance</value>
+  </data>
+  <data name="&gt;&gt;nudDeviceMaintPos.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="lblDevicePosNo.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblDevicePosNo.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblDevicePosNo.Location" type="System.Drawing.Point, System.Drawing">
+    <value>19, 30</value>
+  </data>
+  <data name="lblDevicePosNo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>62, 12</value>
+  </data>
+  <data name="lblDevicePosNo.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="lblDevicePosNo.Text" xml:space="preserve">
+    <value>Position No:</value>
+  </data>
+  <data name="&gt;&gt;lblDevicePosNo.Name" xml:space="preserve">
+    <value>lblDevicePosNo</value>
+  </data>
+  <data name="&gt;&gt;lblDevicePosNo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblDevicePosNo.Parent" xml:space="preserve">
+    <value>grpDeviceMaintenance</value>
+  </data>
+  <data name="&gt;&gt;lblDevicePosNo.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="grpDeviceMaintenance.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 643</value>
+  </data>
+  <data name="grpDeviceMaintenance.Size" type="System.Drawing.Size, System.Drawing">
+    <value>560, 70</value>
+  </data>
+  <data name="grpDeviceMaintenance.TabIndex" type="System.Int32, mscorlib">
+    <value>21</value>
+  </data>
+  <data name="grpDeviceMaintenance.Text" xml:space="preserve">
+    <value>追蹤資料維護 (Device -&gt; LCS)</value>
+  </data>
+  <data name="&gt;&gt;grpDeviceMaintenance.Name" xml:space="preserve">
+    <value>grpDeviceMaintenance</value>
+  </data>
+  <data name="&gt;&gt;grpDeviceMaintenance.Type" xml:space="preserve">
     <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;grpLog.Parent" xml:space="preserve">
+  <data name="&gt;&gt;grpDeviceMaintenance.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;grpLog.ZOrder" xml:space="preserve">
-    <value>1</value>
+  <data name="&gt;&gt;grpDeviceMaintenance.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -1148,7 +1862,7 @@
     <value>6, 12</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>584, 882</value>
+    <value>584, 1061</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

@@ -15,6 +15,10 @@ namespace WindowsFormsApp1.Forms
       private readonly AppPlcService _service;
       private readonly PlcSimulator _simulator;
 
+      // New Controls for Simulator Listen Mode
+      private Button btnSimMainteStart;
+      private Button btnSimMainteStop;
+
       #endregion
 
       #region Constructors
@@ -26,11 +30,12 @@ namespace WindowsFormsApp1.Forms
          InitializeComponent();
          InitializeStationComboBox();
          InitializeReasonCodeComboBox();
-         
+         InitializeMaintenanceUI(); // Add this
+
          if (_simulator == null)
          {
-             grpLcsSimulator.Enabled = false;
-             grpLcsSimulator.Text += " (Not Available - Simulator Mode Only)";
+            grpLcsSimulator.Enabled = false;
+            grpLcsSimulator.Text += " (Not Available - Simulator Mode Only)";
          }
       }
 
@@ -57,6 +62,108 @@ namespace WindowsFormsApp1.Forms
       private void InitializeReasonCodeComboBox()
       {
          cboReasonCode.SelectedIndex = 0; // 預設選擇「0: 廢棄」
+      }
+
+      private void InitializeMaintenanceUI()
+      {
+         // 2. Add Simulator Controls (Assuming grpLcsSimulator exists from Designer)
+         // We'll try to find it or create new if not accessible easily, checking existing code...
+         // Constructor uses grpLcsSimulator.Enabled, so it is accessible.
+         // We will add buttons to it.
+
+         if (_simulator != null)
+         {
+            btnSimMainteStart = new Button
+               { Text = "監聽模式: 啟動", Location = new System.Drawing.Point(10, 80), Size = new System.Drawing.Size(120, 30) }; // Adjust Y
+            btnSimMainteStop = new Button { Text = "監聽模式: 停止", Location = new System.Drawing.Point(140, 80), Size = new System.Drawing.Size(120, 30) };
+
+            btnSimMainteStart.Click += (s, e) => _simulator.StartTrackingMaintenanceListenMode();
+            btnSimMainteStop.Click += (s, e) => _simulator.Stop(); // Or specific stop
+
+            // Use reflection or Find to get grpLcsSimulator if it's private in this partial?
+            // "grpLcsSimulator.Enabled = false" in constructor implies it is accessible.
+            // But strict compile check might fail if it's not in the scope of this file's fields?
+            // "partial class" shares fields. Designer fields are internal/public usually.
+            // Let's assume grpLcsSimulator is accessible.
+
+            // To be safe, let's try to add to 'this.Controls' inside a new Simulator GroupBox if we aren't sure, 
+            // but the user wants to enable/disable specific modes.
+            // Let's just add a new GroupBox for Sim Control to avoid overlapping existing controls in grpLcsSimulator.
+
+            var grpSimControl = new GroupBox
+            {
+               Text = "LCS 模擬器控制",
+               Size = new System.Drawing.Size(300, 80),
+               Location = new System.Drawing.Point(320, 400),
+               Anchor = AnchorStyles.Bottom | AnchorStyles.Left
+            };
+
+            // Re-adjust buttons for new group
+            btnSimMainteStart.Location = new System.Drawing.Point(10, 30);
+            btnSimMainteStop.Location = new System.Drawing.Point(140, 30);
+
+            grpSimControl.Controls.Add(btnSimMainteStart);
+            grpSimControl.Controls.Add(btnSimMainteStop);
+
+            this.Controls.Add(grpSimControl);
+         }
+      }
+
+      private async void btnDeviceSendMaint_Click(object sender, EventArgs e)
+      {
+         try
+         {
+            btnDeviceSendMaint.Enabled = false;
+
+            if (_simulator != null)
+            {
+               _simulator.Stop();
+               _simulator.StartTrackingMaintenanceListenMode();
+            }
+
+            // 1. Prepare Data from UI
+            var data = new TrackingData
+            {
+               BoardId = new ushort[]
+               {
+                  (ushort)nudBoardId1.Value,
+                  (ushort)nudBoardId2.Value,
+                  (ushort)nudBoardId3.Value
+               },
+               LayerCount = (ushort)nudLayerCount.Value,
+               LotNoChar = string.IsNullOrEmpty(txtLotChar.Text) ? (ushort)0 : (ushort)txtLotChar.Text[0],
+               LotNoNum = (uint)nudLotNum.Value,
+               JudgeFlag1 = (ushort)nudJudge1.Value,
+               JudgeFlag2 = (ushort)nudJudge2.Value,
+               JudgeFlag3 = (ushort)nudJudge3.Value
+            };
+
+            int pos = (int)nudDeviceMaintPos.Value;
+
+            // 2. Send Request via Service
+            Log($"[Device] 發送維護請求 (Pos: {pos})...");
+            bool result = await _service.SendTrackingMaintenanceRequestAsync(data, pos, _cts.Token);
+
+            if (result)
+            {
+               Log("[Device] 維護請求成功 (Response OK)");
+               MessageBox.Show("維護請求成功！", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+               Log("[Device] 維護請求失敗或逾時");
+               MessageBox.Show("維護請求失敗或逾時", "失敗", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+         }
+         catch (Exception ex)
+         {
+            Log($"[Device] Error: {ex.Message}");
+            MessageBox.Show($"Error: {ex.Message}");
+         }
+         finally
+         {
+            btnDeviceSendMaint.Enabled = true;
+         }
       }
 
       private void cmbStation_SelectedIndexChanged(object sender, EventArgs e)
@@ -333,6 +440,11 @@ namespace WindowsFormsApp1.Forms
          var text = $"{DateTime.Now:HH:mm:ss} | {message}";
          rtbLog.AppendText(text + Environment.NewLine);
          rtbLog.ScrollToCaret();
+      }
+
+      private void btnSimulatorStopMaintenance_Click(object sender, EventArgs e)
+      {
+         _simulator.Stop();
       }
 
       #endregion

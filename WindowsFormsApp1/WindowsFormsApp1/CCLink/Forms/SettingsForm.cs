@@ -40,8 +40,6 @@ namespace WindowsFormsApp1.CCLink.Forms
 
       protected virtual void LoadToUI()
       {
-
-
          dgvRanges.Rows.Clear();
          if (Settings.ScanRanges != null)
          {
@@ -54,8 +52,6 @@ namespace WindowsFormsApp1.CCLink.Forms
 
       protected virtual void btnSave_Click(object sender, EventArgs e)
       {
-
-
          var ranges = new List<ScanRange>();
          foreach (DataGridViewRow row in dgvRanges.Rows)
          {
@@ -76,9 +72,9 @@ namespace WindowsFormsApp1.CCLink.Forms
                   int end = Convert.ToInt32(endHex, 16);
 
                   // 防呆檢查
-                  if (start < 0 || end < 0 || start > 0x3FFF || end > 0x3FFF)
+                  if (start < 0 || end < 0 || start > 0x51FF || end > 0x51FF)
                   {
-                     MessageBox.Show($"{kind} 位址超出範圍 (0x0000 - 0x3FFF)。");
+                     MessageBox.Show($"{kind} 位址超出範圍 (0x0000 - 0x51FF)。");
                      return;
                   }
 

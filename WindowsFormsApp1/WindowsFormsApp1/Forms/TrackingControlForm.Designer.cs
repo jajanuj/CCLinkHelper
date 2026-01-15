@@ -70,14 +70,18 @@ namespace WindowsFormsApp1.Forms
          this.btnQuickUnloading = new System.Windows.Forms.Button();
          this.btnQuickUnloadingRobot = new System.Windows.Forms.Button();
          this.grpLcsSimulator = new System.Windows.Forms.GroupBox();
-         this.lblSimPos = new System.Windows.Forms.Label();
-         this.nudSimPos = new System.Windows.Forms.NumericUpDown();
          this.btnSimDataMaint = new System.Windows.Forms.Button();
+         this.nudSimPos = new System.Windows.Forms.NumericUpDown();
+         this.lblSimPos = new System.Windows.Forms.Label();
          this.grpLog = new System.Windows.Forms.GroupBox();
          this.rtbLog = new System.Windows.Forms.RichTextBox();
+         this.grpDeviceMaintenance = new System.Windows.Forms.GroupBox();
+         this.btnDeviceSendMaint = new System.Windows.Forms.Button();
+         this.nudDeviceMaintPos = new System.Windows.Forms.NumericUpDown();
+         this.lblDevicePosNo = new System.Windows.Forms.Label();
+         this.btnSimulatorStopMaintenance = new System.Windows.Forms.Button();
          this.grpMonitor.SuspendLayout();
          this.grpOperation.SuspendLayout();
-         this.grpLcsSimulator.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.nudJudge3)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.nudJudge2)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.nudJudge1)).BeginInit();
@@ -87,7 +91,11 @@ namespace WindowsFormsApp1.Forms
          ((System.ComponentModel.ISupportInitialize)(this.nudBoardId2)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.nudBoardId1)).BeginInit();
          this.grpQuickWrite.SuspendLayout();
+         this.grpLcsSimulator.SuspendLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.nudSimPos)).BeginInit();
          this.grpLog.SuspendLayout();
+         this.grpDeviceMaintenance.SuspendLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.nudDeviceMaintPos)).BeginInit();
          this.SuspendLayout();
          // 
          // grpMonitor
@@ -409,44 +417,32 @@ namespace WindowsFormsApp1.Forms
          this.grpLcsSimulator.Controls.Add(this.btnSimDataMaint);
          this.grpLcsSimulator.Controls.Add(this.nudSimPos);
          this.grpLcsSimulator.Controls.Add(this.lblSimPos);
-         this.grpLcsSimulator.Location = new System.Drawing.Point(533, 410); // Adjust location as needed
+         resources.ApplyResources(this.grpLcsSimulator, "grpLcsSimulator");
          this.grpLcsSimulator.Name = "grpLcsSimulator";
-         this.grpLcsSimulator.Size = new System.Drawing.Size(515, 70);
-         this.grpLcsSimulator.TabIndex = 20;
          this.grpLcsSimulator.TabStop = false;
-         this.grpLcsSimulator.Text = "LCS 模擬器 / Maintenance Request Simulator";
          // 
-         // lblSimPos
+         // btnSimDataMaint
          // 
-         this.lblSimPos.AutoSize = true;
-         this.lblSimPos.Location = new System.Drawing.Point(19, 30);
-         this.lblSimPos.Name = "lblSimPos";
-         this.lblSimPos.Size = new System.Drawing.Size(70, 15);
-         this.lblSimPos.TabIndex = 0;
-         this.lblSimPos.Text = "Position No:";
+         this.btnSimDataMaint.BackColor = System.Drawing.Color.LightSkyBlue;
+         resources.ApplyResources(this.btnSimDataMaint, "btnSimDataMaint");
+         this.btnSimDataMaint.Name = "btnSimDataMaint";
+         this.btnSimDataMaint.UseVisualStyleBackColor = false;
+         this.btnSimDataMaint.Click += new System.EventHandler(this.btnSimDataMaint_Click);
          // 
          // nudSimPos
          // 
-         this.nudSimPos.Location = new System.Drawing.Point(92, 26);
+         resources.ApplyResources(this.nudSimPos, "nudSimPos");
          this.nudSimPos.Maximum = new decimal(new int[] {
             999,
             0,
             0,
             0});
          this.nudSimPos.Name = "nudSimPos";
-         this.nudSimPos.Size = new System.Drawing.Size(80, 25);
-         this.nudSimPos.TabIndex = 1;
          // 
-         // btnSimDataMaint
+         // lblSimPos
          // 
-         this.btnSimDataMaint.BackColor = System.Drawing.Color.LightSkyBlue;
-         this.btnSimDataMaint.Location = new System.Drawing.Point(200, 21);
-         this.btnSimDataMaint.Name = "btnSimDataMaint";
-         this.btnSimDataMaint.Size = new System.Drawing.Size(180, 35);
-         this.btnSimDataMaint.TabIndex = 2;
-         this.btnSimDataMaint.Text = "發送維護請求 (LCS Request)";
-         this.btnSimDataMaint.UseVisualStyleBackColor = false;
-         this.btnSimDataMaint.Click += new System.EventHandler(this.btnSimDataMaint_Click);
+         resources.ApplyResources(this.lblSimPos, "lblSimPos");
+         this.lblSimPos.Name = "lblSimPos";
          // 
          // grpLog
          // 
@@ -461,10 +457,51 @@ namespace WindowsFormsApp1.Forms
          this.rtbLog.Name = "rtbLog";
          this.rtbLog.ReadOnly = true;
          // 
+         // grpDeviceMaintenance
+         // 
+         this.grpDeviceMaintenance.Controls.Add(this.btnSimulatorStopMaintenance);
+         this.grpDeviceMaintenance.Controls.Add(this.btnDeviceSendMaint);
+         this.grpDeviceMaintenance.Controls.Add(this.nudDeviceMaintPos);
+         this.grpDeviceMaintenance.Controls.Add(this.lblDevicePosNo);
+         resources.ApplyResources(this.grpDeviceMaintenance, "grpDeviceMaintenance");
+         this.grpDeviceMaintenance.Name = "grpDeviceMaintenance";
+         this.grpDeviceMaintenance.TabStop = false;
+         // 
+         // btnDeviceSendMaint
+         // 
+         this.btnDeviceSendMaint.BackColor = System.Drawing.Color.LightSkyBlue;
+         resources.ApplyResources(this.btnDeviceSendMaint, "btnDeviceSendMaint");
+         this.btnDeviceSendMaint.Name = "btnDeviceSendMaint";
+         this.btnDeviceSendMaint.UseVisualStyleBackColor = false;
+         this.btnDeviceSendMaint.Click += new System.EventHandler(this.btnDeviceSendMaint_Click);
+         // 
+         // nudDeviceMaintPos
+         // 
+         resources.ApplyResources(this.nudDeviceMaintPos, "nudDeviceMaintPos");
+         this.nudDeviceMaintPos.Maximum = new decimal(new int[] {
+            550,
+            0,
+            0,
+            0});
+         this.nudDeviceMaintPos.Name = "nudDeviceMaintPos";
+         // 
+         // lblDevicePosNo
+         // 
+         resources.ApplyResources(this.lblDevicePosNo, "lblDevicePosNo");
+         this.lblDevicePosNo.Name = "lblDevicePosNo";
+         // 
+         // btnSimulatorStopMaintenance
+         // 
+         resources.ApplyResources(this.btnSimulatorStopMaintenance, "btnSimulatorStopMaintenance");
+         this.btnSimulatorStopMaintenance.Name = "btnSimulatorStopMaintenance";
+         this.btnSimulatorStopMaintenance.UseVisualStyleBackColor = true;
+         this.btnSimulatorStopMaintenance.Click += new System.EventHandler(this.btnSimulatorStopMaintenance_Click);
+         // 
          // TrackingControlForm
          // 
          resources.ApplyResources(this, "$this");
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+         this.Controls.Add(this.grpDeviceMaintenance);
          this.Controls.Add(this.grpQuickWrite);
          this.Controls.Add(this.grpLcsSimulator);
          this.Controls.Add(this.grpLog);
@@ -478,8 +515,6 @@ namespace WindowsFormsApp1.Forms
          this.grpMonitor.PerformLayout();
          this.grpOperation.ResumeLayout(false);
          this.grpOperation.PerformLayout();
-         this.grpLcsSimulator.ResumeLayout(false);
-         this.grpLcsSimulator.PerformLayout();
          ((System.ComponentModel.ISupportInitialize)(this.nudJudge3)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.nudJudge2)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.nudJudge1)).EndInit();
@@ -491,7 +526,11 @@ namespace WindowsFormsApp1.Forms
          this.grpQuickWrite.ResumeLayout(false);
          this.grpLcsSimulator.ResumeLayout(false);
          this.grpLcsSimulator.PerformLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.nudSimPos)).EndInit();
          this.grpLog.ResumeLayout(false);
+         this.grpDeviceMaintenance.ResumeLayout(false);
+         this.grpDeviceMaintenance.PerformLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.nudDeviceMaintPos)).EndInit();
          this.ResumeLayout(false);
 
         }
@@ -544,5 +583,10 @@ namespace WindowsFormsApp1.Forms
       private System.Windows.Forms.NumericUpDown nudSimPos;
       private System.Windows.Forms.Label lblSimPos;
       private System.Windows.Forms.Button btnSimDataMaint;
+      private System.Windows.Forms.GroupBox grpDeviceMaintenance;
+      private System.Windows.Forms.Button btnDeviceSendMaint;
+      private System.Windows.Forms.NumericUpDown nudDeviceMaintPos;
+      private System.Windows.Forms.Label lblDevicePosNo;
+      private System.Windows.Forms.Button btnSimulatorStopMaintenance;
    }
 }
