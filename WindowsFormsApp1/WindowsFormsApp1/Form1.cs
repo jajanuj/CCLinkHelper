@@ -177,8 +177,7 @@ namespace WindowsFormsApp1
 
             // 啟動連結報告模擬模式：模擬 LCS 自動回應 EQ 的請求
             _simulator.StartLinkReportMode();
-            _simulator.StartRecipeCheckMode();
-            Log("已啟動 Simulator 連結報告模式 (LCS 自動回應) 與 Recipe Check 模式 | Simulator Link Report & Recipe Check mode started");
+            Log("已啟動 Simulator 連結報告模式 (LCS 自動回應) | Simulator Link Report");
          }
       }
 

@@ -815,15 +815,41 @@ namespace WindowsFormsApp1.Services
       private uint _maintenanceT1Timeout = 5000;
       private uint _maintenanceT2Timeout = 5000;
 
+      // Tracking Maintenance Request (Sender Side) Addresses
+      private readonly string AddrMaintenanceSenderRequestFlag = "LB0506";
+      private readonly string AddrMaintenanceSenderResponseFlag = "LB0107";
+      private readonly string AddrMaintenanceSenderData = "LW05BE";
+      private readonly string AddrMaintenanceSenderPos = "LW05C8";
+
+      // Tracking Maintenance Request (Sender Side) Handshake Fields
+      private int _maintenanceRequestStep;
+      private TrackingData _pendingMaintenanceData;
+      private int _pendingMaintenancePos;
+      private TaskCompletionSource<bool> _maintenanceRequestTcs;
+      private CTimer _maintenanceRequestTimer = new CTimer();
+      private uint _maintenanceRequestT1Timeout = 5000;
+      private uint _maintenanceRequestT2Timeout = 5000;
+
       public void StartTrackingDataMaintenanceMonitor(TimeSpan interval, uint t1Timeout = 5000, uint t2Timeout = 5000)
       {
          StopTrackingDataMaintenanceMonitor();
          _maintenanceT1Timeout = t1Timeout;
          _maintenanceT2Timeout = t2Timeout;
+         _maintenanceRequestT1Timeout = t1Timeout;
+         _maintenanceRequestT2Timeout = t2Timeout;
+
          _maintenanceStep = 0;
+         _maintenanceRequestStep = 0;
+
          _maintenanceMonitorCts = new CancellationTokenSource();
+
+         // 啟動接收端監控 (LCS -> Device)
          _maintenanceMonitorTask = Task.Run(() => TrackingDataMaintenanceLoopAsync(interval, _maintenanceMonitorCts.Token));
-         _logger?.Invoke($"[AppService] Tracking Data Maintenance Monitor started (T1: {t1Timeout}ms)");
+
+         // 啟動傳送端握手 (Device -> LCS)
+         Task.Run(() => MaintenanceRequestLoopAsync(interval, _maintenanceMonitorCts.Token));
+
+         _logger?.Invoke($"[AppService] Tracking Data Maintenance started (T1: {t1Timeout}ms, T2: {t2Timeout}ms)");
       }
 
       public void StopTrackingDataMaintenanceMonitor()
@@ -833,15 +859,25 @@ namespace WindowsFormsApp1.Services
             _maintenanceMonitorCts.Cancel();
             try
             {
-               _maintenanceMonitorTask?.Wait(500);
+               // Wait for receiver monitor task if it exists (not strictly required if we don't await)
+               // _maintenanceMonitorTask?.Wait(100); 
             }
             catch
             {
             }
 
-            _maintenanceMonitorCts.Dispose();
             _maintenanceMonitorCts = null;
          }
+
+         // 清除待處理的發送請求
+         if (_maintenanceRequestTcs != null && !_maintenanceRequestTcs.Task.IsCompleted)
+         {
+            _maintenanceRequestTcs.TrySetCanceled();
+         }
+
+         CompleteMaintenanceRequest(false);
+
+         _logger?.Invoke("[AppService] Tracking Data Maintenance stopped");
       }
 
       private async Task TrackingDataMaintenanceLoopAsync(TimeSpan interval, CancellationToken ct)
@@ -1025,92 +1061,132 @@ namespace WindowsFormsApp1.Services
          }
       }
 
-      public async Task<bool> SendTrackingMaintenanceRequestAsync(TrackingData data, int positionNo, CancellationToken ct = default)
+      /// <summary>
+      /// 處理傳送端的維護 handshake (Device -> LCS)
+      /// </summary>
+      private async Task RunMaintenanceRequestFlow(CancellationToken ct)
       {
-         const string REQ_FLAG_ADDR = "LB0506";
-         const string RESP_FLAG_ADDR = "LB0107";
-         const string DATA_ADDR = "LW05BE";
-         const string POS_ADDR = "LW05C8";
-         const int TIMEOUT_MS = 5000;
+         bool responseOn = _controller.GetBit(AddrMaintenanceSenderResponseFlag);
 
-         try
+         switch (_maintenanceRequestStep)
          {
-            _logger?.Invoke($"[Maintenance] 開始發送維護請求... Pos:{positionNo}");
-
-            // 1. 寫入資料
-            short[] trackWords = data.ToRawData(); // 10 words
-            await _controller.WriteWordsAsync(DATA_ADDR, trackWords, ct);
-            await _controller.WriteWordsAsync(POS_ADDR, new short[] { (short)positionNo }, ct);
-
-            // 2. 設定 Request Flag ON
-            await _controller.WriteBitsAsync(REQ_FLAG_ADDR, new[] { true }, ct);
-            _logger?.Invoke($"[Maintenance] Set Request Flag ({REQ_FLAG_ADDR}) ON");
-
-            // 3. 等待 Response Flag ON
-            bool success = false;
-            var responseWaitStart = DateTime.UtcNow;
-            while (!ct.IsCancellationRequested)
-            {
-               if ((DateTime.UtcNow - responseWaitStart).TotalMilliseconds > TIMEOUT_MS)
+            case 0: // Idle - 等待待處理請求
+               if (_pendingMaintenanceData != null)
                {
-                  _logger?.Invoke($"[Maintenance] Timeout waiting for Response ({RESP_FLAG_ADDR})");
-                  break;
-               }
-
-               bool respOn = _controller.GetBit(RESP_FLAG_ADDR);
-               if (respOn)
-               {
-                  _logger?.Invoke($"[Maintenance] Response Flag ({RESP_FLAG_ADDR}) ON Detected");
-                  success = true;
-                  break;
-               }
-
-               await Task.Delay(100, ct);
-            }
-
-            // 4. 清除 Request Flag OFF
-            await _controller.WriteBitsAsync(REQ_FLAG_ADDR, new[] { false }, ct);
-            _logger?.Invoke($"[Maintenance] Set Request Flag ({REQ_FLAG_ADDR}) OFF");
-
-            // 5. 若成功，等待 Response OFF (可選，但在 UI 操作通常希望能確保流程結束)
-            if (success)
-            {
-               var clearWaitStart = DateTime.UtcNow;
-               while (!ct.IsCancellationRequested)
-               {
-                  if ((DateTime.UtcNow - clearWaitStart).TotalMilliseconds > 2000)
+                  try
                   {
-                     _logger?.Invoke($"[Maintenance] Warning: LCS did not clear Response ({RESP_FLAG_ADDR})");
-                     break;
-                  }
+                     _logger?.Invoke($"[MaintenanceSync] 開始發送維護請求... Pos:{_pendingMaintenancePos}");
 
-                  bool respOn = _controller.GetBit(RESP_FLAG_ADDR);
-                  if (!respOn)
+                     // 1. 寫入資料
+                     short[] trackWords = _pendingMaintenanceData.ToRawData(); // 10 words
+                     await _controller.WriteWordsAsync(AddrMaintenanceSenderData, trackWords, ct);
+                     await _controller.WriteWordsAsync(AddrMaintenanceSenderPos, new short[] { (short)_pendingMaintenancePos }, ct);
+
+                     // 2. 設定 Request Flag ON
+                     await _controller.WriteBitsAsync(AddrMaintenanceSenderRequestFlag, new[] { true }, ct);
+                     _logger?.Invoke($"[MaintenanceSync] Set Request Flag ({AddrMaintenanceSenderRequestFlag}) ON");
+
+                     _maintenanceRequestTimer.Reset();
+                     _maintenanceRequestStep = 10;
+                  }
+                  catch (Exception ex)
                   {
-                     _logger?.Invoke($"[Maintenance] Response Flag ({RESP_FLAG_ADDR}) OFF Confirmed");
-                     break;
+                     _logger?.Invoke($"[MaintenanceSync] 寫入資料失敗: {ex.Message}");
+                     CompleteMaintenanceRequest(false);
                   }
-
-                  await Task.Delay(100, ct);
                }
-            }
 
-            return success;
+               break;
+
+            case 10: // Waiting for Response ON (T1)
+               if (responseOn)
+               {
+                  _logger?.Invoke($"[MaintenanceSync] Response Flag ({AddrMaintenanceSenderResponseFlag}) ON Detected");
+
+                  // 3. 清除 Request Flag OFF
+                  await _controller.WriteBitsAsync(AddrMaintenanceSenderRequestFlag, new[] { false }, ct);
+                  _logger?.Invoke($"[MaintenanceSync] Set Request Flag ({AddrMaintenanceSenderRequestFlag}) OFF");
+
+                  _maintenanceRequestTimer.Reset();
+                  _maintenanceRequestStep = 20;
+               }
+               else if (_maintenanceRequestTimer.On(_maintenanceRequestT1Timeout))
+               {
+                  _logger?.Invoke($"[MaintenanceSync] T1 Timeout: 未能在 {_maintenanceRequestT1Timeout}ms 內收到 Response ON");
+
+                  // 異常處理：清除 Request Flag
+                  await _controller.WriteBitsAsync(AddrMaintenanceSenderRequestFlag, new[] { false }, ct);
+                  CompleteMaintenanceRequest(false);
+               }
+
+               break;
+
+            case 20: // Waiting for Response OFF (T2)
+               if (!responseOn)
+               {
+                  _logger?.Invoke($"[MaintenanceSync] Response Flag ({AddrMaintenanceSenderResponseFlag}) OFF Confirmed - 完成");
+                  CompleteMaintenanceRequest(true);
+               }
+               else if (_maintenanceRequestTimer.On(_maintenanceRequestT2Timeout))
+               {
+                  _logger?.Invoke($"[MaintenanceSync] T2 Alarm: LCS 未能在 {_maintenanceRequestT2Timeout}ms 內清除 Response");
+                  // T2 逾時通常發出警報，但通訊本身可視為成功（若定義為 Request 被接受）
+                  // 依指示：送信端發出警報。
+                  CompleteMaintenanceRequest(true); // 完成流程，但已記錄警報
+               }
+
+               break;
          }
-         catch (Exception ex)
+      }
+
+      private void CompleteMaintenanceRequest(bool success)
+      {
+         _pendingMaintenanceData = null;
+         _maintenanceRequestStep = 0;
+         _maintenanceRequestTcs?.TrySetResult(success);
+      }
+
+      private async Task MaintenanceRequestLoopAsync(TimeSpan interval, CancellationToken ct)
+      {
+         while (!ct.IsCancellationRequested && !_disposed)
          {
-            _logger?.Invoke($"[Maintenance] Exception: {ex.Message}");
-            // 嘗試重置 Request
             try
             {
-               await _controller.WriteBitsAsync(REQ_FLAG_ADDR, new[] { false }, ct);
+               await RunMaintenanceRequestFlow(ct);
+               await Task.Delay(interval, ct);
             }
-            catch
+            catch (OperationCanceledException)
             {
+               break;
             }
+            catch (Exception ex)
+            {
+               _logger?.Invoke($"[MaintenanceSync] Loop Exception: {ex.Message}");
+               await Task.Delay(1000, ct);
+            }
+         }
+      }
 
+      public async Task<bool> SendTrackingMaintenanceRequestAsync(TrackingData data, int positionNo, CancellationToken ct = default)
+      {
+         if (data == null)
+         {
+            throw new ArgumentNullException(nameof(data));
+         }
+
+         // 檢查是否已有待處理的請求
+         if (_pendingMaintenanceData != null || _maintenanceRequestStep != 0)
+         {
+            _logger?.Invoke("[MaintenanceSync] 警告：前一筆維護請求尚未完成，無法發送新請求。");
             return false;
          }
+
+         _maintenanceRequestTcs = new TaskCompletionSource<bool>();
+         _pendingMaintenanceData = data;
+         _pendingMaintenancePos = positionNo;
+
+         // 等待狀態機完成處理
+         return await _maintenanceRequestTcs.Task;
       }
 
       #endregion
