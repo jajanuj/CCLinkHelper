@@ -481,10 +481,10 @@ namespace WindowsFormsApp1.Services
       /// </summary>
       public void StartTrackingMaintenanceListenMode()
       {
-         const int REQUEST_FLAG_ADDR = 0x0506;
-         const int RESPONSE_FLAG_ADDR = 0x0107;
-         const int TRACKING_DATA_START = 0x05BE;
-         const int POS_NO_ADDR = 0x05C8;
+         const int RequestFlagAddr = 0x0506;
+         const int ResponseFlagAddr = 0x0107;
+         const int TrackingDataStart = 0x05BE;
+         const int PosNoAddr = 0x05C8;
 
          lock (_syncLock)
          {
@@ -495,24 +495,24 @@ namespace WindowsFormsApp1.Services
 
             _task = Task.Run(async () =>
             {
-               _logger?.Invoke($"[追蹤資料維護模擬器] 已啟動 (監聽 LB{REQUEST_FLAG_ADDR:X4}) | Tracking Data Maint. Simulator started");
+               _logger?.Invoke($"[追蹤資料維護模擬器] 已啟動 (監聽 LB{RequestFlagAddr:X4}) | Tracking Data Maint. Simulator started");
 
                while (!ct.IsCancellationRequested)
                {
                   try
                   {
                      // 1. 監聽 Request Flag (LB0506)
-                     bool requestFlag = GetBit(new LinkDeviceAddress("LB", REQUEST_FLAG_ADDR, 1));
+                     bool requestFlag = GetBit(new LinkDeviceAddress("LB", RequestFlagAddr, 1));
 
                      if (requestFlag)
                      {
-                        _logger?.Invoke($"[追蹤資料維護模擬器] 偵測到 Request (LB{REQUEST_FLAG_ADDR:X4}) | Detected Request");
+                        _logger?.Invoke($"[追蹤資料維護模擬器] 偵測到 Request (LB{RequestFlagAddr:X4}) | Detected Request");
 
                         // 2. 讀取追蹤資料 (LW05BE-05C7) 與 Position No (LW05C8)
                         // 資料長度 10 words + 1 word = 讀取 11 words 比較快，或是分開讀
                         // 這裡分開讀取比較清晰
-                        short[] trackingRaw = await ReadWordsAsync(TRACKING_DATA_START, 10);
-                        short[] posRaw = await ReadWordsAsync(POS_NO_ADDR, 1);
+                        short[] trackingRaw = await ReadWordsAsync(TrackingDataStart, 10);
+                        short[] posRaw = await ReadWordsAsync(PosNoAddr, 1);
                         ushort posNo = (ushort)posRaw[0];
 
                         // 解析一下資料方便 Log
@@ -524,13 +524,13 @@ namespace WindowsFormsApp1.Services
                         await Task.Delay(500, ct).ConfigureAwait(false);
 
                         // 4. 設定 Response Flag (LB0107) ON
-                        SetResponseWithAddress(RESPONSE_FLAG_ADDR, true);
-                        _logger?.Invoke($"[追蹤資料維護模擬器] 設定 Response ON (LB{RESPONSE_FLAG_ADDR:X4})");
+                        SetResponseWithAddress(ResponseFlagAddr, true);
+                        _logger?.Invoke($"[追蹤資料維護模擬器] 設定 Response ON (LB{ResponseFlagAddr:X4})");
 
                         // 5. 等待 Request Flag OFF
                         while (!ct.IsCancellationRequested)
                         {
-                           bool req = GetBit(new LinkDeviceAddress("LB", REQUEST_FLAG_ADDR, 1));
+                           bool req = GetBit(new LinkDeviceAddress("LB", RequestFlagAddr, 1));
                            if (!req)
                            {
                               _logger?.Invoke($"[追蹤資料維護模擬器] 偵測到 Request OFF");
@@ -542,8 +542,8 @@ namespace WindowsFormsApp1.Services
 
                         // 6. 清除 Response Flag OFF
                         await Task.Delay(200, ct).ConfigureAwait(false);
-                        SetResponseWithAddress(RESPONSE_FLAG_ADDR, false);
-                        _logger?.Invoke($"[追蹤資料維護模擬器] 清除 Response OFF (LB{RESPONSE_FLAG_ADDR:X4})");
+                        SetResponseWithAddress(ResponseFlagAddr, false);
+                        _logger?.Invoke($"[追蹤資料維護模擬器] 清除 Response OFF (LB{ResponseFlagAddr:X4})");
                      }
 
                      await Task.Delay(100, ct).ConfigureAwait(false);
@@ -563,7 +563,6 @@ namespace WindowsFormsApp1.Services
             }, ct);
          }
       }
-
 
       /// <summary>
       /// 手動設定 response flag（true 設為 1，false 設為 0）。
