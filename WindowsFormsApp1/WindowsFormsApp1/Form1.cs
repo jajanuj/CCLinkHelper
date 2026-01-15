@@ -299,7 +299,7 @@ namespace WindowsFormsApp1
                return;
             }
 
-            var form = new RecipeCheckForm(_appPlcService.Controller);
+            var form = new RecipeCheckForm(_appPlcService.Controller, _simulator);
             form.Show();
          };
       }

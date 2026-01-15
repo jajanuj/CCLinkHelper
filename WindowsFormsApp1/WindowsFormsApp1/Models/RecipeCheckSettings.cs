@@ -17,7 +17,7 @@ namespace WindowsFormsApp1.Models
       public string RequestDataAddress { get; set; } = "LW3B67";
 
       /// <summary>Request Data Recipe No. 地址（數值模式）</summary>
-      public string RequestRecipeNoAddress { get; set; } = "LWLW34F5";
+      public string RequestRecipeNoAddress { get; set; } = "LW34F5";
 
       /// <summary>Request Data Recipe Name 地址（字串模式）</summary>
       public string RequestRecipeNameAddress { get; set; } = "LW34F8";

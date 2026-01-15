@@ -361,10 +361,6 @@ namespace WindowsFormsApp1.Services
          }
       }
 
-      /// <summary>
-      /// 啟動 Recipe Check 模擬模式：監控裝置端的 Request並自動回應。
-      /// 模擬 MPLC 端的行為。
-      /// </summary>
       public void StartRecipeCheckMode(RecipeCheckSettings settings = null)
       {
          var recipeSettings = settings ?? new RecipeCheckSettings();
@@ -382,97 +378,136 @@ namespace WindowsFormsApp1.Services
 
                var random = new Random();
 
-               while (!ct.IsCancellationRequested)
+               try
                {
-                  try
-                  {
-                     // 1. 監聽 Request Flag (LB0303)
-                     bool requestFlag = GetBit(new LinkDeviceAddress("LB", 0x0303, 1));
+                  // 解析控制用的地址
+                  var reqFlagAddr = ParseRecipeAddress(recipeSettings.RequestFlagAddress, 1);
+                  var reqDataAddr = ParseRecipeAddress(recipeSettings.RequestDataAddress, 10);
+                  var respOkAddr = ParseRecipeAddress(recipeSettings.ResponseOkAddress, 1);
+                  var respNgAddr = ParseRecipeAddress(recipeSettings.ResponseNgAddress, 1);
+                  var respThickAddr = ParseRecipeAddress(recipeSettings.ResponseThicknessAddress, 1);
+                  var respRecipeNoAddr = ParseRecipeAddress(recipeSettings.ResponseRecipeNoAddress, 1);
+                  var respRecipeNameAddr = ParseRecipeAddress(recipeSettings.ResponseRecipeNameAddress, 50);
 
-                     if (requestFlag)
+                  while (!ct.IsCancellationRequested)
+                  {
+                     try
                      {
-                        _logger?.Invoke($"[Recipe Check 模擬器] 偵測到 Request | Detected Recipe Check Request");
+                        // 1. 監聽 Request Flag
+                        bool requestFlag = GetBit(reqFlagAddr);
 
-                        // 2. 讀取追蹤資料 (LW6087-6096)
-                        short[] trackingData = await ReadWordsAsync(0x17C7, 10);
-
-                        // 3. 檢查批號首字（offset 4 = LW6091）
-                        bool autoOk = CheckLotNoPrefix(trackingData[4]);
-
-                        bool isOk;
-                        ushort boardThickness;
-                        ushort recipeNo;
-                        string recipeName;
-
-                        if (autoOk)
+                        if (requestFlag)
                         {
-                           // 批號 P/D 自動 OK
-                           isOk = true;
-                           boardThickness = (ushort)random.Next(100, 500);
-                           recipeNo = 9999;
-                           recipeName = "AUTO_OK_RECIPE";
-                           _logger?.Invoke($"[Recipe Check 模擬器] 批號首字為 P/D，自動判定 OK | Auto OK due to lot prefix");
-                        }
-                        else
-                        {
-                           // 隨機 OK/NG
-                           isOk = random.Next(0, 2) == 1;
-                           boardThickness = (ushort)random.Next(100, 500);
-                           recipeNo = (ushort)random.Next(1, 1000);
-                           recipeName = $"RECIPE_{recipeNo:D4}";
-                           _logger?.Invoke($"[Recipe Check 模擬器] 隨機判定 {(isOk ? "OK" : "NG")} | Random result: {(isOk ? "OK" : "NG")}");
+                           _logger?.Invoke($"[Recipe Check 模擬器] 偵測到 Request (Addr: {reqFlagAddr}) | Detected Recipe Check Request");
+
+                           // 2. 讀取追蹤資料 (10 words)
+                           short[] trackingData = await ReadWordsAsync(reqDataAddr.Start, 10);
+
+                           // 3. 檢查批號首字（offset 4 = LW6091）
+                           bool autoOk = CheckLotNoPrefix(trackingData[4]);
+
+                           bool isOk;
+                           ushort boardThickness;
+                           ushort recipeNo;
+                           string recipeName;
+
+                           if (autoOk)
+                           {
+                              // 批號 P/D 自動 OK
+                              isOk = true;
+                              boardThickness = (ushort)random.Next(100, 500);
+                              recipeNo = 9999;
+                              recipeName = "AUTO_OK_RECIPE";
+                              _logger?.Invoke($"[Recipe Check 模擬器] 批號首字為 P/D，自動判定 OK | Auto OK due to lot prefix");
+                           }
+                           else
+                           {
+                              // 隨機 OK/NG
+                              isOk = random.Next(0, 2) == 1;
+                              boardThickness = (ushort)random.Next(100, 500);
+                              recipeNo = (ushort)random.Next(1, 1000);
+                              recipeName = $"RECIPE_{recipeNo:D4}";
+                              _logger?.Invoke($"[Recipe Check 模擬器] 隨機判定 {(isOk ? "OK" : "NG")} | Random result: {(isOk ? "OK" : "NG")}");
+                           }
+
+                           // 4. 寫入 Response Data
+                           await WriteWordAsync(respThickAddr.Start, boardThickness);
+                           _logger?.Invoke($"[Recipe Check 模擬器] 回應板厚: {boardThickness} (Addr: {respThickAddr})");
+
+                           if (recipeSettings.Mode == RecipeCheckMode.Numeric)
+                           {
+                              await WriteWordAsync(respRecipeNoAddr.Start, recipeNo);
+                              _logger?.Invoke($"[Recipe Check 模擬器] 回應 Recipe No.: {recipeNo} (Addr: {respRecipeNoAddr})");
+                           }
+                           else
+                           {
+                              short[] recipeWords = ConvertStringToWords(recipeName, 50);
+                              await WriteWordsAsync(respRecipeNameAddr.Start, recipeWords);
+                              _logger?.Invoke($"[Recipe Check 模擬器] 回應 Recipe Name: {recipeName} (Addr: {respRecipeNameAddr})");
+                           }
+
+                           // 5. 設定 Response Flag
+                           if (isOk)
+                           {
+                              SetRequest(respOkAddr, true); // OK
+                              _logger?.Invoke($"[Recipe Check 模擬器] 設定 Response OK Flag (Addr: {respOkAddr})");
+                           }
+                           else
+                           {
+                              SetRequest(respNgAddr, true); // NG
+                              _logger?.Invoke($"[Recipe Check 模擬器] 設定 Response NG Flag (Addr: {respNgAddr})");
+                           }
+
+                           // 6. 等待一段時間後清除 Request Flag
+                           await Task.Delay(200, ct).ConfigureAwait(false);
+                           SetRequest(reqFlagAddr, false);
+                           _logger?.Invoke($"[Recipe Check 模擬器] 已清除 Request Flag (Addr: {reqFlagAddr})");
                         }
 
-                        // 4. 寫入 Response Data
-                        await WriteWordAsync(0x05DA, boardThickness); // LW1498 板厚
-                        _logger?.Invoke($"[Recipe Check 模擬器] 板厚: {boardThickness}");
-
-                        if (recipeSettings.Mode == RecipeCheckMode.Numeric)
-                        {
-                           await WriteWordAsync(0x05DC, recipeNo); // LW1500 Recipe No.
-                           _logger?.Invoke($"[Recipe Check 模擬器] Recipe No.: {recipeNo}");
-                        }
-                        else
-                        {
-                           short[] recipeWords = ConvertStringToWords(recipeName, 50);
-                           await WriteWordsAsync(0x05DE, recipeWords); // LW1502 Recipe Name
-                           _logger?.Invoke($"[Recipe Check 模擬器] Recipe Name: {recipeName}");
-                        }
-
-                        // 5. 設定 Response Flag
-                        if (isOk)
-                        {
-                           SetRequest(new LinkDeviceAddress("LB", 0x0103, 1), true); // LB0103 OK
-                           _logger?.Invoke($"[Recipe Check 模擬器] 設定 Response OK Flag");
-                        }
-                        else
-                        {
-                           SetRequest(new LinkDeviceAddress("LB", 0x0104, 1), true); // LB0104 NG
-                           _logger?.Invoke($"[Recipe Check 模擬器] 設定 Response NG Flag");
-                        }
-
-                        // 6. 等待一段時間後清除 Request Flag
-                        await Task.Delay(200, ct).ConfigureAwait(false);
-                        SetRequest(new LinkDeviceAddress("LB", 0x0303, 1), false);
-                        _logger?.Invoke($"[Recipe Check 模擬器] 已清除 Request Flag");
+                        await Task.Delay(100, ct).ConfigureAwait(false);
                      }
-
-                     await Task.Delay(100, ct).ConfigureAwait(false);
+                     catch (TaskCanceledException)
+                     {
+                        break;
+                     }
+                     catch (Exception ex)
+                     {
+                        _logger?.Invoke($"[Recipe Check 模擬器] 循環例外 | Loop Exception: {ex.Message}");
+                        await Task.Delay(500, ct).ConfigureAwait(false);
+                     }
                   }
-                  catch (TaskCanceledException)
-                  {
-                     break;
-                  }
-                  catch (Exception ex)
-                  {
-                     _logger?.Invoke($"[Recipe Check 模擬器] 例外 | Exception: {ex.Message}");
-                     await Task.Delay(500, ct).ConfigureAwait(false);
-                  }
+               }
+               catch (Exception ex)
+               {
+                  _logger?.Invoke($"[Recipe Check 模擬器] 啟動失敗 | Startup Exception: {ex.Message}");
                }
 
                _logger?.Invoke($"[Recipe Check 模擬器] 已停止 | Recipe Check Simulator stopped");
             }, ct);
          }
+      }
+
+      /// <summary>
+      /// 解析 Recipe Check 使用的地址字串。
+      /// 特別處理 LW 為十進位，其他則依據 LinkDeviceAddress.Parse 的邏輯（優先十六進位）。
+      /// </summary>
+      private LinkDeviceAddress ParseRecipeAddress(string address, int length)
+      {
+         if (string.IsNullOrEmpty(address) || address.Length < 3)
+            return LinkDeviceAddress.Parse(address, length);
+
+         string prefix = address.Substring(0, 2).ToUpperInvariant();
+         string numPart = address.Substring(2);
+
+         if (prefix == "LW")
+         {
+            if (int.TryParse(numPart, out int decValue))
+            {
+               return new LinkDeviceAddress("LW", decValue, length);
+            }
+         }
+
+         return LinkDeviceAddress.Parse(address, length);
       }
 
       /// <summary>

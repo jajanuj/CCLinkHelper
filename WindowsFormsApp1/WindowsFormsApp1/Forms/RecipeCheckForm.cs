@@ -12,6 +12,7 @@ namespace WindowsFormsApp1.Forms
       #region Fields
 
       private readonly ICCLinkController _controller;
+      private readonly PlcSimulator _simulator; // 新增模擬器引用
       private RecipeCheckClient _client;
       private RecipeCheckSettings _settings;
 
@@ -19,10 +20,11 @@ namespace WindowsFormsApp1.Forms
 
       #region Constructors
 
-      public RecipeCheckForm(ICCLinkController controller)
+      public RecipeCheckForm(ICCLinkController controller, PlcSimulator simulator = null)
       {
          InitializeComponent();
          _controller = controller ?? throw new ArgumentNullException(nameof(controller));
+         _simulator = simulator; // 儲存模擬器引用
 
          // 初始化設定
          _settings = new RecipeCheckSettings();
@@ -62,6 +64,13 @@ namespace WindowsFormsApp1.Forms
             lblResult.Text = "狀態: 檢查中...";
             lblResult.ForeColor = Color.Blue;
             Log("開始發送 Recipe Check 請求...");
+
+            // 如果有模擬器，自動啟動模擬器流程
+            if (_simulator != null)
+            {
+               Log("[模擬模式] 自動啟動模擬器流程...");
+               _simulator.StartRecipeCheckMode(_settings);
+            }
 
             // 準備追蹤資料
             short[] trackingData = ParsetrackingData(txtTrackingData.Text);
