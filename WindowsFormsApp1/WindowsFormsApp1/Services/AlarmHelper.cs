@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using WindowsFormsApp1.CCLink.Interfaces;
-using WindowsFormsApp1.Services;
 
 namespace WindowsFormsApp1.Services
 {
@@ -80,6 +79,97 @@ namespace WindowsFormsApp1.Services
 
          return AddAlarmCodesAsync(appPlcService.Controller, newAlarmCodes, appPlcService, baseAddress);
       }
+
+      /// <summary>
+      /// 清除所有警報碼
+      /// 將 PLC 中的所有警報位址重置為 0
+      /// </summary>
+      /// <param name="appPlcService">PLC 控制器介面</param>
+      /// <param name="baseAddress">警報起始位址，預設為 LW113A</param>
+      /// <exception cref="ArgumentNullException">controller 為 null</exception>
+      /// <exception cref="InvalidOperationException">PLC 寫入失敗</exception>
+      public static async Task ClearAllAlarmsAsync(
+         AppPlcService appPlcService,
+         string baseAddress = DefaultAlarmAddress)
+      {
+         if (appPlcService == null)
+         {
+            throw new ArgumentNullException(nameof(appPlcService));
+         }
+
+         try
+         {
+            var emptyAlarms = new ushort[MaxAlarmCount];
+            await WriteAlarmCodesAsync(appPlcService.Controller, emptyAlarms, baseAddress);
+
+            await appPlcService.SetAlarmStatus(AlarmStatus.NoAlarm);
+         }
+         catch (Exception ex)
+         {
+            throw new InvalidOperationException($"清除警報碼失敗: {ex.Message}", ex);
+         }
+      }
+
+      /// <summary>
+      /// 移除指定的警報碼
+      /// 會從警報列表中移除指定的警報碼，並將後續的警報碼向前移動以填補空位
+      /// </summary>
+      /// <param name="controller">PLC 控制器介面</param>
+      /// <param name="alarmCode">要移除的警報碼</param>
+      /// <param name="baseAddress">警報起始位址，預設為 LW113A</param>
+      /// <returns>true 表示成功移除，false 表示找不到該警報碼</returns>
+      /// <exception cref="ArgumentNullException">controller 為 null</exception>
+      /// <exception cref="InvalidOperationException">PLC 讀寫失敗</exception>
+      public static async Task<bool> RemoveAlarmCodeAsync(
+         ICCLinkController controller,
+         ushort alarmCode,
+         string baseAddress = DefaultAlarmAddress)
+      {
+         if (controller == null)
+         {
+            throw new ArgumentNullException(nameof(controller));
+         }
+
+         if (alarmCode == 0)
+         {
+            return false; // 0 不是有效的警報碼
+         }
+
+         try
+         {
+            // 1. 讀取目前的警報碼
+            var currentAlarms = await ReadAlarmCodesAsync(controller, baseAddress);
+
+            // 2. 找到目標警報碼的位置
+            int targetIndex = Array.IndexOf(currentAlarms, alarmCode);
+            if (targetIndex == -1)
+            {
+               // 找不到該警報碼
+               return false;
+            }
+
+            // 3. 將後續的警報碼向前移動（壓縮）
+            for (int i = targetIndex; i < MaxAlarmCount - 1; i++)
+            {
+               currentAlarms[i] = currentAlarms[i + 1];
+            }
+
+            currentAlarms[MaxAlarmCount - 1] = 0; // 最後一個位置設為 0
+
+            // 4. 寫回 PLC
+            await WriteAlarmCodesAsync(controller, currentAlarms, baseAddress);
+
+            return true;
+         }
+         catch (Exception ex)
+         {
+            throw new InvalidOperationException($"移除警報碼失敗: {ex.Message}", ex);
+         }
+      }
+
+      #endregion
+
+      #region Private Methods
 
       /// <summary>
       /// 新增警報碼到 PLC（內部實作方法）
@@ -161,91 +251,6 @@ namespace WindowsFormsApp1.Services
          }
       }
 
-      /// <summary>
-      /// 清除所有警報碼
-      /// 將 PLC 中的所有警報位址重置為 0
-      /// </summary>
-      /// <param name="controller">PLC 控制器介面</param>
-      /// <param name="baseAddress">警報起始位址，預設為 LW113A</param>
-      /// <exception cref="ArgumentNullException">controller 為 null</exception>
-      /// <exception cref="InvalidOperationException">PLC 寫入失敗</exception>
-      public static async Task ClearAllAlarmsAsync(
-         ICCLinkController controller,
-         string baseAddress = DefaultAlarmAddress)
-      {
-         if (controller == null)
-         {
-            throw new ArgumentNullException(nameof(controller));
-         }
-
-         try
-         {
-            var emptyAlarms = new ushort[MaxAlarmCount];
-            await WriteAlarmCodesAsync(controller, emptyAlarms, baseAddress);
-         }
-         catch (Exception ex)
-         {
-            throw new InvalidOperationException($"清除警報碼失敗: {ex.Message}", ex);
-         }
-      }
-
-      /// <summary>
-      /// 移除指定的警報碼
-      /// 會從警報列表中移除指定的警報碼，並將後續的警報碼向前移動以填補空位
-      /// </summary>
-      /// <param name="controller">PLC 控制器介面</param>
-      /// <param name="alarmCode">要移除的警報碼</param>
-      /// <param name="baseAddress">警報起始位址，預設為 LW113A</param>
-      /// <returns>true 表示成功移除，false 表示找不到該警報碼</returns>
-      /// <exception cref="ArgumentNullException">controller 為 null</exception>
-      /// <exception cref="InvalidOperationException">PLC 讀寫失敗</exception>
-      public static async Task<bool> RemoveAlarmCodeAsync(
-         ICCLinkController controller,
-         ushort alarmCode,
-         string baseAddress = DefaultAlarmAddress)
-      {
-         if (controller == null)
-         {
-            throw new ArgumentNullException(nameof(controller));
-         }
-
-         if (alarmCode == 0)
-         {
-            return false; // 0 不是有效的警報碼
-         }
-
-         try
-         {
-            // 1. 讀取目前的警報碼
-            var currentAlarms = await ReadAlarmCodesAsync(controller, baseAddress);
-
-            // 2. 找到目標警報碼的位置
-            int targetIndex = Array.IndexOf(currentAlarms, alarmCode);
-            if (targetIndex == -1)
-            {
-               // 找不到該警報碼
-               return false;
-            }
-
-            // 3. 將後續的警報碼向前移動（壓縮）
-            for (int i = targetIndex; i < MaxAlarmCount - 1; i++)
-            {
-               currentAlarms[i] = currentAlarms[i + 1];
-            }
-
-            currentAlarms[MaxAlarmCount - 1] = 0; // 最後一個位置設為 0
-
-            // 4. 寫回 PLC
-            await WriteAlarmCodesAsync(controller, currentAlarms, baseAddress);
-
-            return true;
-         }
-         catch (Exception ex)
-         {
-            throw new InvalidOperationException($"移除警報碼失敗: {ex.Message}", ex);
-         }
-      }
-
       #endregion
 
       #region Private Helper Methods
@@ -283,17 +288,16 @@ namespace WindowsFormsApp1.Services
       {
          if (codes == null || codes.Length == 0)
          {
-            return AlarmStatus.NoAlarm;  // 4 - 沒有警報
+            return AlarmStatus.NoAlarm; // 4 - 沒有警報
          }
 
-         AlarmStatus highestStatus = AlarmStatus.NoAlarm;  // 預設為 4
          bool hasCritical = false;
          bool hasLow = false;
          bool hasPreAlarm = false;
 
          foreach (var code in codes)
          {
-            string hex = code.ToString("X4");  // 轉換為 4 位十六進制字串
+            string hex = code.ToString("X4"); // 轉換為 4 位十六進制字串
 
             if (hex.StartsWith("C"))
             {
@@ -315,18 +319,18 @@ namespace WindowsFormsApp1.Services
          // 根據優先級返回：Critical (1) > Low (2) > PreAlarm (3) > NoAlarm (4)
          if (hasCritical)
          {
-            return AlarmStatus.Critical;  // 1
+            return AlarmStatus.Critical; // 1
          }
          else if (hasLow)
          {
-            return AlarmStatus.Low;  // 2
+            return AlarmStatus.Low; // 2
          }
          else if (hasPreAlarm)
          {
-            return AlarmStatus.PreAlarm;  // 3
+            return AlarmStatus.PreAlarm; // 3
          }
 
-         return AlarmStatus.NoAlarm;  // 4
+         return AlarmStatus.NoAlarm; // 4
       }
 
       #endregion

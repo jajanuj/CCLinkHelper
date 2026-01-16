@@ -696,6 +696,12 @@ namespace WindowsFormsApp1
 
       private void btnStartTimeSync_Click(object sender, EventArgs e)
       {
+         if (_appPlcService?.Controller == null)
+         {
+            MessageBox.Show("請先點擊 Open 按鈕建立連接 | Please click Open button first", "Error");
+            return;
+         }
+
          _appPlcService.StartTimeSync(
             TimeSpan.FromMilliseconds(_settings.TimeSyncIntervalMs),
             _settings.TimeSync.TriggerAddress,
@@ -787,6 +793,7 @@ namespace WindowsFormsApp1
       // PLC 模擬器相關
       // -------------------
 
+      [Obsolete]
       private void btnStartHeartbeat_Click(object sender, EventArgs e)
       {
          try
@@ -1161,6 +1168,7 @@ namespace WindowsFormsApp1
          Log("維護監控已手動停止 | Maintenance Monitor stopped manually");
       }
 
+      [Obsolete]
       private async void btnAddAlarm_Click(object sender, EventArgs e)
       {
          try
@@ -1208,7 +1216,7 @@ namespace WindowsFormsApp1
                return;
             }
 
-            var (added, ignored) = await AlarmHelper.AddAlarmCodesAsync(_appPlcService.Controller, alarmData);
+            var (added, ignored) = await AlarmHelper.AddAlarmCodesAsync(_appPlcService, alarmData);
             Log($"[UI btnAddAlarm] 新增警報代碼結果: 添加了 {added} 個代碼, 忽略了 {ignored} 個代碼");
          }
          catch (Exception ex)
@@ -1255,6 +1263,11 @@ namespace WindowsFormsApp1
          {
             Log($"[tmrScan] 錯誤代碼掃描失敗 | Error code scan failed (Error: {ex.Message})");
          }
+      }
+
+      private async void btnAlarmReset_Click(object sender, EventArgs e)
+      {
+         await AlarmHelper.ClearAllAlarmsAsync(_appPlcService);
       }
 
       #endregion

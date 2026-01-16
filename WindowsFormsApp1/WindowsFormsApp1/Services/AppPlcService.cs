@@ -156,7 +156,7 @@ namespace WindowsFormsApp1.Services
 
       public async Task SetAlarmStatus(AlarmStatus status)
       {
-         await _controller.WriteWordsAsync("LW1116", [(short)status]);
+         await _controller.WriteWordsAsync("LW1146", [(short)status]);
       }
 
       public async Task SetMachineStatus(MachineStatus status)
@@ -542,6 +542,7 @@ namespace WindowsFormsApp1.Services
 
       #region Heartbeat Methods
 
+      [Obsolete]
       public void StartHeartbeat(int failThreshold = 3)
       {
          StopHeartbeat();
@@ -579,6 +580,7 @@ namespace WindowsFormsApp1.Services
          ConsecutiveHeartbeatFailuresCount = 0;
       }
 
+      [Obsolete]
       private async Task HeartbeatLoopAsync(CancellationToken ct)
       {
          while (!ct.IsCancellationRequested && !_disposed)
@@ -600,6 +602,7 @@ namespace WindowsFormsApp1.Services
          }
       }
 
+      [Obsolete]
       private async Task RunHeartbeatAsync(CancellationToken ct)
       {
          // 檢查 OnlineMode 狀態
@@ -684,8 +687,8 @@ namespace WindowsFormsApp1.Services
 
                   try
                   {
-                     await AlarmHelper.AddAlarmCodesAsync(Controller, new ushort[] { 0xC000 });
-                     await _controller.WriteBitsAsync(_heartbeatResponseAddr, new[] { false }, ct);
+                     await AlarmHelper.AddAlarmCodesAsync(this, [0xC000]);
+                     await _controller.WriteBitsAsync(_heartbeatResponseAddr, [false], ct);
                   }
                   catch (Exception ex)
                   {
@@ -791,13 +794,21 @@ namespace WindowsFormsApp1.Services
                DayOfWeek = (ushort)values[6]
             };
 
+            // 先取得修改系統時間的權限
+            if (!EnableSetTimePrivilege())
+            {
+               _logger?.Invoke("[TimeSync] Failed to enable time privilege (需要以管理員權限執行)");
+               return;
+            }
+
             if (SetLocalTime(ref st))
             {
                _logger?.Invoke($"[TimeSync] System Time Updated: {st.Year}/{st.Month}/{st.Day} {st.Hour}:{st.Minute}:{st.Second}");
             }
             else
             {
-               _logger?.Invoke($"[TimeSync] Failed to Update System Time (Error: {Marshal.GetLastWin32Error()})");
+               int errorCode = Marshal.GetLastWin32Error();
+               _logger?.Invoke($"[TimeSync] Failed to Update System Time (Error: {errorCode})");
             }
          }
          catch (Exception ex)
@@ -819,8 +830,79 @@ namespace WindowsFormsApp1.Services
          public ushort Milliseconds;
       }
 
+      // Windows API - Token Privilege Structures
+      [StructLayout(LayoutKind.Sequential, Pack = 1)]
+      private struct TOKEN_PRIVILEGES
+      {
+         public int PrivilegeCount;
+         public long Luid;
+         public int Attributes;
+      }
+
+      private const int SE_PRIVILEGE_ENABLED = 0x00000002;
+      private const int TOKEN_QUERY = 0x00000008;
+      private const int TOKEN_ADJUST_PRIVILEGES = 0x00000020;
+
+      [DllImport("advapi32.dll", SetLastError = true)]
+      private static extern bool OpenProcessToken(IntPtr ProcessHandle, uint DesiredAccess, out IntPtr TokenHandle);
+
+      [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+      private static extern bool LookupPrivilegeValue(string lpSystemName, string lpName, out long lpLuid);
+
+      [DllImport("advapi32.dll", SetLastError = true)]
+      private static extern bool AdjustTokenPrivileges(IntPtr TokenHandle, bool DisableAllPrivileges,
+         ref TOKEN_PRIVILEGES NewState, int BufferLength, IntPtr PreviousState, IntPtr ReturnLength);
+
+      [DllImport("kernel32.dll")]
+      private static extern IntPtr GetCurrentProcess();
+
+      [DllImport("kernel32.dll", SetLastError = true)]
+      private static extern bool CloseHandle(IntPtr hObject);
+
       [DllImport("kernel32.dll", SetLastError = true)]
       private static extern bool SetLocalTime(ref SystemTime lpSystemTime);
+
+      /// <summary>
+      /// 啟用修改系統時間的權限
+      /// </summary>
+      /// <returns>true 表示成功啟用權限</returns>
+      private static bool EnableSetTimePrivilege()
+      {
+         IntPtr tokenHandle = IntPtr.Zero;
+         try
+         {
+            // 1. 開啟當前進程的 Token
+            if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, out tokenHandle))
+            {
+               return false;
+            }
+
+            // 2. 查詢 SE_SYSTEMTIME_NAME 的 LUID
+            long luid;
+            if (!LookupPrivilegeValue(null, "SeSystemtimePrivilege", out luid))
+            {
+               return false;
+            }
+
+            // 3. 設定權限結構
+            TOKEN_PRIVILEGES tokenPrivileges = new TOKEN_PRIVILEGES
+            {
+               PrivilegeCount = 1,
+               Luid = luid,
+               Attributes = SE_PRIVILEGE_ENABLED
+            };
+
+            // 4. 調整權限
+            return AdjustTokenPrivileges(tokenHandle, false, ref tokenPrivileges, 0, IntPtr.Zero, IntPtr.Zero);
+         }
+         finally
+         {
+            if (tokenHandle != IntPtr.Zero)
+            {
+               CloseHandle(tokenHandle);
+            }
+         }
+      }
 
       #endregion
 
