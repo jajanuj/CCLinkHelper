@@ -9,6 +9,30 @@ using WindowsFormsApp1.Models;
 
 namespace WindowsFormsApp1.Services
 {
+   public enum AlarmStatus
+   {
+      Critical = 1,
+      Low = 2,
+      PreAlarm = 3,
+      NoAlarm = 4,
+   }
+
+   public enum MachineStatus
+   {
+      Init,
+      Preparing,
+      Ready,
+      Running,
+      Stopped,
+   }
+
+   public enum ActionStatus
+   {
+      Homing,
+      Moving,
+      Other,
+   }
+
    public class AppPlcService : IDisposable
    {
       #region Constant
@@ -38,21 +62,27 @@ namespace WindowsFormsApp1.Services
       // Heartbeat Fields
       private CancellationTokenSource _heartbeatCts;
       private int _heartbeatFailThreshold = 3;
+      private uint _heartbeatGlobalTimeout = 3000;
       private TimeSpan _heartbeatInterval;
       private string _heartbeatRequestAddr;
       private string _heartbeatResponseAddr;
+
+      // Heartbeat State Machine Fields
+      private int _heartbeatStep = 0;
+      private uint _heartbeatT1Timeout = 2000;
+      private CTimer _heartbeatT1Timer = new CTimer();
       private Task _heartbeatTask;
+      private CTimer _heartbeatTimeoutTimer = new CTimer();
+
+      // Common Report Cache
       private CommonReportAlarm _lastCommonReportAlarm;
       private CommonReportStatus1 _lastCommonReportStatus1;
       private CommonReportStatus2 _lastCommonReportStatus2;
-      private bool? _lastObservedRequest = null;
-      private bool? _lastObservedResponse = null;
-      private bool? _lastOnlineMode = null; // 追蹤上次的 OnlineMode 狀態（null=首次執行）
+
       private bool _lastTimeSyncTrigger;
       private CancellationTokenSource _linkReportCts;
       private int _linkReportStep;
       private Task _linkReportTask;
-      private DateTime? _t1Watchdog = null; // T1 計時器：Response ON 後開始計時
 
       // TimeSync Fields
       private CancellationTokenSource _timeSyncCts;
@@ -119,6 +149,41 @@ namespace WindowsFormsApp1.Services
       public ICCLinkController Controller => _controller;
 
       public int ConsecutiveHeartbeatFailuresCount { get; private set; }
+
+      #endregion
+
+      #region Public Methods
+
+      public async Task SetAlarmStatus(AlarmStatus status)
+      {
+         await _controller.WriteWordsAsync("LW1116", [(short)status]);
+      }
+
+      public async Task SetMachineStatus(MachineStatus status)
+      {
+         ushort statusValue = status switch
+         {
+            MachineStatus.Init => 1,
+            MachineStatus.Preparing => 2,
+            MachineStatus.Ready => 3,
+            MachineStatus.Running => 4,
+            MachineStatus.Stopped => 5,
+            _ => 0,
+         };
+         await _controller.WriteWordsAsync("LW1147", [(short)statusValue]);
+      }
+
+      public async Task SetActionStatus(ActionStatus status)
+      {
+         ushort statusValue = status switch
+         {
+            ActionStatus.Homing => 1,
+            ActionStatus.Moving => 2,
+            ActionStatus.Other => 99,
+            _ => 0,
+         };
+         await _controller.WriteWordsAsync("LW1148", [(short)statusValue]);
+      }
 
       #endregion
 
@@ -537,166 +602,125 @@ namespace WindowsFormsApp1.Services
 
       private async Task RunHeartbeatAsync(CancellationToken ct)
       {
-         bool ok = true;
-         bool handshakeCompleted = false;
-
-         // 檢查 OnlineMode 狀態變更（包含首次執行）
-         if (!_lastOnlineMode.HasValue || OnlineMode != _lastOnlineMode.Value)
-         {
-            if (OnlineMode)
-            {
-               _logger?.Invoke($"[Heartbeat] 進入連線模式，開始心跳監控 | Enter Online Mode, starting heartbeat");
-               // 可選擇在此重置心跳狀態變數
-               ConsecutiveHeartbeatFailuresCount = 0;
-            }
-            else
-            {
-               _logger?.Invoke($"[Heartbeat] 離開連線模式，暫停心跳監控 | Exit Online Mode, pausing heartbeat");
-               // 重置觀察狀態，確保下次進入時能正確偵測
-               _lastObservedRequest = null;
-               _lastObservedResponse = null;
-            }
-
-            _lastOnlineMode = OnlineMode;
-         }
-
-         // 若不在連線模式，則不執行後續心跳邏輯
+         // 檢查 OnlineMode 狀態
          if (!OnlineMode)
          {
+            // 離線模式：重置狀態機
+            if (_heartbeatStep != 0)
+            {
+               _logger?.Invoke("[Heartbeat] 離開連線模式，重置狀態機 | Exit Online Mode, resetting state machine");
+               _heartbeatStep = 0;
+            }
+
             return;
          }
 
-         // Use Cached GetBit from Controller
+         // 讀取當前信號狀態
          bool requestOn = _controller.GetBit(_heartbeatRequestAddr);
          bool responseOn = _controller.GetBit(_heartbeatResponseAddr);
 
-         // 計算當前狀態
-         // Bit 0: Response (0=OFF, 1=ON)
-         // Bit 1: Request (0=OFF, 1=ON) -> value 2
-         int state = (requestOn ? 2 : 0) | (responseOn ? 1 : 0);
-
-         // 檢查狀態是否改變
-         // 如果 _lastObservedRequest/Response 為 null (首次運行或重置後)，視為狀態改變
-         int lastState = (_lastObservedRequest ?? false ? 2 : 0) | (_lastObservedResponse ?? false ? 1 : 0);
-         bool stateChanged = !(_lastObservedRequest.HasValue && _lastObservedResponse.HasValue) || state != lastState;
-
-         if (stateChanged || state == 0)
+         switch (_heartbeatStep)
          {
-            _handshakeWatchdog = DateTime.UtcNow; // Keep this line from original
-            if (stateChanged)
+            case 0: // Idle - 等待 PLC Request
             {
-               _logger?.Invoke($"[Heartbeat] State Changed: {lastState} -> {state}");
-            }
-         }
-         else
-         {
-            var elapsed = DateTime.UtcNow - (_handshakeWatchdog ?? DateTime.UtcNow);
-            if (elapsed.TotalMilliseconds > _heartbeatInterval.TotalMilliseconds * _heartbeatFailThreshold)
-            {
-               _logger?.Invoke($"[Heartbeat] Timeout (State: {state})");
-               ok = false;
-            }
-         }
-
-         switch (state)
-         {
-            case 0: // (0,0) Idle
-               if (lastState == 1)
+               if (requestOn && !responseOn)
                {
-                  handshakeCompleted = true;
-               }
+                  _logger?.Invoke("[Heartbeat] PLC Request detected (1,0)");
 
-               _lastObservedRequest = false;
-               _lastObservedResponse = false;
-               break;
-
-            case 2: // (1,0) PLC Request
-               if (lastState == 0 || !_lastObservedRequest.HasValue)
-               {
-                  _logger?.Invoke("[Heartbeat] PLC Request Detected (1,0)");
                   try
                   {
+                     // 寫入 Response ON
                      await _controller.WriteBitsAsync(_heartbeatResponseAddr, new[] { true }, ct);
-                     _lastObservedRequest = true;
-                     _lastObservedResponse = false;
+
+                     _heartbeatT1Timer.Reset();
+                     _heartbeatTimeoutTimer.Reset();
+                     _heartbeatStep = 2; // → Responding
                   }
                   catch (Exception ex)
                   {
                      _logger?.Invoke($"[Heartbeat] Set Response Failed: {ex.Message}");
-                     ok = false;
+                     HandleHeartbeatFailure();
                   }
                }
 
                break;
+            }
 
-            case 3: // (1,1) PC Responded
-               // 當從狀態 2 (1,0) 進入狀態 3 (1,1) 時，開始 T1 計時
-               if (lastState == 2)
+            case 2: // Responding - 等待 PLC 清除 Request
+            {
+               if (!requestOn && responseOn)
                {
-                  _t1Watchdog = DateTime.UtcNow;
-                  _logger?.Invoke("[Heartbeat] PC Responded (1,1), T1 timer started");
-               }
-               else if (_t1Watchdog.HasValue)
-               {
-                  // 檢查 T1 逾時：從 Response ON 後，Request 仍然沒有 OFF
-                  var t1Elapsed = DateTime.UtcNow - _t1Watchdog.Value;
-                  var t1Timeout = _heartbeatInterval.TotalMilliseconds * 2; // T1 逾時設定（可調整）
+                  _logger?.Invoke("[Heartbeat] PLC cleared Request (0,1)");
 
-                  if (t1Elapsed.TotalMilliseconds > t1Timeout)
-                  {
-                     await AlarmHelper.AddAlarmCodeAsync(Controller, "C000");
-                     _logger?.Invoke($"[Heartbeat] T1 Timeout: PLC 未在 {t1Timeout}ms 內清除 Request | T1 Timeout: PLC did not clear Request within {t1Timeout}ms");
-                     ok = false;
-                     _t1Watchdog = null; // 重置計時器
-                  }
-               }
-
-               _lastObservedRequest = true;
-               _lastObservedResponse = true;
-
-               break;
-
-            case 1: // (0,1) PLC Cleared Request
-               // 清除 T1 計時器：已成功從 (1,1) 進入 (0,1)
-               _t1Watchdog = null;
-
-               if (lastState == 3)
-               {
-                  _logger?.Invoke("[Heartbeat] PLC Cleared Request, Clearing Response (0,1)");
                   try
                   {
+                     // PLC 已清除 Request，清除 Response
                      await _controller.WriteBitsAsync(_heartbeatResponseAddr, new[] { false }, ct);
-                     _lastObservedRequest = false;
-                     _lastObservedResponse = true;
+
+                     _logger?.Invoke("[Heartbeat] Handshake completed");
+                     _heartbeatStep = 0; // → Idle
+
+                     // 觸發成功事件
+                     ConsecutiveHeartbeatFailuresCount = 0;
+                     PostEvent(() => HeartbeatSucceeded?.Invoke());
                   }
                   catch (Exception ex)
                   {
                      _logger?.Invoke($"[Heartbeat] Clear Response Failed: {ex.Message}");
-                     ok = false;
+                     HandleHeartbeatFailure();
+                     _heartbeatStep = 0; // → Idle
                   }
+               }
+               else if (!requestOn && !responseOn)
+               {
+                  // 異常狀態：兩個都變成 OFF 了
+                  _logger?.Invoke("[Heartbeat] 異常狀態：Request 和 Response 都是 OFF");
+                  _heartbeatStep = 0; // → Idle
+               }
+               else if (_heartbeatT1Timer.On(_heartbeatT1Timeout))
+               {
+                  // T1 逾時：PLC 未在時限內清除 Request
+                  _logger?.Invoke($"[Heartbeat] T1 Timeout - PLC 未在 {_heartbeatT1Timeout}ms 內清除 Request");
+
+                  try
+                  {
+                     await AlarmHelper.AddAlarmCodesAsync(Controller, new ushort[] { 0xC000 });
+                     await _controller.WriteBitsAsync(_heartbeatResponseAddr, new[] { false }, ct);
+                  }
+                  catch (Exception ex)
+                  {
+                     _logger?.Invoke($"[Heartbeat] T1 Timeout處理失敗: {ex.Message}");
+                  }
+
+                  HandleHeartbeatFailure();
+                  _heartbeatStep = 0; // → Idle
+               }
+               else if (_heartbeatTimeoutTimer.On(_heartbeatGlobalTimeout))
+               {
+                  // 全局逾時
+                  _logger?.Invoke($"[Heartbeat] Global Timeout - 超過 {_heartbeatGlobalTimeout}ms");
+                  HandleHeartbeatFailure();
+                  _heartbeatStep = 0; // → Idle
                }
 
                break;
+            }
          }
+      }
 
-         if (ok)
+      /// <summary>
+      /// 處理心跳失敗
+      /// </summary>
+      private void HandleHeartbeatFailure()
+      {
+         ConsecutiveHeartbeatFailuresCount++;
+         PostEvent(() => ConsecutiveHeartbeatFailures?.Invoke(ConsecutiveHeartbeatFailuresCount));
+
+         if (ConsecutiveHeartbeatFailuresCount >= _heartbeatFailThreshold)
          {
-            ConsecutiveHeartbeatFailuresCount = 0;
-            if (handshakeCompleted)
-            {
-               PostEvent(() => HeartbeatSucceeded?.Invoke());
-            }
-         }
-         else
-         {
-            ConsecutiveHeartbeatFailuresCount++;
-            PostEvent(() => ConsecutiveHeartbeatFailures?.Invoke(ConsecutiveHeartbeatFailuresCount));
-            if (ConsecutiveHeartbeatFailuresCount >= _heartbeatFailThreshold)
-            {
-               _logger?.Invoke($"[Heartbeat] 連續失敗 {_heartbeatFailThreshold} 次，已停止心跳監控");
-               PostEvent(() => HeartbeatFailed?.Invoke());
-               _heartbeatCts?.Cancel();
-            }
+            _logger?.Invoke($"[Heartbeat] 連續失敗 {_heartbeatFailThreshold} 次，已停止心跳監控");
+            PostEvent(() => HeartbeatFailed?.Invoke());
+            _heartbeatCts?.Cancel();
          }
       }
 

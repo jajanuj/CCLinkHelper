@@ -526,6 +526,10 @@ namespace WindowsFormsApp1
 
             _isOpened = true;
 
+            await _appPlcService.SetAlarmStatus(AlarmStatus.NoAlarm);
+            await _appPlcService.SetMachineStatus(MachineStatus.Init);
+            await _appPlcService.SetActionStatus(ActionStatus.Other);
+
             // 啟動 Maintenance Monitor (Device Logic)
             _appPlcService.StartTrackingDataMaintenanceMonitor(TimeSpan.FromMilliseconds(200));
 

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using WindowsFormsApp1.CCLink.Interfaces;
+using WindowsFormsApp1.Services;
 
 namespace WindowsFormsApp1.Services
 {
@@ -27,17 +28,37 @@ namespace WindowsFormsApp1.Services
 
       #region Public Methods
 
+      /// <summary>
+      /// 新增單一警報碼（舊版方法，為向後相容保留）
+      /// </summary>
+      [Obsolete("請使用接受 AppPlcService 的版本")]
       public static Task<(int AddedCount, ushort[] IgnoredCodes)> AddAlarmCodeAsync(ICCLinkController controller, string code)
       {
          var codes = new ushort[] { ushort.Parse(code) };
-         return AddAlarmCodesAsync(controller, codes, DefaultAlarmAddress);
+         return AddAlarmCodesAsync(controller, codes, null, DefaultAlarmAddress);
+      }
+
+      /// <summary>
+      /// 新增警報碼到 PLC（舊版方法，為向後相容保留）
+      /// </summary>
+      [Obsolete("請使用接受 AppPlcService 的版本")]
+      public static Task<(int AddedCount, ushort[] IgnoredCodes)> AddAlarmCodesAsync(
+         ICCLinkController controller,
+         ushort[] newAlarmCodes,
+         string baseAddress = DefaultAlarmAddress)
+      {
+         return AddAlarmCodesAsync(controller, newAlarmCodes, null, baseAddress);
       }
 
       /// <summary>
       /// 新增警報碼到 PLC
       /// 會自動排除重複的警報碼，並在空間不足時返回被忽略的警報碼
+      /// 成功新增後會自動根據警報代碼設定 AlarmStatus：
+      /// - C 開頭（如 C000）→ PreAlarm (3)
+      /// - 23 開頭（如 2329）→ Low (2)
+      /// - 其他代碼（如 0001）→ Critical (1)
       /// </summary>
-      /// <param name="controller">PLC 控制器介面</param>
+      /// <param name="appPlcService">AppPlcService 實例（包含 Controller 和 AlarmStatus 設定功能）</param>
       /// <param name="newAlarmCodes">要新增的警報碼陣列</param>
       /// <param name="baseAddress">警報起始位址，預設為 LW113A</param>
       /// <returns>
@@ -45,11 +66,28 @@ namespace WindowsFormsApp1.Services
       /// - AddedCount: 成功新增的警報碼數量
       /// - IgnoredCodes: 因空間不足而被忽略的警報碼陣列
       /// </returns>
-      /// <exception cref="ArgumentNullException">controller 或 newAlarmCodes 為 null</exception>
+      /// <exception cref="ArgumentNullException">appPlcService 或 newAlarmCodes 為 null</exception>
       /// <exception cref="InvalidOperationException">PLC 讀寫失敗</exception>
-      public static async Task<(int AddedCount, ushort[] IgnoredCodes)> AddAlarmCodesAsync(
+      public static Task<(int AddedCount, ushort[] IgnoredCodes)> AddAlarmCodesAsync(
+         AppPlcService appPlcService,
+         ushort[] newAlarmCodes,
+         string baseAddress = DefaultAlarmAddress)
+      {
+         if (appPlcService == null)
+         {
+            throw new ArgumentNullException(nameof(appPlcService));
+         }
+
+         return AddAlarmCodesAsync(appPlcService.Controller, newAlarmCodes, appPlcService, baseAddress);
+      }
+
+      /// <summary>
+      /// 新增警報碼到 PLC（內部實作方法）
+      /// </summary>
+      private static async Task<(int AddedCount, ushort[] IgnoredCodes)> AddAlarmCodesAsync(
          ICCLinkController controller,
          ushort[] newAlarmCodes,
+         AppPlcService appPlcService,
          string baseAddress = DefaultAlarmAddress)
       {
          if (controller == null)
@@ -105,7 +143,15 @@ namespace WindowsFormsApp1.Services
             // 7. 寫回 PLC
             await WriteAlarmCodesAsync(controller, currentAlarms, baseAddress);
 
-            // 8. 返回結果
+            // 8. 自動設定 AlarmStatus（如果有提供 AppPlcService）
+            if (appPlcService != null)
+            {
+               var addedCodes = uniqueNewCodes.Take(addedCount).ToArray();
+               var highestStatus = DetermineHighestAlarmStatus(addedCodes);
+               await appPlcService.SetAlarmStatus(highestStatus);
+            }
+
+            // 9. 返回結果
             var ignoredCodes = uniqueNewCodes.Skip(addedCount).ToArray();
             return (addedCount, ignoredCodes);
          }
@@ -225,6 +271,62 @@ namespace WindowsFormsApp1.Services
 
          var words = alarmCodes.Select(code => unchecked((short)code)).ToArray();
          await controller.WriteWordsAsync(baseAddress, words);
+      }
+
+      /// <summary>
+      /// 判斷最高優先級的 AlarmStatus
+      /// 優先級：Critical (1) > Low (2) > PreAlarm (3) > NoAlarm (4)
+      /// </summary>
+      /// <param name="codes">警報代碼陣列</param>
+      /// <returns>最高優先級的 AlarmStatus</returns>
+      private static AlarmStatus DetermineHighestAlarmStatus(ushort[] codes)
+      {
+         if (codes == null || codes.Length == 0)
+         {
+            return AlarmStatus.NoAlarm;  // 4 - 沒有警報
+         }
+
+         AlarmStatus highestStatus = AlarmStatus.NoAlarm;  // 預設為 4
+         bool hasCritical = false;
+         bool hasLow = false;
+         bool hasPreAlarm = false;
+
+         foreach (var code in codes)
+         {
+            string hex = code.ToString("X4");  // 轉換為 4 位十六進制字串
+
+            if (hex.StartsWith("C"))
+            {
+               // C 開頭 → PreAlarm (3)
+               hasPreAlarm = true;
+            }
+            else if (hex.StartsWith("23"))
+            {
+               // 23 開頭 → Low (2)
+               hasLow = true;
+            }
+            else
+            {
+               // 其他代碼 → Critical (1) - 最高優先級
+               hasCritical = true;
+            }
+         }
+
+         // 根據優先級返回：Critical (1) > Low (2) > PreAlarm (3) > NoAlarm (4)
+         if (hasCritical)
+         {
+            return AlarmStatus.Critical;  // 1
+         }
+         else if (hasLow)
+         {
+            return AlarmStatus.Low;  // 2
+         }
+         else if (hasPreAlarm)
+         {
+            return AlarmStatus.PreAlarm;  // 3
+         }
+
+         return AlarmStatus.NoAlarm;  // 4
       }
 
       #endregion
