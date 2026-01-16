@@ -45,8 +45,6 @@
          this.btnStopSimulator = new System.Windows.Forms.Button();
          this.btnPlcSettings = new System.Windows.Forms.Button();
          this.btnScanMonitor = new System.Windows.Forms.Button();
-         this.btnStopMaintMonitor = new System.Windows.Forms.Button();
-         this.btnStartMaintMonitor = new System.Windows.Forms.Button();
          this.btnTrackingControl = new System.Windows.Forms.Button();
          this.btnStartCommonReporting = new System.Windows.Forms.Button();
          this.btnSetCommonReporting = new System.Windows.Forms.Button();
@@ -58,19 +56,25 @@
          this.dtpTime = new System.Windows.Forms.DateTimePicker();
          this.btnSyncFromPc = new System.Windows.Forms.Button();
          this.btnSetTimeToPlc = new System.Windows.Forms.Button();
+         this.grpLinkReport = new System.Windows.Forms.GroupBox();
+         this.lblLinkReportTestMode = new System.Windows.Forms.Label();
+         this.cboLinkReportTestMode = new System.Windows.Forms.ComboBox();
+         this.grpConnectMode = new System.Windows.Forms.GroupBox();
+         this.rbtnOffline = new System.Windows.Forms.RadioButton();
+         this.rbtnOnline = new System.Windows.Forms.RadioButton();
+         this.btnStartMaintMonitor = new System.Windows.Forms.Button();
+         this.btnStopMaintMonitor = new System.Windows.Forms.Button();
          this.lstLog = new System.Windows.Forms.ListBox();
          this.lblStatus = new System.Windows.Forms.Label();
-         this.grpLinkReport = new System.Windows.Forms.GroupBox();
-         this.cboLinkReportTestMode = new System.Windows.Forms.ComboBox();
-         this.lblLinkReportTestMode = new System.Windows.Forms.Label();
-         this.grpConnectMode = new System.Windows.Forms.GroupBox();
-         this.rbtnOnline = new System.Windows.Forms.RadioButton();
-         this.rbtnOffline = new System.Windows.Forms.RadioButton();
+         this.grpAlarm = new System.Windows.Forms.GroupBox();
+         this.btnAddAlarm = new System.Windows.Forms.Button();
+         this.txtAlarmCode = new System.Windows.Forms.TextBox();
          this.flowLayoutPanel1.SuspendLayout();
          this.grpConnectionMode.SuspendLayout();
          this.grpManualTime.SuspendLayout();
          this.grpLinkReport.SuspendLayout();
          this.grpConnectMode.SuspendLayout();
+         this.grpAlarm.SuspendLayout();
          this.SuspendLayout();
          // 
          // flowLayoutPanel1
@@ -99,6 +103,7 @@
          this.flowLayoutPanel1.Controls.Add(this.grpManualTime);
          this.flowLayoutPanel1.Controls.Add(this.grpLinkReport);
          this.flowLayoutPanel1.Controls.Add(this.grpConnectMode);
+         this.flowLayoutPanel1.Controls.Add(this.grpAlarm);
          this.flowLayoutPanel1.Controls.Add(this.btnStartMaintMonitor);
          this.flowLayoutPanel1.Controls.Add(this.btnStopMaintMonitor);
          this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
@@ -106,7 +111,7 @@
          this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
          this.flowLayoutPanel1.Name = "flowLayoutPanel1";
          this.flowLayoutPanel1.Padding = new System.Windows.Forms.Padding(10);
-         this.flowLayoutPanel1.Size = new System.Drawing.Size(832, 358);
+         this.flowLayoutPanel1.Size = new System.Drawing.Size(832, 404);
          this.flowLayoutPanel1.TabIndex = 0;
          // 
          // grpConnectionMode
@@ -379,27 +384,6 @@
          this.btnSetTimeToPlc.UseVisualStyleBackColor = true;
          this.btnSetTimeToPlc.Click += new System.EventHandler(this.btnSetTimeToPlc_Click);
          // 
-         // lstLog
-         // 
-         this.lstLog.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.lstLog.FormattingEnabled = true;
-         this.lstLog.ItemHeight = 12;
-         this.lstLog.Location = new System.Drawing.Point(0, 358);
-         this.lstLog.Name = "lstLog";
-         this.lstLog.Size = new System.Drawing.Size(832, 68);
-         this.lstLog.TabIndex = 10;
-         // 
-         // lblStatus
-         // 
-         this.lblStatus.BackColor = System.Drawing.Color.LightGreen;
-         this.lblStatus.Dock = System.Windows.Forms.DockStyle.Bottom;
-         this.lblStatus.Location = new System.Drawing.Point(0, 426);
-         this.lblStatus.Name = "lblStatus";
-         this.lblStatus.Size = new System.Drawing.Size(832, 24);
-         this.lblStatus.TabIndex = 11;
-         this.lblStatus.Text = "Status";
-         this.lblStatus.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-         // 
          // grpLinkReport
          // 
          this.grpLinkReport.Controls.Add(this.lblLinkReportTestMode);
@@ -410,6 +394,15 @@
          this.grpLinkReport.TabIndex = 22;
          this.grpLinkReport.TabStop = false;
          this.grpLinkReport.Text = "連結報告";
+         // 
+         // lblLinkReportTestMode
+         // 
+         this.lblLinkReportTestMode.AutoSize = true;
+         this.lblLinkReportTestMode.Location = new System.Drawing.Point(6, 36);
+         this.lblLinkReportTestMode.Name = "lblLinkReportTestMode";
+         this.lblLinkReportTestMode.Size = new System.Drawing.Size(55, 14);
+         this.lblLinkReportTestMode.TabIndex = 1;
+         this.lblLinkReportTestMode.Text = "測試模式";
          // 
          // cboLinkReportTestMode
          // 
@@ -425,15 +418,6 @@
          this.cboLinkReportTestMode.TabIndex = 0;
          this.cboLinkReportTestMode.SelectedIndexChanged += new System.EventHandler(this.cboLinkReportTestMode_SelectedIndexChanged);
          // 
-         // lblLinkReportTestMode
-         // 
-         this.lblLinkReportTestMode.AutoSize = true;
-         this.lblLinkReportTestMode.Location = new System.Drawing.Point(6, 36);
-         this.lblLinkReportTestMode.Name = "lblLinkReportTestMode";
-         this.lblLinkReportTestMode.Size = new System.Drawing.Size(55, 14);
-         this.lblLinkReportTestMode.TabIndex = 1;
-         this.lblLinkReportTestMode.Text = "測試模式";
-         // 
          // grpConnectMode
          // 
          this.grpConnectMode.Controls.Add(this.rbtnOffline);
@@ -444,17 +428,6 @@
          this.grpConnectMode.TabIndex = 23;
          this.grpConnectMode.TabStop = false;
          this.grpConnectMode.Text = "連線模式";
-         // 
-         // rbtnOnline
-         // 
-         this.rbtnOnline.AutoSize = true;
-         this.rbtnOnline.Location = new System.Drawing.Point(17, 25);
-         this.rbtnOnline.Name = "rbtnOnline";
-         this.rbtnOnline.Size = new System.Drawing.Size(67, 18);
-         this.rbtnOnline.TabIndex = 0;
-         this.rbtnOnline.Text = "Online";
-         this.rbtnOnline.UseVisualStyleBackColor = true;
-         this.rbtnOnline.CheckedChanged += new System.EventHandler(this.Online_CheckedChanged);
          // 
          // rbtnOffline
          // 
@@ -467,12 +440,22 @@
          this.rbtnOffline.TabStop = true;
          this.rbtnOffline.Text = "Offline";
          this.rbtnOffline.UseVisualStyleBackColor = true;
-         this.rbtnOffline.UseVisualStyleBackColor = true;
          this.rbtnOffline.CheckedChanged += new System.EventHandler(this.Offline_CheckedChanged);
+         // 
+         // rbtnOnline
+         // 
+         this.rbtnOnline.AutoSize = true;
+         this.rbtnOnline.Location = new System.Drawing.Point(17, 25);
+         this.rbtnOnline.Name = "rbtnOnline";
+         this.rbtnOnline.Size = new System.Drawing.Size(67, 18);
+         this.rbtnOnline.TabIndex = 0;
+         this.rbtnOnline.Text = "Online";
+         this.rbtnOnline.UseVisualStyleBackColor = true;
+         this.rbtnOnline.CheckedChanged += new System.EventHandler(this.Online_CheckedChanged);
          // 
          // btnStartMaintMonitor
          // 
-         this.btnStartMaintMonitor.Location = new System.Drawing.Point(657, 251);
+         this.btnStartMaintMonitor.Location = new System.Drawing.Point(20, 358);
          this.btnStartMaintMonitor.Margin = new System.Windows.Forms.Padding(10);
          this.btnStartMaintMonitor.Name = "btnStartMaintMonitor";
          this.btnStartMaintMonitor.Size = new System.Drawing.Size(186, 26);
@@ -484,7 +467,7 @@
          // btnStopMaintMonitor
          // 
          this.btnStopMaintMonitor.Enabled = false;
-         this.btnStopMaintMonitor.Location = new System.Drawing.Point(20, 351);
+         this.btnStopMaintMonitor.Location = new System.Drawing.Point(226, 358);
          this.btnStopMaintMonitor.Margin = new System.Windows.Forms.Padding(10);
          this.btnStopMaintMonitor.Name = "btnStopMaintMonitor";
          this.btnStopMaintMonitor.Size = new System.Drawing.Size(186, 26);
@@ -492,6 +475,56 @@
          this.btnStopMaintMonitor.Text = "Stop Maint Monitor";
          this.btnStopMaintMonitor.UseVisualStyleBackColor = true;
          this.btnStopMaintMonitor.Click += new System.EventHandler(this.btnStopMaintMonitor_Click);
+         // 
+         // lstLog
+         // 
+         this.lstLog.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.lstLog.FormattingEnabled = true;
+         this.lstLog.ItemHeight = 12;
+         this.lstLog.Location = new System.Drawing.Point(0, 404);
+         this.lstLog.Name = "lstLog";
+         this.lstLog.Size = new System.Drawing.Size(832, 22);
+         this.lstLog.TabIndex = 10;
+         // 
+         // lblStatus
+         // 
+         this.lblStatus.BackColor = System.Drawing.Color.LightGreen;
+         this.lblStatus.Dock = System.Windows.Forms.DockStyle.Bottom;
+         this.lblStatus.Location = new System.Drawing.Point(0, 426);
+         this.lblStatus.Name = "lblStatus";
+         this.lblStatus.Size = new System.Drawing.Size(832, 24);
+         this.lblStatus.TabIndex = 11;
+         this.lblStatus.Text = "Status";
+         this.lblStatus.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+         // 
+         // grpAlarm
+         // 
+         this.grpAlarm.Controls.Add(this.txtAlarmCode);
+         this.grpAlarm.Controls.Add(this.btnAddAlarm);
+         this.grpAlarm.Location = new System.Drawing.Point(657, 251);
+         this.grpAlarm.Name = "grpAlarm";
+         this.grpAlarm.Size = new System.Drawing.Size(112, 87);
+         this.grpAlarm.TabIndex = 26;
+         this.grpAlarm.TabStop = false;
+         this.grpAlarm.Text = "警報測試";
+         // 
+         // btnAddAlarm
+         // 
+         this.btnAddAlarm.Location = new System.Drawing.Point(7, 21);
+         this.btnAddAlarm.Margin = new System.Windows.Forms.Padding(10);
+         this.btnAddAlarm.Name = "btnAddAlarm";
+         this.btnAddAlarm.Size = new System.Drawing.Size(92, 26);
+         this.btnAddAlarm.TabIndex = 22;
+         this.btnAddAlarm.Text = "Add Alarm";
+         this.btnAddAlarm.UseVisualStyleBackColor = true;
+         this.btnAddAlarm.Click += new System.EventHandler(this.btnAddAlarm_Click);
+         // 
+         // txtAlarmCode
+         // 
+         this.txtAlarmCode.Location = new System.Drawing.Point(7, 53);
+         this.txtAlarmCode.Name = "txtAlarmCode";
+         this.txtAlarmCode.Size = new System.Drawing.Size(92, 22);
+         this.txtAlarmCode.TabIndex = 23;
          // 
          // Form1
          // 
@@ -511,6 +544,8 @@
          this.grpLinkReport.PerformLayout();
          this.grpConnectMode.ResumeLayout(false);
          this.grpConnectMode.PerformLayout();
+         this.grpAlarm.ResumeLayout(false);
+         this.grpAlarm.PerformLayout();
          this.ResumeLayout(false);
          this.PerformLayout();
 
@@ -566,6 +601,9 @@
       private System.Windows.Forms.RadioButton rbtnOnline;
       private System.Windows.Forms.Button btnStartMaintMonitor;
       private System.Windows.Forms.Button btnStopMaintMonitor;
+      private System.Windows.Forms.GroupBox grpAlarm;
+      private System.Windows.Forms.TextBox txtAlarmCode;
+      private System.Windows.Forms.Button btnAddAlarm;
    }
 }
 

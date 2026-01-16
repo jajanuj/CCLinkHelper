@@ -119,6 +119,7 @@
     <Compile Include="Models\TrackingData.cs" />
     <Compile Include="Models\TrackingSettings.cs" />
     <Compile Include="Models\TrackingStation.cs" />
+    <Compile Include="Services\AlarmHelper.cs" />
     <Compile Include="Services\AppPlcService.cs" />
     <Compile Include="Models\RecipeCheckMode.cs" />
     <Compile Include="Models\RecipeCheckSettings.cs" />

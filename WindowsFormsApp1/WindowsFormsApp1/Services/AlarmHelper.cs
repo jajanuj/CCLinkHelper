@@ -11,6 +11,8 @@ namespace WindowsFormsApp1.Services
    /// </summary>
    public static class AlarmHelper
    {
+      #region Constant
+
       /// <summary>
       /// 預設的警報碼數量上限
       /// </summary>
@@ -20,6 +22,10 @@ namespace WindowsFormsApp1.Services
       /// 預設的警報起始位址
       /// </summary>
       private const string DefaultAlarmAddress = "LW113A";
+
+      #endregion
+
+      #region Public Methods
 
       /// <summary>
       /// 新增警報碼到 PLC
@@ -41,13 +47,19 @@ namespace WindowsFormsApp1.Services
          string baseAddress = DefaultAlarmAddress)
       {
          if (controller == null)
+         {
             throw new ArgumentNullException(nameof(controller));
-         
+         }
+
          if (newAlarmCodes == null)
+         {
             throw new ArgumentNullException(nameof(newAlarmCodes));
+         }
 
          if (newAlarmCodes.Length == 0)
+         {
             return (0, Array.Empty<ushort>());
+         }
 
          try
          {
@@ -77,7 +89,7 @@ namespace WindowsFormsApp1.Services
             // 5. 計算可以新增的數量
             int availableSlots = MaxAlarmCount - emptySlotIndex;
             int addedCount = Math.Min(availableSlots, uniqueNewCodes.Length);
-            
+
             // 6. 填入新的警報碼
             for (int i = 0; i < addedCount; i++)
             {
@@ -110,7 +122,9 @@ namespace WindowsFormsApp1.Services
          string baseAddress = DefaultAlarmAddress)
       {
          if (controller == null)
+         {
             throw new ArgumentNullException(nameof(controller));
+         }
 
          try
          {
@@ -139,10 +153,14 @@ namespace WindowsFormsApp1.Services
          string baseAddress = DefaultAlarmAddress)
       {
          if (controller == null)
+         {
             throw new ArgumentNullException(nameof(controller));
+         }
 
          if (alarmCode == 0)
+         {
             return false; // 0 不是有效的警報碼
+         }
 
          try
          {
@@ -162,6 +180,7 @@ namespace WindowsFormsApp1.Services
             {
                currentAlarms[i] = currentAlarms[i + 1];
             }
+
             currentAlarms[MaxAlarmCount - 1] = 0; // 最後一個位置設為 0
 
             // 4. 寫回 PLC
@@ -175,6 +194,8 @@ namespace WindowsFormsApp1.Services
          }
       }
 
+      #endregion
+
       #region Private Helper Methods
 
       /// <summary>
@@ -183,7 +204,7 @@ namespace WindowsFormsApp1.Services
       private static async Task<ushort[]> ReadAlarmCodesAsync(ICCLinkController controller, string baseAddress)
       {
          var words = await controller.ReadWordsAsync(baseAddress, MaxAlarmCount);
-         return words.Select(w => (ushort)w).ToArray();
+         return words.Select(w => unchecked((ushort)w)).ToArray();
       }
 
       /// <summary>
@@ -192,9 +213,11 @@ namespace WindowsFormsApp1.Services
       private static async Task WriteAlarmCodesAsync(ICCLinkController controller, ushort[] alarmCodes, string baseAddress)
       {
          if (alarmCodes.Length != MaxAlarmCount)
+         {
             throw new ArgumentException($"警報碼陣列長度必須為 {MaxAlarmCount}");
+         }
 
-         var words = alarmCodes.Select(code => (short)code).ToArray();
+         var words = alarmCodes.Select(code => unchecked((short)code)).ToArray();
          await controller.WriteWordsAsync(baseAddress, words);
       }
 

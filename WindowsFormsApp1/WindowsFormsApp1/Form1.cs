@@ -1157,6 +1157,62 @@ namespace WindowsFormsApp1
          Log("維護監控已手動停止 | Maintenance Monitor stopped manually");
       }
 
+      private async void btnAddAlarm_Click(object sender, EventArgs e)
+      {
+         try
+         {
+            string[] inputs = txtAlarmCode.Text.Split(',');
+            ushort[] alarmData = new ushort[inputs.Length];
+
+            for (int i = 0; i < inputs.Length; i++)
+            {
+               string trimmed = inputs[i].Trim();
+               if (string.IsNullOrEmpty(trimmed))
+               {
+                  MessageBox.Show($"警報代碼不可為空 | Alarm code cannot be empty (Position: {i + 1})");
+                  return;
+               }
+
+               // 使用 Convert.ToUInt16 來解析十六進位字串
+               try
+               {
+                  alarmData[i] = Convert.ToUInt16(trimmed, 16);
+               }
+               catch (FormatException)
+               {
+                  MessageBox.Show(
+                     $"無效的警報代碼格式 | Invalid alarm code format: '{trimmed}'\n請使用十六進位格式 (例如: C000, 0001) | Please use hexadecimal format (e.g., C000, 0001)",
+                     "格式錯誤 | Format Error",
+                     MessageBoxButtons.OK,
+                     MessageBoxIcon.Warning);
+                  return;
+               }
+               catch (OverflowException)
+               {
+                  MessageBox.Show(
+                     $"警報代碼超出範圍 | Alarm code out of range: '{trimmed}'\n範圍: 0000-FFFF | Range: 0000-FFFF",
+                     "範圍錯誤 | Range Error",
+                     MessageBoxButtons.OK,
+                     MessageBoxIcon.Warning);
+                  return;
+               }
+            }
+
+            if (alarmData.Length == 0)
+            {
+               MessageBox.Show("請輸入有效的警報代碼 | Please enter a valid alarm code");
+               return;
+            }
+
+            var (added, ignored) = await AlarmHelper.AddAlarmCodesAsync(_appPlcService.Controller, alarmData);
+            Log($"[UI btnAddAlarm] 新增警報代碼結果: 添加了 {added} 個代碼, 忽略了 {ignored} 個代碼");
+         }
+         catch (Exception ex)
+         {
+            Log($"[UI btnAddAlarm] 發生例外: {ex.Message}");
+         }
+      }
+
       #endregion
    }
 }
