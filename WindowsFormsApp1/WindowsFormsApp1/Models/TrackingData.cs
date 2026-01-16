@@ -128,6 +128,29 @@ namespace WindowsFormsApp1.Models
          return new TrackingData(data);
       }
 
+      /// <summary>
+      /// 從 ushort 陣列建立 TrackingData（用於維護資料接收）
+      /// </summary>
+      /// <param name="words">10 個 Word 的 ushort 陣列</param>
+      public static TrackingData FromWords(ushort[] words)
+      {
+         if (words == null || words.Length < 10)
+         {
+            return new TrackingData();
+         }
+
+         return new TrackingData
+         {
+            BoardId = new ushort[] { words[0], words[1], words[2] },
+            LayerCount = words[3],
+            LotNoChar = words[4],
+            LotNoNum = (uint)(words[5] | (words[6] << 16)),  // Little Endian
+            JudgeFlag1 = words[7],
+            JudgeFlag2 = words[8],
+            JudgeFlag3 = words[9]
+         };
+      }
+
       #endregion
    }
 }
