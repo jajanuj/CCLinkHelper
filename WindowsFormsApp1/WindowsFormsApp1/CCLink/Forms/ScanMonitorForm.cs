@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -320,7 +320,8 @@ namespace WindowsFormsApp1.CCLink.Forms
                           {
                              // 直接使用 MonitorItem.GetAddress() 方法
                              short wordValue = _controller.GetWord(item.GetAddress());
-                             currentValue = wordValue.ToString();
+                              // 將 short 轉換為 ushort 顯示，避免大於 32767 的值顯示為負數
+                              currentValue = ((ushort)wordValue).ToString();
                           }
                        }
                        catch (ArgumentException)
