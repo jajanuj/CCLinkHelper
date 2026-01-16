@@ -45,6 +45,9 @@ namespace WindowsFormsApp1.Forms
             txtLoadingStationAddr.Text = appSettings.Tracking?.LoadingStationAddress ?? "LW0010";
             txtUnloadingRobotAddr.Text = appSettings.Tracking?.UnloadingRobotAddress ?? "LW0020";
             txtUnloadingStationAddr.Text = appSettings.Tracking?.UnloadingStationAddress ?? "LW0030";
+
+            paramMaintenanceT1Timeout.Value = appSettings.Maintenance?.MaintenanceT1Timeout ?? 1000;
+            paramMaintenanceT2Timeout.Value = appSettings.Maintenance?.MaintenanceT2Timeout ?? 1000;
          }
       }
 
@@ -78,6 +81,9 @@ namespace WindowsFormsApp1.Forms
             appSettings.Tracking.LoadingStationAddress = txtLoadingStationAddr.Text?.Trim() ?? "LW0010";
             appSettings.Tracking.UnloadingRobotAddress = txtUnloadingRobotAddr.Text?.Trim() ?? "LW0020";
             appSettings.Tracking.UnloadingStationAddress = txtUnloadingStationAddr.Text?.Trim() ?? "LW0030";
+
+            appSettings.Maintenance.MaintenanceT1Timeout = (int)paramMaintenanceT1Timeout.Value;
+            appSettings.Maintenance.MaintenanceT2Timeout = (int)paramMaintenanceT2Timeout.Value;
          }
       }
 

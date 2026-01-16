@@ -1,9 +1,9 @@
+using GRT.SDK.Framework.Timer;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using GRT.SDK.Framework.Timer;
 using WindowsFormsApp1.CCLink.Interfaces;
 using WindowsFormsApp1.Models;
 
@@ -687,7 +687,7 @@ namespace WindowsFormsApp1.Services
 
                   try
                   {
-                     await AlarmHelper.AddAlarmCodesAsync(this, [0xC000]);
+                     await AlarmHelper.AddAlarmCodeAsync(this, "0xC000");
                      await _controller.WriteBitsAsync(_heartbeatResponseAddr, [false], ct);
                   }
                   catch (Exception ex)
@@ -794,13 +794,6 @@ namespace WindowsFormsApp1.Services
                DayOfWeek = (ushort)values[6]
             };
 
-            // 先取得修改系統時間的權限
-            if (!EnableSetTimePrivilege())
-            {
-               _logger?.Invoke("[TimeSync] Failed to enable time privilege (需要以管理員權限執行)");
-               return;
-            }
-
             if (SetLocalTime(ref st))
             {
                _logger?.Invoke($"[TimeSync] System Time Updated: {st.Year}/{st.Month}/{st.Day} {st.Hour}:{st.Minute}:{st.Second}");
@@ -809,6 +802,7 @@ namespace WindowsFormsApp1.Services
             {
                int errorCode = Marshal.GetLastWin32Error();
                _logger?.Invoke($"[TimeSync] Failed to Update System Time (Error: {errorCode})");
+               await AlarmHelper.AddAlarmCodeAsync(this, "C001");
             }
          }
          catch (Exception ex)
@@ -830,79 +824,8 @@ namespace WindowsFormsApp1.Services
          public ushort Milliseconds;
       }
 
-      // Windows API - Token Privilege Structures
-      [StructLayout(LayoutKind.Sequential, Pack = 1)]
-      private struct TOKEN_PRIVILEGES
-      {
-         public int PrivilegeCount;
-         public long Luid;
-         public int Attributes;
-      }
-
-      private const int SE_PRIVILEGE_ENABLED = 0x00000002;
-      private const int TOKEN_QUERY = 0x00000008;
-      private const int TOKEN_ADJUST_PRIVILEGES = 0x00000020;
-
-      [DllImport("advapi32.dll", SetLastError = true)]
-      private static extern bool OpenProcessToken(IntPtr ProcessHandle, uint DesiredAccess, out IntPtr TokenHandle);
-
-      [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-      private static extern bool LookupPrivilegeValue(string lpSystemName, string lpName, out long lpLuid);
-
-      [DllImport("advapi32.dll", SetLastError = true)]
-      private static extern bool AdjustTokenPrivileges(IntPtr TokenHandle, bool DisableAllPrivileges,
-         ref TOKEN_PRIVILEGES NewState, int BufferLength, IntPtr PreviousState, IntPtr ReturnLength);
-
-      [DllImport("kernel32.dll")]
-      private static extern IntPtr GetCurrentProcess();
-
-      [DllImport("kernel32.dll", SetLastError = true)]
-      private static extern bool CloseHandle(IntPtr hObject);
-
       [DllImport("kernel32.dll", SetLastError = true)]
       private static extern bool SetLocalTime(ref SystemTime lpSystemTime);
-
-      /// <summary>
-      /// 啟用修改系統時間的權限
-      /// </summary>
-      /// <returns>true 表示成功啟用權限</returns>
-      private static bool EnableSetTimePrivilege()
-      {
-         IntPtr tokenHandle = IntPtr.Zero;
-         try
-         {
-            // 1. 開啟當前進程的 Token
-            if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, out tokenHandle))
-            {
-               return false;
-            }
-
-            // 2. 查詢 SE_SYSTEMTIME_NAME 的 LUID
-            long luid;
-            if (!LookupPrivilegeValue(null, "SeSystemtimePrivilege", out luid))
-            {
-               return false;
-            }
-
-            // 3. 設定權限結構
-            TOKEN_PRIVILEGES tokenPrivileges = new TOKEN_PRIVILEGES
-            {
-               PrivilegeCount = 1,
-               Luid = luid,
-               Attributes = SE_PRIVILEGE_ENABLED
-            };
-
-            // 4. 調整權限
-            return AdjustTokenPrivileges(tokenHandle, false, ref tokenPrivileges, 0, IntPtr.Zero, IntPtr.Zero);
-         }
-         finally
-         {
-            if (tokenHandle != IntPtr.Zero)
-            {
-               CloseHandle(tokenHandle);
-            }
-         }
-      }
 
       #endregion
 
@@ -939,13 +862,13 @@ namespace WindowsFormsApp1.Services
       private uint _maintenanceRequestT1Timeout = 5000;
       private uint _maintenanceRequestT2Timeout = 5000;
 
-      public void StartTrackingDataMaintenanceMonitor(TimeSpan interval, uint t1Timeout = 5000, uint t2Timeout = 5000)
+      public void StartTrackingDataMaintenanceMonitor(TimeSpan interval)
       {
          StopTrackingDataMaintenanceMonitor();
-         _maintenanceT1Timeout = t1Timeout;
-         _maintenanceT2Timeout = t2Timeout;
-         _maintenanceRequestT1Timeout = t1Timeout;
-         _maintenanceRequestT2Timeout = t2Timeout;
+         _maintenanceT1Timeout = (ushort)_settings.Maintenance.MaintenanceT1Timeout;
+         _maintenanceT2Timeout = (ushort)_settings.Maintenance.MaintenanceT2Timeout;
+         _maintenanceRequestT1Timeout = (ushort)_settings.Maintenance.MaintenanceT1Timeout;
+         _maintenanceRequestT2Timeout = (ushort)_settings.Maintenance.MaintenanceT2Timeout;
 
          _maintenanceStep = 0;
          _maintenanceRequestStep = 0;
@@ -958,7 +881,7 @@ namespace WindowsFormsApp1.Services
          // 啟動傳送端握手 (Device -> LCS)
          Task.Run(() => MaintenanceRequestLoopAsync(interval, _maintenanceMonitorCts.Token));
 
-         _logger?.Invoke($"[AppService] Tracking Data Maintenance started (T1: {t1Timeout}ms, T2: {t2Timeout}ms)");
+         _logger?.Invoke($"[AppService] Tracking Data Maintenance started (T1: {_maintenanceT1Timeout}ms, T2: {_maintenanceT2Timeout}ms)");
       }
 
       public void StopTrackingDataMaintenanceMonitor()

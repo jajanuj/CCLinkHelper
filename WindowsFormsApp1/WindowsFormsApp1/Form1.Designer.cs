@@ -67,12 +67,12 @@
          this.lstLog = new System.Windows.Forms.ListBox();
          this.lblStatus = new System.Windows.Forms.Label();
          this.grpAlarm = new System.Windows.Forms.GroupBox();
+         this.btnAlarmReset = new System.Windows.Forms.Button();
          this.txtAlarmCode = new System.Windows.Forms.TextBox();
          this.btnAddAlarm = new System.Windows.Forms.Button();
          this.panel1 = new System.Windows.Forms.Panel();
          this.ltbErrorCodes = new System.Windows.Forms.ListBox();
          this.tmrScan = new System.Windows.Forms.Timer(this.components);
-         this.btnAlarmReset = new System.Windows.Forms.Button();
          this.grpConnectionMode.SuspendLayout();
          this.grpManualTime.SuspendLayout();
          this.grpLinkReport.SuspendLayout();
@@ -476,6 +476,17 @@
          this.grpAlarm.TabStop = false;
          this.grpAlarm.Text = "警報測試";
          // 
+         // btnAlarmReset
+         // 
+         this.btnAlarmReset.Location = new System.Drawing.Point(7, 88);
+         this.btnAlarmReset.Margin = new System.Windows.Forms.Padding(10);
+         this.btnAlarmReset.Name = "btnAlarmReset";
+         this.btnAlarmReset.Size = new System.Drawing.Size(92, 26);
+         this.btnAlarmReset.TabIndex = 24;
+         this.btnAlarmReset.Text = "Alarm Reset";
+         this.btnAlarmReset.UseVisualStyleBackColor = true;
+         this.btnAlarmReset.Click += new System.EventHandler(this.btnAlarmReset_Click);
+         // 
          // txtAlarmCode
          // 
          this.txtAlarmCode.Location = new System.Drawing.Point(7, 53);
@@ -536,17 +547,6 @@
          this.tmrScan.Enabled = true;
          this.tmrScan.Interval = 500;
          this.tmrScan.Tick += new System.EventHandler(this.tmrScan_Tick);
-         // 
-         // btnAlarmReset
-         // 
-         this.btnAlarmReset.Location = new System.Drawing.Point(7, 88);
-         this.btnAlarmReset.Margin = new System.Windows.Forms.Padding(10);
-         this.btnAlarmReset.Name = "btnAlarmReset";
-         this.btnAlarmReset.Size = new System.Drawing.Size(92, 26);
-         this.btnAlarmReset.TabIndex = 24;
-         this.btnAlarmReset.Text = "Alarm Reset";
-         this.btnAlarmReset.UseVisualStyleBackColor = true;
-         this.btnAlarmReset.Click += new System.EventHandler(this.btnAlarmReset_Click);
          // 
          // Form1
          // 

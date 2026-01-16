@@ -62,6 +62,9 @@ namespace WindowsFormsApp1.Forms
          this.chkIsx64 = new System.Windows.Forms.CheckBox();
          this.label10 = new System.Windows.Forms.Label();
          this.cmbEndian = new System.Windows.Forms.ComboBox();
+         this.tpMaintenance = new System.Windows.Forms.TabPage();
+         this.paramMaintenanceT1Timeout = new GRT.SDK.Framework.Component.ParamNumericUpDownUserControl();
+         this.paramMaintenanceT2Timeout = new GRT.SDK.Framework.Component.ParamNumericUpDownUserControl();
          this.tabControl1.SuspendLayout();
          this.tabGeneral.SuspendLayout();
          this.tabApp.SuspendLayout();
@@ -73,15 +76,18 @@ namespace WindowsFormsApp1.Forms
          ((System.ComponentModel.ISupportInitialize)(this.numRetryCount)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.numRetryBackoff)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.numStation)).BeginInit();
+         this.tpMaintenance.SuspendLayout();
          this.SuspendLayout();
          // 
          // tabControl1
          // 
          this.tabControl1.Controls.Add(this.tabApp);
          this.tabControl1.Controls.Add(this.tabTracking);
+         this.tabControl1.Controls.Add(this.tpMaintenance);
          this.tabControl1.Location = new System.Drawing.Point(14, 16);
          this.tabControl1.Margin = new System.Windows.Forms.Padding(4);
          this.tabControl1.Size = new System.Drawing.Size(439, 560);
+         this.tabControl1.Controls.SetChildIndex(this.tpMaintenance, 0);
          this.tabControl1.Controls.SetChildIndex(this.tabTracking, 0);
          this.tabControl1.Controls.SetChildIndex(this.tabApp, 0);
          this.tabControl1.Controls.SetChildIndex(this.tabGeneral, 0);
@@ -542,6 +548,50 @@ namespace WindowsFormsApp1.Forms
          this.cmbEndian.Size = new System.Drawing.Size(93, 24);
          this.cmbEndian.TabIndex = 14;
          // 
+         // tpMaintenance
+         // 
+         this.tpMaintenance.Controls.Add(this.paramMaintenanceT2Timeout);
+         this.tpMaintenance.Controls.Add(this.paramMaintenanceT1Timeout);
+         this.tpMaintenance.Location = new System.Drawing.Point(4, 25);
+         this.tpMaintenance.Name = "tpMaintenance";
+         this.tpMaintenance.Padding = new System.Windows.Forms.Padding(3);
+         this.tpMaintenance.Size = new System.Drawing.Size(431, 531);
+         this.tpMaintenance.TabIndex = 3;
+         this.tpMaintenance.Text = "維護設定";
+         this.tpMaintenance.UseVisualStyleBackColor = true;
+         // 
+         // paramMaintenanceT1Timeout
+         // 
+         this.paramMaintenanceT1Timeout.Caption = "Maintenance T1 Timeout(ms)";
+         this.paramMaintenanceT1Timeout.CaptionWidth = 80F;
+         this.paramMaintenanceT1Timeout.DecimalPlaces = 0;
+         this.paramMaintenanceT1Timeout.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramMaintenanceT1Timeout.Increment = 100D;
+         this.paramMaintenanceT1Timeout.Location = new System.Drawing.Point(17, 21);
+         this.paramMaintenanceT1Timeout.MaxNumber = 5000D;
+         this.paramMaintenanceT1Timeout.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramMaintenanceT1Timeout.MinNumber = 0D;
+         this.paramMaintenanceT1Timeout.Name = "paramMaintenanceT1Timeout";
+         this.paramMaintenanceT1Timeout.Size = new System.Drawing.Size(300, 30);
+         this.paramMaintenanceT1Timeout.TabIndex = 13;
+         this.paramMaintenanceT1Timeout.Value = 1000D;
+         // 
+         // paramMaintenanceT2Timeout
+         // 
+         this.paramMaintenanceT2Timeout.Caption = "Maintenance T2 Timeout(ms)";
+         this.paramMaintenanceT2Timeout.CaptionWidth = 80F;
+         this.paramMaintenanceT2Timeout.DecimalPlaces = 0;
+         this.paramMaintenanceT2Timeout.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramMaintenanceT2Timeout.Increment = 100D;
+         this.paramMaintenanceT2Timeout.Location = new System.Drawing.Point(17, 57);
+         this.paramMaintenanceT2Timeout.MaxNumber = 5000D;
+         this.paramMaintenanceT2Timeout.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramMaintenanceT2Timeout.MinNumber = 0D;
+         this.paramMaintenanceT2Timeout.Name = "paramMaintenanceT2Timeout";
+         this.paramMaintenanceT2Timeout.Size = new System.Drawing.Size(300, 30);
+         this.paramMaintenanceT2Timeout.TabIndex = 14;
+         this.paramMaintenanceT2Timeout.Value = 1000D;
+         // 
          // MelsecBoardSettingForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 16F);
@@ -565,6 +615,7 @@ namespace WindowsFormsApp1.Forms
          ((System.ComponentModel.ISupportInitialize)(this.numRetryCount)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.numRetryBackoff)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.numStation)).EndInit();
+         this.tpMaintenance.ResumeLayout(false);
          this.ResumeLayout(false);
 
       }
@@ -609,5 +660,8 @@ namespace WindowsFormsApp1.Forms
       private GRT.SDK.Framework.Component.ParamTextUserControl paramHeartbeatRequestAddress;
       private GRT.SDK.Framework.Component.ParamTextUserControl paramHeartbeatResponseAddress;
       private GRT.SDK.Framework.Component.ParamNumericUpDownUserControl paramHeartbeatInterval;
+      private System.Windows.Forms.TabPage tpMaintenance;
+      private GRT.SDK.Framework.Component.ParamNumericUpDownUserControl paramMaintenanceT1Timeout;
+      private GRT.SDK.Framework.Component.ParamNumericUpDownUserControl paramMaintenanceT2Timeout;
    }
 }

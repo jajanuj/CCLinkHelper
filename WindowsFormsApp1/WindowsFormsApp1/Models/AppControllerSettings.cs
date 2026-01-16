@@ -63,6 +63,8 @@ namespace WindowsFormsApp1.Models
       /// <summary>追蹤資料位址設定。</summary>
       public TrackingSettings Tracking { get; set; } = new TrackingSettings();
 
+      public MaintenanceSettings Maintenance { get; set; } = new MaintenanceSettings();
+
       #endregion
 
       #region Public Methods

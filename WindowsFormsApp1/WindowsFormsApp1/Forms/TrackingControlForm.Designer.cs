@@ -79,7 +79,6 @@ namespace WindowsFormsApp1.Forms
          this.btnDeviceSendMaint = new System.Windows.Forms.Button();
          this.nudDeviceMaintPos = new System.Windows.Forms.NumericUpDown();
          this.lblDevicePosNo = new System.Windows.Forms.Label();
-         this.btnSimulatorStopMaintenance = new System.Windows.Forms.Button();
          this.grpMonitor.SuspendLayout();
          this.grpOperation.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.nudJudge3)).BeginInit();
@@ -459,7 +458,6 @@ namespace WindowsFormsApp1.Forms
          // 
          // grpDeviceMaintenance
          // 
-         this.grpDeviceMaintenance.Controls.Add(this.btnSimulatorStopMaintenance);
          this.grpDeviceMaintenance.Controls.Add(this.btnDeviceSendMaint);
          this.grpDeviceMaintenance.Controls.Add(this.nudDeviceMaintPos);
          this.grpDeviceMaintenance.Controls.Add(this.lblDevicePosNo);
@@ -489,13 +487,6 @@ namespace WindowsFormsApp1.Forms
          // 
          resources.ApplyResources(this.lblDevicePosNo, "lblDevicePosNo");
          this.lblDevicePosNo.Name = "lblDevicePosNo";
-         // 
-         // btnSimulatorStopMaintenance
-         // 
-         resources.ApplyResources(this.btnSimulatorStopMaintenance, "btnSimulatorStopMaintenance");
-         this.btnSimulatorStopMaintenance.Name = "btnSimulatorStopMaintenance";
-         this.btnSimulatorStopMaintenance.UseVisualStyleBackColor = true;
-         this.btnSimulatorStopMaintenance.Click += new System.EventHandler(this.btnSimulatorStopMaintenance_Click);
          // 
          // TrackingControlForm
          // 
@@ -587,6 +578,5 @@ namespace WindowsFormsApp1.Forms
       private System.Windows.Forms.Button btnDeviceSendMaint;
       private System.Windows.Forms.NumericUpDown nudDeviceMaintPos;
       private System.Windows.Forms.Label lblDevicePosNo;
-      private System.Windows.Forms.Button btnSimulatorStopMaintenance;
    }
 }

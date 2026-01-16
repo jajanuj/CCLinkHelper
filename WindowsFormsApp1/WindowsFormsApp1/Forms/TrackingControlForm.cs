@@ -392,11 +392,6 @@ namespace WindowsFormsApp1.Forms
          rtbLog.ScrollToCaret();
       }
 
-      private void btnSimulatorStopMaintenance_Click(object sender, EventArgs e)
-      {
-         _simulator.Stop();
-      }
-
       #endregion
    }
 }

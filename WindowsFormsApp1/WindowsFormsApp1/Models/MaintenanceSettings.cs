@@ -1,5 +1,4 @@
 using System;
-using System;
 
 namespace WindowsFormsApp1.Models
 {
@@ -7,7 +6,7 @@ namespace WindowsFormsApp1.Models
    /// 對時功能設定。
    /// </summary>
    [Serializable]
-   public class TimeSyncSettings
+   public class MaintenanceSettings
    {
       #region Properties
 
@@ -21,6 +20,9 @@ namespace WindowsFormsApp1.Models
       /// 預期連續讀取 7 個字組。
       /// </summary>
       public string DataBaseAddress { get; set; } = "LW0000";
+
+      public int MaintenanceT1Timeout { get; set; }
+      public int MaintenanceT2Timeout { get; set; }
 
       #endregion
    }

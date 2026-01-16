@@ -1168,9 +1168,14 @@ namespace WindowsFormsApp1
          Log("維護監控已手動停止 | Maintenance Monitor stopped manually");
       }
 
-      [Obsolete]
       private async void btnAddAlarm_Click(object sender, EventArgs e)
       {
+         if (_appPlcService?.Controller == null)
+         {
+            MessageBox.Show("請先點擊 Open 按鈕建立連接 | Please click Open button first", "Error");
+            return;
+         }
+
          try
          {
             string[] inputs = txtAlarmCode.Text.Split(',');

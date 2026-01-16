@@ -117,6 +117,7 @@
     <Compile Include="Models\RobotSignals.cs" />
     <Compile Include="Models\SliderSignals.cs" />
     <Compile Include="Models\HeartbeatSettings.cs" />
+    <Compile Include="Models\MaintenanceSettings.cs" />
     <Compile Include="Models\TimeSyncSettings.cs" />
     <Compile Include="Models\TrackingData.cs" />
     <Compile Include="Models\TrackingSettings.cs" />
