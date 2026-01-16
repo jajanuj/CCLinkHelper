@@ -1213,6 +1213,46 @@ namespace WindowsFormsApp1
          }
       }
 
+      /// <summary>
+      /// tmrScan 定時器事件處理器
+      /// 定時掃描並顯示錯誤代碼
+      /// </summary>
+      private void tmrScan_Tick(object sender, EventArgs e)
+      {
+         UpdateErrorCodeDisplay();
+      }
+
+      /// <summary>
+      /// 更新錯誤代碼顯示
+      /// 讀取 LW113A 開始的 12 個錯誤代碼並以十六進制格式顯示
+      /// </summary>
+      private void UpdateErrorCodeDisplay()
+      {
+         try
+         {
+            // 檢查 PLC 是否已連接
+            if (!_isOpened || _appPlcService?.Controller == null)
+            {
+               return;
+            }
+
+            // 使用快取資料讀取 12 個錯誤代碼（LW113A-LW1145）
+            ltbErrorCodes.Items.Clear();
+            for (int i = 0; i < 12; i++)
+            {
+               string address = $"LW{0x113A + i:X4}"; // LW113A, LW113B, LW113C, ...
+               short value = _appPlcService.Controller.GetWord(address);
+               // 轉換為 ushort 並格式化為十六進制顯示
+               ushort uValue = unchecked((ushort)value);
+               ltbErrorCodes.Items.Add($"{i + 1:D2}: 0x{uValue:X4}");
+            }
+         }
+         catch (Exception ex)
+         {
+            Log($"[tmrScan] 錯誤代碼掃描失敗 | Error code scan failed (Error: {ex.Message})");
+         }
+      }
+
       #endregion
    }
 }

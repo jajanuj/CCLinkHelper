@@ -27,6 +27,12 @@ namespace WindowsFormsApp1.Services
 
       #region Public Methods
 
+      public static Task<(int AddedCount, ushort[] IgnoredCodes)> AddAlarmCodeAsync(ICCLinkController controller, string code)
+      {
+         var codes = new ushort[] { ushort.Parse(code) };
+         return AddAlarmCodesAsync(controller, codes, DefaultAlarmAddress);
+      }
+
       /// <summary>
       /// 新增警報碼到 PLC
       /// 會自動排除重複的警報碼，並在空間不足時返回被忽略的警報碼

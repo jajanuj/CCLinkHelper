@@ -644,6 +644,7 @@ namespace WindowsFormsApp1.Services
 
                   if (t1Elapsed.TotalMilliseconds > t1Timeout)
                   {
+                     await AlarmHelper.AddAlarmCodeAsync(Controller, "C000");
                      _logger?.Invoke($"[Heartbeat] T1 Timeout: PLC 未在 {t1Timeout}ms 內清除 Request | T1 Timeout: PLC did not clear Request within {t1Timeout}ms");
                      ok = false;
                      _t1Watchdog = null; // 重置計時器
