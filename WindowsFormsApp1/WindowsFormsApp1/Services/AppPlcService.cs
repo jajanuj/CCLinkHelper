@@ -852,7 +852,7 @@ namespace WindowsFormsApp1.Services
       private int _maintenanceStep;
       private uint _maintenanceT1Timeout = 5000;
       private uint _maintenanceT2Timeout = 5000;
-      
+
       // 接收到的維護資料（用於觸發事件）
       private TrackingData _receivedMaintenanceData;
       private int _receivedMaintenancePos;
@@ -1053,7 +1053,7 @@ namespace WindowsFormsApp1.Services
                         // 將 trackWords 轉換為 TrackingData 並保存
                         _receivedMaintenanceData = TrackingData.FromWords(trackWords.Select(w => (ushort)w).ToArray());
                         _receivedMaintenancePos = pos;
-                        
+
                         // 3. Update Device Memory (Write to LW Base + Offset)
                         int baseAddr = Convert.ToInt32(AddrTrackingDataBase.Substring(2), 16);
                         int targetAddr = baseAddr + pos * TrackingDataSize;
@@ -1100,7 +1100,7 @@ namespace WindowsFormsApp1.Services
                   {
                      var data = _receivedMaintenanceData;
                      var pos = _receivedMaintenancePos;
-                     
+
                      PostEvent(() => MaintenanceDataReceived?.Invoke(data, pos));
                      _logger?.Invoke($"[Maintenance] Data received notification sent for Position {pos}");
                   }
