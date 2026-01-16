@@ -26,7 +26,10 @@ namespace WindowsFormsApp1.Forms
          InitializeComponent();
          InitializeStationComboBox();
          InitializeReasonCodeComboBox();
-
+         
+         // 訂閱維護資料接收事件
+         _service.MaintenanceDataReceived += OnMaintenanceDataReceived;
+         
          if (_simulator == null)
          {
             grpLcsSimulator.Enabled = false;
@@ -40,7 +43,8 @@ namespace WindowsFormsApp1.Forms
 
       protected override void OnFormClosing(FormClosingEventArgs e)
       {
-         _cts.Cancel();
+         _service.MaintenanceDataReceived -= OnMaintenanceDataReceived;
+         _cts?.Cancel();
          base.OnFormClosing(e);
       }
 
@@ -351,6 +355,39 @@ namespace WindowsFormsApp1.Forms
          {
             btnSimDataMaint.Enabled = true;
          }
+      }
+
+      /// <summary>
+      /// 當接收到維護資料時的事件處理器
+      /// </summary>
+      private void OnMaintenanceDataReceived(TrackingData data, int position)
+      {
+         // 在 UI 執行緒上更新
+         if (InvokeRequired)
+         {
+            Invoke(new Action(() => OnMaintenanceDataReceived(data, position)));
+            return;
+         }
+
+         Log($"[Maintenance] 接收到位置 {position} 的維護資料");
+
+         // 更新 UI 顯示接收到的資料
+         nudBoardId1.Value = data.BoardId[0];
+         nudBoardId2.Value = data.BoardId[1];
+         nudBoardId3.Value = data.BoardId[2];
+         nudLayerCount.Value = data.LayerCount;
+         txtLotChar.Text = data.LotNoChar > 0 ? ((char)data.LotNoChar).ToString() : "";
+         nudLotNum.Value = data.LotNoNum;
+         nudJudge1.Value = data.JudgeFlag1;
+         nudJudge2.Value = data.JudgeFlag2;
+         nudJudge3.Value = data.JudgeFlag3;
+         nudSimPos.Value = position;
+
+         Log($"[Received] BoardId: {data.BoardId[0]}-{data.BoardId[1]}-{data.BoardId[2]}, " +
+             $"Layer: {data.LayerCount}, Lot: {(char)data.LotNoChar}{data.LotNoNum}");
+
+         MessageBox.Show($"接收到維護資料 (Position {position})", "Maintenance Data Received",
+             MessageBoxButtons.OK, MessageBoxIcon.Information);
       }
 
       private async Task QuickWriteAsync(TrackingStation station, ushort boardId, ushort layerCount,

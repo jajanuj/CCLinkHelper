@@ -199,6 +199,12 @@ namespace WindowsFormsApp1.Services
       public event Action<int> ConsecutiveHeartbeatFailures;
       public event Action HeartbeatSucceeded;
 
+      /// <summary>
+      /// 當接收到維護資料時觸發（Device 端接收 LCS 維護請求）
+      /// 參數：(TrackingData data, int position)
+      /// </summary>
+      public event Action<TrackingData, int> MaintenanceDataReceived;
+
       #endregion
 
       #region Common Report Methods
@@ -846,6 +852,10 @@ namespace WindowsFormsApp1.Services
       private int _maintenanceStep;
       private uint _maintenanceT1Timeout = 5000;
       private uint _maintenanceT2Timeout = 5000;
+      
+      // 接收到的維護資料（用於觸發事件）
+      private TrackingData _receivedMaintenanceData;
+      private int _receivedMaintenancePos;
 
       // Tracking Maintenance Request (Sender Side) Addresses
       private readonly string AddrMaintenanceSenderRequestFlag = "LB0506";
@@ -1040,6 +1050,10 @@ namespace WindowsFormsApp1.Services
                      // Validate Position
                      if (pos >= 0 && pos < MaxPositions)
                      {
+                        // 將 trackWords 轉換為 TrackingData 並保存
+                        _receivedMaintenanceData = TrackingData.FromWords(trackWords.Select(w => (ushort)w).ToArray());
+                        _receivedMaintenancePos = pos;
+                        
                         // 3. Update Device Memory (Write to LW Base + Offset)
                         int baseAddr = Convert.ToInt32(AddrTrackingDataBase.Substring(2), 16);
                         int targetAddr = baseAddr + pos * TrackingDataSize;
@@ -1081,6 +1095,17 @@ namespace WindowsFormsApp1.Services
                   await _controller.WriteBitsAsync(AddrMaintenanceResponseOk, new[] { false }, ct);
                   await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { false }, ct);
 
+                  // 握手完成：觸發事件通知 UI
+                  if (_receivedMaintenanceData != null)
+                  {
+                     var data = _receivedMaintenanceData;
+                     var pos = _receivedMaintenancePos;
+                     
+                     PostEvent(() => MaintenanceDataReceived?.Invoke(data, pos));
+                     _logger?.Invoke($"[Maintenance] Data received notification sent for Position {pos}");
+                  }
+
+                  _receivedMaintenanceData = null;
                   _maintenanceStep = 0;
                }
                else if (_maintenanceTimer.On(_maintenanceT1Timeout))
