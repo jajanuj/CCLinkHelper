@@ -1,5 +1,4 @@
 using System;
-using WindowsFormsApp1.CCLink.Forms;
 using WindowsFormsApp1.Models;
 
 namespace WindowsFormsApp1.Forms
@@ -34,10 +33,12 @@ namespace WindowsFormsApp1.Forms
             chkIsx64.Checked = appSettings.Isx64;
 
             // App Parameters
-            numHeartbeat.Value = appSettings.HeartbeatIntervalMs;
             numTimeSync.Value = appSettings.TimeSyncIntervalMs;
             txtTrigger.Text = appSettings.TimeSync?.TriggerAddress ?? "LB0301";
             txtData.Text = appSettings.TimeSync?.DataBaseAddress ?? "LW0000";
+            paramHeartbeatRequestAddress.TextValue = appSettings.Heartbeat?.RequestAddress ?? "LB0100";
+            paramHeartbeatResponseAddress.TextValue = appSettings.Heartbeat?.ResponseAddress ?? "LB0500";
+            paramHeartbeatInterval.Value = appSettings.Heartbeat?.HeartbeatIntervalMs ?? 300;
 
             // Tracking Parameters
             txtLoadingRobotAddr.Text = appSettings.Tracking?.LoadingRobotAddress ?? "LW0000";
@@ -65,7 +66,9 @@ namespace WindowsFormsApp1.Forms
             appSettings.DriverType = MelsecDriverType.MelsecBoard; // Ensure driver type is set
 
             // App Parameters
-            appSettings.HeartbeatIntervalMs = (int)numHeartbeat.Value;
+            appSettings.Heartbeat.RequestAddress = paramHeartbeatRequestAddress.TextValue;
+            appSettings.Heartbeat.ResponseAddress = paramHeartbeatResponseAddress.TextValue;
+            appSettings.Heartbeat.HeartbeatIntervalMs = (int)paramHeartbeatInterval.Value;
             appSettings.TimeSyncIntervalMs = (int)numTimeSync.Value;
             appSettings.TimeSync.TriggerAddress = txtTrigger.Text?.Trim() ?? "LB0301";
             appSettings.TimeSync.DataBaseAddress = txtData.Text?.Trim() ?? "LW0000";

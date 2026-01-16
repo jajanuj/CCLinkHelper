@@ -38,6 +38,9 @@ namespace WindowsFormsApp1
       private bool _eventsBound;
       private ushort _greenLightStatus = 3; // 預設：閃爍
 
+      // 滑台與機械手臂交握服務
+      private SliderRobotHandshakeService _handshakeService;
+
       // 連接狀態標記
       private bool _isOpened;
       private ushort _machineStatus = 4; // 預設：生產中
@@ -70,6 +73,7 @@ namespace WindowsFormsApp1
          InitializeComponent();
          InitializeComboBox();
          InitializeRecipeCheckButton();
+         InitializeHandshakeButton();
 
          // 1. 加載或設定連線參數 (內建自動檢查檔名與開啟 UI 邏輯)
          _settings = new AppControllerSettings("Settings");
@@ -282,13 +286,13 @@ namespace WindowsFormsApp1
             {
                // Fallback: 加在主表單右下角附近
                btnRecipeCheck.Location = new System.Drawing.Point(20, 300);
-               this.Controls.Add(btnRecipeCheck);
+               Controls.Add(btnRecipeCheck);
             }
          }
          else
          {
             btnRecipeCheck.Location = new System.Drawing.Point(20, 300);
-            this.Controls.Add(btnRecipeCheck);
+            Controls.Add(btnRecipeCheck);
          }
 
          btnRecipeCheck.Click += (s, e) =>
@@ -302,6 +306,58 @@ namespace WindowsFormsApp1
             var form = new RecipeCheckForm(_appPlcService.Controller, _simulator);
             form.Show();
          };
+      }
+
+      private void InitializeHandshakeButton()
+      {
+         var btnHandshake = new Button();
+         btnHandshake.Text = "交握監控";
+         btnHandshake.Size = new System.Drawing.Size(100, 30);
+
+         // 嘗試定位在 btnTrackingControl 附近
+         if (btnTrackingControl != null)
+         {
+            if (btnTrackingControl.Parent != null)
+            {
+               btnHandshake.Location = new System.Drawing.Point(btnTrackingControl.Location.X, btnTrackingControl.Location.Y + btnTrackingControl.Height + 10);
+               btnTrackingControl.Parent.Controls.Add(btnHandshake);
+            }
+            else
+            {
+               btnHandshake.Location = new System.Drawing.Point(20, 400);
+               Controls.Add(btnHandshake);
+            }
+         }
+         else
+         {
+            btnHandshake.Location = new System.Drawing.Point(20, 400);
+            Controls.Add(btnHandshake);
+         }
+
+         btnHandshake.Click += btnHandshake_Click;
+      }
+
+      private void btnHandshake_Click(object sender, EventArgs e)
+      {
+         if (_appPlcService?.Controller == null)
+         {
+            MessageBox.Show("請先連接 PLC | Please connect PLC first", "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+         }
+
+         // 建立HandshakeService（如果尚未建立）
+         if (_handshakeService == null)
+         {
+            var settings = new HandshakeSettings();
+            _handshakeService = new SliderRobotHandshakeService(
+               _appPlcService.Controller,
+               settings,
+               msg => Log($"[Handshake] {msg}"));
+         }
+
+         // 開啟HandshakeControlForm
+         var form = new HandshakeControlForm(_handshakeService);
+         form.Show();
       }
 
       private ushort GetCurrentControlStatus() => _controlStatus;
@@ -439,7 +495,10 @@ namespace WindowsFormsApp1
                {
                   DriverType = MelsecDriverType.Simulator,
                   ScanRanges = _settings.ScanRanges,
-                  HeartbeatIntervalMs = _settings.HeartbeatIntervalMs,
+                  Heartbeat = new HeartbeatSettings
+                  {
+                     HeartbeatIntervalMs = _settings.Heartbeat.HeartbeatIntervalMs
+                  },
                   TimeSyncIntervalMs = _settings.TimeSyncIntervalMs,
                   TimeSync = _settings.TimeSync
                };
@@ -753,9 +812,7 @@ namespace WindowsFormsApp1
             var respAddr = new LinkDeviceAddress("LB", CCLinkConstants.DefaultResponseFlagAddress, 1);
 
             // 啟動心跳
-            _appPlcService.StartHeartbeat(
-               _settings.HeartbeatIntervalMs > 0 ? TimeSpan.FromMilliseconds(_settings.HeartbeatIntervalMs) : TimeSpan.FromSeconds(0.3),
-               reqAddr.ToString(), respAddr.ToString());
+            _appPlcService.StartHeartbeat();
 
             // 在 Simulator 模式下，自動啟動 Simulator 以模擬 LCS 回應
             if (_settings.DriverType == MelsecDriverType.Simulator && _simulator != null)
@@ -992,7 +1049,7 @@ namespace WindowsFormsApp1
             return;
          }
 
-         var form = new Forms.TrackingControlForm(_appPlcService, _simulator);
+         var form = new TrackingControlForm(_appPlcService, _simulator);
          form.Show(this);
          // using (var form = new Forms.TrackingControlForm(_appPlcService, _simulator))
          // {

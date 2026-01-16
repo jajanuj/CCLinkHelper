@@ -36,7 +36,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="GRT.SDK.Framework">
+    <Reference Include="GRT.SDK.Framework, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>Library\GRT.SDK.Framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -72,6 +73,12 @@
     <Compile Include="CCLink\Adapters\MelsecApiAdapter.cs" />
     <Compile Include="CCLink\Controllers\MelsecControlCard.cs" />
     <Compile Include="CCLink\Models\MelsecException.cs" />
+    <Compile Include="Forms\HandshakeControlForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\HandshakeControlForm.Designer.cs">
+      <DependentUpon>HandshakeControlForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\MelsecBoardSettingForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -100,8 +107,14 @@
     <Compile Include="Models\CommonReportAlarm.cs" />
     <Compile Include="Models\CommonReportStatus1.cs" />
     <Compile Include="Models\CommonReportStatus2.cs" />
+    <Compile Include="Models\HandshakeAddresses.cs" />
+    <Compile Include="Models\HandshakeSettings.cs" />
+    <Compile Include="Models\HandshakeState.cs" />
     <Compile Include="Models\LinkReportData.cs" />
     <Compile Include="Models\MoveOutData.cs" />
+    <Compile Include="Models\RobotSignals.cs" />
+    <Compile Include="Models\SliderSignals.cs" />
+    <Compile Include="Models\HeartbeatSettings.cs" />
     <Compile Include="Models\TimeSyncSettings.cs" />
     <Compile Include="Models\TrackingData.cs" />
     <Compile Include="Models\TrackingSettings.cs" />
@@ -142,6 +155,10 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\PlcSimulator.cs" />
+    <Compile Include="Services\SliderRobotHandshakeService.cs" />
+    <EmbeddedResource Include="CCLink\Forms\SettingsForm.resx">
+      <DependentUpon>SettingsForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

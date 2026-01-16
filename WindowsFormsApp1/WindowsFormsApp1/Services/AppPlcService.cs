@@ -477,19 +477,21 @@ namespace WindowsFormsApp1.Services
 
       #region Heartbeat Methods
 
-      public void StartHeartbeat(TimeSpan interval, string reqAddr, string respAddr, int failThreshold = 3)
+      public void StartHeartbeat(int failThreshold = 3)
       {
          StopHeartbeat();
 
-         _heartbeatInterval = interval;
-         _heartbeatRequestAddr = reqAddr;
-         _heartbeatResponseAddr = respAddr;
+         _heartbeatInterval = _settings.Heartbeat.HeartbeatIntervalMs > 0
+            ? TimeSpan.FromMilliseconds(_settings.Heartbeat.HeartbeatIntervalMs)
+            : TimeSpan.FromSeconds(0.3);
+         _heartbeatRequestAddr = _settings.Heartbeat.RequestAddress;
+         _heartbeatResponseAddr = _settings.Heartbeat.ResponseAddress;
          _heartbeatFailThreshold = Math.Max(1, failThreshold);
          ConsecutiveHeartbeatFailuresCount = 0;
 
          _heartbeatCts = new CancellationTokenSource();
          _heartbeatTask = Task.Run(() => HeartbeatLoopAsync(_heartbeatCts.Token));
-         _logger?.Invoke($"[AppService] Heartbeat started (Interval: {interval.TotalMilliseconds}ms)");
+         _logger?.Invoke($"[AppService] Heartbeat started (Interval: {_heartbeatInterval.TotalMilliseconds}ms)");
       }
 
       public void StopHeartbeat()

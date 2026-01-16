@@ -29,8 +29,9 @@ namespace WindowsFormsApp1.Forms
       private void InitializeComponent()
       {
          this.tabApp = new System.Windows.Forms.TabPage();
-         this.label3 = new System.Windows.Forms.Label();
-         this.numHeartbeat = new System.Windows.Forms.NumericUpDown();
+         this.paramHeartbeatInterval = new GRT.SDK.Framework.Component.ParamNumericUpDownUserControl();
+         this.paramHeartbeatResponseAddress = new GRT.SDK.Framework.Component.ParamTextUserControl();
+         this.paramHeartbeatRequestAddress = new GRT.SDK.Framework.Component.ParamTextUserControl();
          this.label11 = new System.Windows.Forms.Label();
          this.numTimeSync = new System.Windows.Forms.NumericUpDown();
          this.label12 = new System.Windows.Forms.Label();
@@ -46,7 +47,6 @@ namespace WindowsFormsApp1.Forms
          this.txtUnloadingRobotAddr = new System.Windows.Forms.TextBox();
          this.label17 = new System.Windows.Forms.Label();
          this.txtUnloadingStationAddr = new System.Windows.Forms.TextBox();
-
          this.label5 = new System.Windows.Forms.Label();
          this.numPort = new System.Windows.Forms.NumericUpDown();
          this.label6 = new System.Windows.Forms.Label();
@@ -62,32 +62,32 @@ namespace WindowsFormsApp1.Forms
          this.chkIsx64 = new System.Windows.Forms.CheckBox();
          this.label10 = new System.Windows.Forms.Label();
          this.cmbEndian = new System.Windows.Forms.ComboBox();
-
-         ((System.ComponentModel.ISupportInitialize)(this.numHeartbeat)).BeginInit();
+         this.tabControl1.SuspendLayout();
+         this.tabGeneral.SuspendLayout();
+         this.tabApp.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.numTimeSync)).BeginInit();
+         this.tabTracking.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.numPort)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.numNetwork)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.numTimeout)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.numRetryCount)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.numRetryBackoff)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.numStation)).BeginInit();
-         this.tabApp.SuspendLayout();
-         this.tabTracking.SuspendLayout();
-         this.tabGeneral.SuspendLayout();
          this.SuspendLayout();
-
          // 
-         // tabGeneral (Inherited)
+         // tabControl1
          // 
+         this.tabControl1.Controls.Add(this.tabApp);
+         this.tabControl1.Controls.Add(this.tabTracking);
+         this.tabControl1.Location = new System.Drawing.Point(14, 16);
+         this.tabControl1.Margin = new System.Windows.Forms.Padding(4);
+         this.tabControl1.Size = new System.Drawing.Size(439, 560);
+         this.tabControl1.Controls.SetChildIndex(this.tabTracking, 0);
+         this.tabControl1.Controls.SetChildIndex(this.tabApp, 0);
+         this.tabControl1.Controls.SetChildIndex(this.tabGeneral, 0);
          // 
-         // tabGeneral (Inherited)
+         // tabGeneral
          // 
-         // Reposition dgvRanges to make room for Board settings
-         this.dgvRanges.Location = new System.Drawing.Point(10, 160);
-         this.dgvRanges.Size = new System.Drawing.Size(350, 220);
-         // Reposition label4 (Scan Ranges label) to match grid
-         this.label4.Location = new System.Drawing.Point(10, 145);
-
          this.tabGeneral.Controls.Add(this.label5);
          this.tabGeneral.Controls.Add(this.numPort);
          this.tabGeneral.Controls.Add(this.label6);
@@ -103,210 +103,166 @@ namespace WindowsFormsApp1.Forms
          this.tabGeneral.Controls.Add(this.chkIsx64);
          this.tabGeneral.Controls.Add(this.label10);
          this.tabGeneral.Controls.Add(this.cmbEndian);
-
-         // label5 (Port)
-         this.label5.AutoSize = true;
-         this.label5.Location = new System.Drawing.Point(10, 17);
-         this.label5.Name = "label5";
-         this.label5.Size = new System.Drawing.Size(27, 12);
-         this.label5.TabIndex = 0;
-         this.label5.Text = "Port:";
-         // numPort
-         this.numPort.Location = new System.Drawing.Point(70, 15);
-         this.numPort.Maximum = new decimal(new int[] { 65535, 0, 0, 0 });
-         this.numPort.Name = "numPort";
-         this.numPort.Size = new System.Drawing.Size(80, 22);
-         this.numPort.TabIndex = 1;
-         // label6 (Network)
-         this.label6.AutoSize = true;
-         this.label6.Location = new System.Drawing.Point(10, 45);
-         this.label6.Name = "label6";
-         this.label6.Size = new System.Drawing.Size(48, 12);
-         this.label6.TabIndex = 2;
-         this.label6.Text = "Network:";
-         // numNetwork
-         this.numNetwork.Location = new System.Drawing.Point(70, 43);
-         this.numNetwork.Maximum = new decimal(new int[] { 255, 0, 0, 0 });
-         this.numNetwork.Name = "numNetwork";
-         this.numNetwork.Size = new System.Drawing.Size(60, 22);
-         this.numNetwork.TabIndex = 3;
-
-         // label7 (Timeout)
-         this.label7.AutoSize = true;
-         this.label7.Location = new System.Drawing.Point(180, 17);
-         this.label7.Name = "label7";
-         this.label7.Size = new System.Drawing.Size(71, 12);
-         this.label7.TabIndex = 4;
-         this.label7.Text = "Timeout (ms):";
-         // numTimeout
-         this.numTimeout.Location = new System.Drawing.Point(260, 15);
-         this.numTimeout.Maximum = new decimal(new int[] { 60000, 0, 0, 0 });
-         this.numTimeout.Name = "numTimeout";
-         this.numTimeout.Size = new System.Drawing.Size(80, 22);
-         this.numTimeout.TabIndex = 5;
-         this.numTimeout.Value = new decimal(new int[] { 3000, 0, 0, 0 });
-
-         // label8 (Retry Count)
-         this.label8.AutoSize = true;
-         this.label8.Location = new System.Drawing.Point(180, 45);
-         this.label8.Name = "label8";
-         this.label8.Size = new System.Drawing.Size(65, 12);
-         this.label8.TabIndex = 6;
-         this.label8.Text = "Retry Count:";
-         // numRetryCount
-         this.numRetryCount.Location = new System.Drawing.Point(260, 43);
-         this.numRetryCount.Maximum = new decimal(new int[] { 10, 0, 0, 0 });
-         this.numRetryCount.Name = "numRetryCount";
-         this.numRetryCount.Size = new System.Drawing.Size(60, 22);
-         this.numRetryCount.TabIndex = 7;
-         this.numRetryCount.Value = new decimal(new int[] { 3, 0, 0, 0 });
-
-         // label9 (Retry Backoff)
-         this.label9.AutoSize = true;
-         this.label9.Location = new System.Drawing.Point(180, 73);
-         this.label9.Name = "label9";
-         this.label9.Size = new System.Drawing.Size(76, 12);
-         this.label9.TabIndex = 8;
-         this.label9.Text = "Retry Backoff:";
-         // numRetryBackoff
-         this.numRetryBackoff.Location = new System.Drawing.Point(260, 71);
-         this.numRetryBackoff.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
-         this.numRetryBackoff.Name = "numRetryBackoff";
-         this.numRetryBackoff.Size = new System.Drawing.Size(80, 22);
-         this.numRetryBackoff.TabIndex = 9;
-         this.numRetryBackoff.Value = new decimal(new int[] { 50, 0, 0, 0 });
-
-         // label2 (Station)
-         this.label2.AutoSize = true;
-         this.label2.Location = new System.Drawing.Point(10, 101);
-         this.label2.Name = "label2";
-         this.label2.Size = new System.Drawing.Size(40, 12);
-         this.label2.TabIndex = 10;
-         this.label2.Text = "Station:";
-         // numStation
-         this.numStation.Location = new System.Drawing.Point(70, 99);
-         this.numStation.Maximum = new decimal(new int[] { 64, 0, 0, 0 });
-         this.numStation.Name = "numStation";
-         this.numStation.Size = new System.Drawing.Size(60, 22);
-         this.numStation.TabIndex = 11;
-
-         // chkIsx64
-         this.chkIsx64.AutoSize = true;
-         this.chkIsx64.Location = new System.Drawing.Point(182, 101);
-         this.chkIsx64.Name = "chkIsx64";
-         this.chkIsx64.Size = new System.Drawing.Size(71, 16);
-         this.chkIsx64.TabIndex = 12;
-         this.chkIsx64.Text = "Is 64-bit?";
-         this.chkIsx64.UseVisualStyleBackColor = true;
-
-         // label10 (Endian)
-         this.label10.AutoSize = true;
-         this.label10.Location = new System.Drawing.Point(10, 129);
-         this.label10.Name = "label10";
-         this.label10.Size = new System.Drawing.Size(41, 12);
-         this.label10.TabIndex = 13;
-         this.label10.Text = "Endian:";
-         // cmbEndian
-         this.cmbEndian.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.cmbEndian.FormattingEnabled = true;
-         this.cmbEndian.Items.AddRange(new object[] { "Big", "Little" });
-         this.cmbEndian.Location = new System.Drawing.Point(70, 127);
-         this.cmbEndian.Name = "cmbEndian";
-         this.cmbEndian.Size = new System.Drawing.Size(80, 20);
-         this.cmbEndian.TabIndex = 14;
-
+         this.tabGeneral.Location = new System.Drawing.Point(4, 25);
+         this.tabGeneral.Margin = new System.Windows.Forms.Padding(4);
+         this.tabGeneral.Padding = new System.Windows.Forms.Padding(4);
+         this.tabGeneral.Size = new System.Drawing.Size(431, 531);
+         this.tabGeneral.Controls.SetChildIndex(this.cmbEndian, 0);
+         this.tabGeneral.Controls.SetChildIndex(this.label10, 0);
+         this.tabGeneral.Controls.SetChildIndex(this.chkIsx64, 0);
+         this.tabGeneral.Controls.SetChildIndex(this.numStation, 0);
+         this.tabGeneral.Controls.SetChildIndex(this.label2, 0);
+         this.tabGeneral.Controls.SetChildIndex(this.numRetryBackoff, 0);
+         this.tabGeneral.Controls.SetChildIndex(this.label9, 0);
+         this.tabGeneral.Controls.SetChildIndex(this.numRetryCount, 0);
+         this.tabGeneral.Controls.SetChildIndex(this.label8, 0);
+         this.tabGeneral.Controls.SetChildIndex(this.numTimeout, 0);
+         this.tabGeneral.Controls.SetChildIndex(this.label7, 0);
+         this.tabGeneral.Controls.SetChildIndex(this.numNetwork, 0);
+         this.tabGeneral.Controls.SetChildIndex(this.label6, 0);
+         this.tabGeneral.Controls.SetChildIndex(this.numPort, 0);
+         this.tabGeneral.Controls.SetChildIndex(this.label5, 0);
+         this.tabGeneral.Controls.SetChildIndex(this.label4, 0);
+         // 
+         // label4
+         // 
+         this.label4.Location = new System.Drawing.Point(12, 193);
+         this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+         this.label4.Size = new System.Drawing.Size(115, 16);
+         // 
+         // btnSave
+         // 
+         this.btnSave.Location = new System.Drawing.Point(358, 595);
+         this.btnSave.Margin = new System.Windows.Forms.Padding(4);
+         this.btnSave.Size = new System.Drawing.Size(88, 33);
          // 
          // tabApp
          // 
-         this.tabApp.Controls.Add(this.label3);
-         this.tabApp.Controls.Add(this.numHeartbeat);
+         this.tabApp.Controls.Add(this.paramHeartbeatInterval);
+         this.tabApp.Controls.Add(this.paramHeartbeatResponseAddress);
+         this.tabApp.Controls.Add(this.paramHeartbeatRequestAddress);
          this.tabApp.Controls.Add(this.label11);
          this.tabApp.Controls.Add(this.numTimeSync);
          this.tabApp.Controls.Add(this.label12);
          this.tabApp.Controls.Add(this.txtTrigger);
          this.tabApp.Controls.Add(this.label13);
          this.tabApp.Controls.Add(this.txtData);
-         this.tabApp.Location = new System.Drawing.Point(4, 22);
+         this.tabApp.Location = new System.Drawing.Point(4, 25);
+         this.tabApp.Margin = new System.Windows.Forms.Padding(4);
          this.tabApp.Name = "tabApp";
-         this.tabApp.Padding = new System.Windows.Forms.Padding(3);
-         this.tabApp.Size = new System.Drawing.Size(368, 394);
+         this.tabApp.Padding = new System.Windows.Forms.Padding(4);
+         this.tabApp.Size = new System.Drawing.Size(431, 531);
          this.tabApp.TabIndex = 1;
          this.tabApp.Text = "進階設定";
          this.tabApp.UseVisualStyleBackColor = true;
-
          // 
-         // label3 (Heartbeat Interval)
+         // paramHeartbeatInterval
          // 
-         this.label3.AutoSize = true;
-         this.label3.Location = new System.Drawing.Point(10, 17);
-         this.label3.Name = "label3";
-         this.label3.Size = new System.Drawing.Size(62, 12);
-         this.label3.TabIndex = 0;
-         this.label3.Text = "HB Int (ms):";
+         this.paramHeartbeatInterval.Caption = "Heartbeat Inteval(ms)";
+         this.paramHeartbeatInterval.CaptionWidth = 80F;
+         this.paramHeartbeatInterval.DecimalPlaces = 0;
+         this.paramHeartbeatInterval.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramHeartbeatInterval.Increment = 1D;
+         this.paramHeartbeatInterval.Location = new System.Drawing.Point(15, 285);
+         this.paramHeartbeatInterval.MaxNumber = 1000D;
+         this.paramHeartbeatInterval.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramHeartbeatInterval.MinNumber = 0D;
+         this.paramHeartbeatInterval.Name = "paramHeartbeatInterval";
+         this.paramHeartbeatInterval.Size = new System.Drawing.Size(300, 30);
+         this.paramHeartbeatInterval.TabIndex = 12;
+         this.paramHeartbeatInterval.Value = 300D;
          // 
-         // numHeartbeat
+         // paramHeartbeatResponseAddress
          // 
-         this.numHeartbeat.Location = new System.Drawing.Point(100, 15);
-         this.numHeartbeat.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
-         this.numHeartbeat.Minimum = new decimal(new int[] { 10, 0, 0, 0 });
-         this.numHeartbeat.Name = "numHeartbeat";
-         this.numHeartbeat.Size = new System.Drawing.Size(80, 22);
-         this.numHeartbeat.TabIndex = 1;
-         this.numHeartbeat.Value = new decimal(new int[] { 300, 0, 0, 0 });
-
+         this.paramHeartbeatResponseAddress.Caption = "Heartbeat Response Address";
+         this.paramHeartbeatResponseAddress.CaptionWidth = 80F;
+         this.paramHeartbeatResponseAddress.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramHeartbeatResponseAddress.Location = new System.Drawing.Point(15, 249);
+         this.paramHeartbeatResponseAddress.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramHeartbeatResponseAddress.Name = "paramHeartbeatResponseAddress";
+         this.paramHeartbeatResponseAddress.ReadOnly = false;
+         this.paramHeartbeatResponseAddress.ShowKeyboard = false;
+         this.paramHeartbeatResponseAddress.Size = new System.Drawing.Size(300, 30);
+         this.paramHeartbeatResponseAddress.TabIndex = 11;
+         this.paramHeartbeatResponseAddress.TextValue = "";
          // 
-         // label11 (TimeSync Interval)
+         // paramHeartbeatRequestAddress
+         // 
+         this.paramHeartbeatRequestAddress.Caption = "Heartbeat Request Address";
+         this.paramHeartbeatRequestAddress.CaptionWidth = 80F;
+         this.paramHeartbeatRequestAddress.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramHeartbeatRequestAddress.Location = new System.Drawing.Point(15, 213);
+         this.paramHeartbeatRequestAddress.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramHeartbeatRequestAddress.Name = "paramHeartbeatRequestAddress";
+         this.paramHeartbeatRequestAddress.ReadOnly = false;
+         this.paramHeartbeatRequestAddress.ShowKeyboard = false;
+         this.paramHeartbeatRequestAddress.Size = new System.Drawing.Size(300, 30);
+         this.paramHeartbeatRequestAddress.TabIndex = 10;
+         this.paramHeartbeatRequestAddress.TextValue = "";
+         // 
+         // label11
          // 
          this.label11.AutoSize = true;
-         this.label11.Location = new System.Drawing.Point(10, 47);
+         this.label11.Location = new System.Drawing.Point(12, 63);
+         this.label11.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
          this.label11.Name = "label11";
-         this.label11.Size = new System.Drawing.Size(63, 12);
+         this.label11.Size = new System.Drawing.Size(68, 16);
          this.label11.TabIndex = 2;
          this.label11.Text = "TS Int (ms):";
          // 
          // numTimeSync
          // 
-         this.numTimeSync.Location = new System.Drawing.Point(100, 45);
-         this.numTimeSync.Maximum = new decimal(new int[] { 3600000, 0, 0, 0 });
+         this.numTimeSync.Location = new System.Drawing.Point(117, 60);
+         this.numTimeSync.Margin = new System.Windows.Forms.Padding(4);
+         this.numTimeSync.Maximum = new decimal(new int[] {
+            3600000,
+            0,
+            0,
+            0});
          this.numTimeSync.Name = "numTimeSync";
-         this.numTimeSync.Size = new System.Drawing.Size(80, 22);
+         this.numTimeSync.Size = new System.Drawing.Size(93, 23);
          this.numTimeSync.TabIndex = 3;
-         this.numTimeSync.Value = new decimal(new int[] { 1000, 0, 0, 0 });
-
+         this.numTimeSync.Value = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
          // 
-         // label12 (Trigger)
+         // label12
          // 
          this.label12.AutoSize = true;
-         this.label12.Location = new System.Drawing.Point(10, 77);
+         this.label12.Location = new System.Drawing.Point(12, 103);
+         this.label12.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
          this.label12.Name = "label12";
-         this.label12.Size = new System.Drawing.Size(61, 12);
+         this.label12.Size = new System.Drawing.Size(68, 16);
          this.label12.TabIndex = 4;
          this.label12.Text = "TS Trigger:";
          // 
          // txtTrigger
          // 
-         this.txtTrigger.Location = new System.Drawing.Point(100, 75);
+         this.txtTrigger.Location = new System.Drawing.Point(117, 100);
+         this.txtTrigger.Margin = new System.Windows.Forms.Padding(4);
          this.txtTrigger.Name = "txtTrigger";
-         this.txtTrigger.Size = new System.Drawing.Size(80, 22);
+         this.txtTrigger.Size = new System.Drawing.Size(93, 23);
          this.txtTrigger.TabIndex = 5;
-
          // 
-         // label13 (Data)
+         // label13
          // 
          this.label13.AutoSize = true;
-         this.label13.Location = new System.Drawing.Point(10, 107);
+         this.label13.Location = new System.Drawing.Point(12, 143);
+         this.label13.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
          this.label13.Name = "label13";
-         this.label13.Size = new System.Drawing.Size(46, 12);
+         this.label13.Size = new System.Drawing.Size(54, 16);
          this.label13.TabIndex = 6;
          this.label13.Text = "TS Data:";
          // 
          // txtData
          // 
-         this.txtData.Location = new System.Drawing.Point(100, 105);
+         this.txtData.Location = new System.Drawing.Point(117, 140);
+         this.txtData.Margin = new System.Windows.Forms.Padding(4);
          this.txtData.Name = "txtData";
-         this.txtData.Size = new System.Drawing.Size(80, 22);
+         this.txtData.Size = new System.Drawing.Size(93, 23);
          this.txtData.TabIndex = 7;
-
          // 
          // tabTracking
          // 
@@ -318,117 +274,304 @@ namespace WindowsFormsApp1.Forms
          this.tabTracking.Controls.Add(this.txtUnloadingRobotAddr);
          this.tabTracking.Controls.Add(this.label17);
          this.tabTracking.Controls.Add(this.txtUnloadingStationAddr);
-         this.tabTracking.Location = new System.Drawing.Point(4, 22);
+         this.tabTracking.Location = new System.Drawing.Point(4, 25);
+         this.tabTracking.Margin = new System.Windows.Forms.Padding(4);
          this.tabTracking.Name = "tabTracking";
-         this.tabTracking.Padding = new System.Windows.Forms.Padding(3);
-         this.tabTracking.Size = new System.Drawing.Size(368, 394);
+         this.tabTracking.Padding = new System.Windows.Forms.Padding(4);
+         this.tabTracking.Size = new System.Drawing.Size(431, 531);
          this.tabTracking.TabIndex = 2;
          this.tabTracking.Text = "追蹤設定";
          this.tabTracking.UseVisualStyleBackColor = true;
-
          // 
-         // label14 (LoadingRobot)
+         // label14
          // 
          this.label14.AutoSize = true;
-         this.label14.Location = new System.Drawing.Point(10, 17);
+         this.label14.Location = new System.Drawing.Point(12, 23);
+         this.label14.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
          this.label14.Name = "label14";
-         this.label14.Size = new System.Drawing.Size(84, 12);
+         this.label14.Size = new System.Drawing.Size(94, 16);
          this.label14.TabIndex = 0;
          this.label14.Text = "插框Robot位址:";
          // 
          // txtLoadingRobotAddr
          // 
-         this.txtLoadingRobotAddr.Location = new System.Drawing.Point(120, 15);
+         this.txtLoadingRobotAddr.Location = new System.Drawing.Point(140, 20);
+         this.txtLoadingRobotAddr.Margin = new System.Windows.Forms.Padding(4);
          this.txtLoadingRobotAddr.Name = "txtLoadingRobotAddr";
-         this.txtLoadingRobotAddr.Size = new System.Drawing.Size(100, 22);
+         this.txtLoadingRobotAddr.Size = new System.Drawing.Size(116, 23);
          this.txtLoadingRobotAddr.TabIndex = 1;
-
          // 
-         // label15 (LoadingStation)
+         // label15
          // 
          this.label15.AutoSize = true;
-         this.label15.Location = new System.Drawing.Point(10, 47);
+         this.label15.Location = new System.Drawing.Point(12, 63);
+         this.label15.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
          this.label15.Name = "label15";
-         this.label15.Size = new System.Drawing.Size(72, 12);
+         this.label15.Size = new System.Drawing.Size(70, 16);
          this.label15.TabIndex = 2;
          this.label15.Text = "插框站位址:";
          // 
          // txtLoadingStationAddr
          // 
-         this.txtLoadingStationAddr.Location = new System.Drawing.Point(120, 45);
+         this.txtLoadingStationAddr.Location = new System.Drawing.Point(140, 60);
+         this.txtLoadingStationAddr.Margin = new System.Windows.Forms.Padding(4);
          this.txtLoadingStationAddr.Name = "txtLoadingStationAddr";
-         this.txtLoadingStationAddr.Size = new System.Drawing.Size(100, 22);
+         this.txtLoadingStationAddr.Size = new System.Drawing.Size(116, 23);
          this.txtLoadingStationAddr.TabIndex = 3;
-
          // 
-         // label16 (UnloadingRobot)
+         // label16
          // 
          this.label16.AutoSize = true;
-         this.label16.Location = new System.Drawing.Point(10, 77);
+         this.label16.Location = new System.Drawing.Point(12, 103);
+         this.label16.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
          this.label16.Name = "label16";
-         this.label16.Size = new System.Drawing.Size(84, 12);
+         this.label16.Size = new System.Drawing.Size(94, 16);
          this.label16.TabIndex = 4;
          this.label16.Text = "拆框Robot位址:";
          // 
          // txtUnloadingRobotAddr
          // 
-         this.txtUnloadingRobotAddr.Location = new System.Drawing.Point(120, 75);
+         this.txtUnloadingRobotAddr.Location = new System.Drawing.Point(140, 100);
+         this.txtUnloadingRobotAddr.Margin = new System.Windows.Forms.Padding(4);
          this.txtUnloadingRobotAddr.Name = "txtUnloadingRobotAddr";
-         this.txtUnloadingRobotAddr.Size = new System.Drawing.Size(100, 22);
+         this.txtUnloadingRobotAddr.Size = new System.Drawing.Size(116, 23);
          this.txtUnloadingRobotAddr.TabIndex = 5;
-
          // 
-         // label17 (UnloadingStation)
+         // label17
          // 
          this.label17.AutoSize = true;
-         this.label17.Location = new System.Drawing.Point(10, 107);
+         this.label17.Location = new System.Drawing.Point(12, 143);
+         this.label17.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
          this.label17.Name = "label17";
-         this.label17.Size = new System.Drawing.Size(72, 12);
+         this.label17.Size = new System.Drawing.Size(70, 16);
          this.label17.TabIndex = 6;
          this.label17.Text = "拆框站位址:";
          // 
          // txtUnloadingStationAddr
          // 
-         this.txtUnloadingStationAddr.Location = new System.Drawing.Point(120, 105);
+         this.txtUnloadingStationAddr.Location = new System.Drawing.Point(140, 140);
+         this.txtUnloadingStationAddr.Margin = new System.Windows.Forms.Padding(4);
          this.txtUnloadingStationAddr.Name = "txtUnloadingStationAddr";
-         this.txtUnloadingStationAddr.Size = new System.Drawing.Size(100, 22);
+         this.txtUnloadingStationAddr.Size = new System.Drawing.Size(116, 23);
          this.txtUnloadingStationAddr.TabIndex = 7;
-
+         // 
+         // label5
+         // 
+         this.label5.AutoSize = true;
+         this.label5.Location = new System.Drawing.Point(12, 23);
+         this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+         this.label5.Name = "label5";
+         this.label5.Size = new System.Drawing.Size(33, 16);
+         this.label5.TabIndex = 0;
+         this.label5.Text = "Port:";
+         // 
+         // numPort
+         // 
+         this.numPort.Location = new System.Drawing.Point(82, 20);
+         this.numPort.Margin = new System.Windows.Forms.Padding(4);
+         this.numPort.Maximum = new decimal(new int[] {
+            65535,
+            0,
+            0,
+            0});
+         this.numPort.Name = "numPort";
+         this.numPort.Size = new System.Drawing.Size(93, 23);
+         this.numPort.TabIndex = 1;
+         // 
+         // label6
+         // 
+         this.label6.AutoSize = true;
+         this.label6.Location = new System.Drawing.Point(12, 60);
+         this.label6.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+         this.label6.Name = "label6";
+         this.label6.Size = new System.Drawing.Size(58, 16);
+         this.label6.TabIndex = 2;
+         this.label6.Text = "Network:";
+         // 
+         // numNetwork
+         // 
+         this.numNetwork.Location = new System.Drawing.Point(82, 57);
+         this.numNetwork.Margin = new System.Windows.Forms.Padding(4);
+         this.numNetwork.Maximum = new decimal(new int[] {
+            255,
+            0,
+            0,
+            0});
+         this.numNetwork.Name = "numNetwork";
+         this.numNetwork.Size = new System.Drawing.Size(70, 23);
+         this.numNetwork.TabIndex = 3;
+         // 
+         // label7
+         // 
+         this.label7.AutoSize = true;
+         this.label7.Location = new System.Drawing.Point(210, 23);
+         this.label7.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+         this.label7.Name = "label7";
+         this.label7.Size = new System.Drawing.Size(84, 16);
+         this.label7.TabIndex = 4;
+         this.label7.Text = "Timeout (ms):";
+         // 
+         // numTimeout
+         // 
+         this.numTimeout.Location = new System.Drawing.Point(303, 20);
+         this.numTimeout.Margin = new System.Windows.Forms.Padding(4);
+         this.numTimeout.Maximum = new decimal(new int[] {
+            60000,
+            0,
+            0,
+            0});
+         this.numTimeout.Name = "numTimeout";
+         this.numTimeout.Size = new System.Drawing.Size(93, 23);
+         this.numTimeout.TabIndex = 5;
+         this.numTimeout.Value = new decimal(new int[] {
+            3000,
+            0,
+            0,
+            0});
+         // 
+         // label8
+         // 
+         this.label8.AutoSize = true;
+         this.label8.Location = new System.Drawing.Point(210, 60);
+         this.label8.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+         this.label8.Name = "label8";
+         this.label8.Size = new System.Drawing.Size(76, 16);
+         this.label8.TabIndex = 6;
+         this.label8.Text = "Retry Count:";
+         // 
+         // numRetryCount
+         // 
+         this.numRetryCount.Location = new System.Drawing.Point(303, 57);
+         this.numRetryCount.Margin = new System.Windows.Forms.Padding(4);
+         this.numRetryCount.Maximum = new decimal(new int[] {
+            10,
+            0,
+            0,
+            0});
+         this.numRetryCount.Name = "numRetryCount";
+         this.numRetryCount.Size = new System.Drawing.Size(70, 23);
+         this.numRetryCount.TabIndex = 7;
+         this.numRetryCount.Value = new decimal(new int[] {
+            3,
+            0,
+            0,
+            0});
+         // 
+         // label9
+         // 
+         this.label9.AutoSize = true;
+         this.label9.Location = new System.Drawing.Point(210, 97);
+         this.label9.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+         this.label9.Name = "label9";
+         this.label9.Size = new System.Drawing.Size(84, 16);
+         this.label9.TabIndex = 8;
+         this.label9.Text = "Retry Backoff:";
+         // 
+         // numRetryBackoff
+         // 
+         this.numRetryBackoff.Location = new System.Drawing.Point(303, 95);
+         this.numRetryBackoff.Margin = new System.Windows.Forms.Padding(4);
+         this.numRetryBackoff.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+         this.numRetryBackoff.Name = "numRetryBackoff";
+         this.numRetryBackoff.Size = new System.Drawing.Size(93, 23);
+         this.numRetryBackoff.TabIndex = 9;
+         this.numRetryBackoff.Value = new decimal(new int[] {
+            50,
+            0,
+            0,
+            0});
+         // 
+         // label2
+         // 
+         this.label2.AutoSize = true;
+         this.label2.Location = new System.Drawing.Point(12, 135);
+         this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+         this.label2.Name = "label2";
+         this.label2.Size = new System.Drawing.Size(50, 16);
+         this.label2.TabIndex = 10;
+         this.label2.Text = "Station:";
+         // 
+         // numStation
+         // 
+         this.numStation.Location = new System.Drawing.Point(82, 132);
+         this.numStation.Margin = new System.Windows.Forms.Padding(4);
+         this.numStation.Maximum = new decimal(new int[] {
+            64,
+            0,
+            0,
+            0});
+         this.numStation.Name = "numStation";
+         this.numStation.Size = new System.Drawing.Size(70, 23);
+         this.numStation.TabIndex = 11;
+         // 
+         // chkIsx64
+         // 
+         this.chkIsx64.AutoSize = true;
+         this.chkIsx64.Location = new System.Drawing.Point(212, 135);
+         this.chkIsx64.Margin = new System.Windows.Forms.Padding(4);
+         this.chkIsx64.Name = "chkIsx64";
+         this.chkIsx64.Size = new System.Drawing.Size(77, 20);
+         this.chkIsx64.TabIndex = 12;
+         this.chkIsx64.Text = "Is 64-bit?";
+         this.chkIsx64.UseVisualStyleBackColor = true;
+         // 
+         // label10
+         // 
+         this.label10.AutoSize = true;
+         this.label10.Location = new System.Drawing.Point(12, 172);
+         this.label10.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+         this.label10.Name = "label10";
+         this.label10.Size = new System.Drawing.Size(49, 16);
+         this.label10.TabIndex = 13;
+         this.label10.Text = "Endian:";
+         // 
+         // cmbEndian
+         // 
+         this.cmbEndian.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.cmbEndian.FormattingEnabled = true;
+         this.cmbEndian.Items.AddRange(new object[] {
+            "Big",
+            "Little"});
+         this.cmbEndian.Location = new System.Drawing.Point(82, 169);
+         this.cmbEndian.Margin = new System.Windows.Forms.Padding(4);
+         this.cmbEndian.Name = "cmbEndian";
+         this.cmbEndian.Size = new System.Drawing.Size(93, 24);
+         this.cmbEndian.TabIndex = 14;
          // 
          // MelsecBoardSettingForm
          // 
-         this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+         this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 16F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(400, 480);
+         this.ClientSize = new System.Drawing.Size(467, 640);
+         this.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.Margin = new System.Windows.Forms.Padding(4);
          this.Name = "MelsecBoardSettingForm";
          this.Text = "MelsecBoardSettingForm";
-         
-         // Add inherited tab control pages
-         this.tabControl1.Controls.Add(this.tabApp);
-         this.tabControl1.Controls.Add(this.tabTracking);
-
-         ((System.ComponentModel.ISupportInitialize)(this.numHeartbeat)).EndInit();
+         this.tabControl1.ResumeLayout(false);
+         this.tabGeneral.ResumeLayout(false);
+         this.tabGeneral.PerformLayout();
+         this.tabApp.ResumeLayout(false);
+         this.tabApp.PerformLayout();
          ((System.ComponentModel.ISupportInitialize)(this.numTimeSync)).EndInit();
+         this.tabTracking.ResumeLayout(false);
+         this.tabTracking.PerformLayout();
          ((System.ComponentModel.ISupportInitialize)(this.numPort)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.numNetwork)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.numTimeout)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.numRetryCount)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.numRetryBackoff)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.numStation)).EndInit();
-         this.tabApp.ResumeLayout(false);
-         this.tabApp.PerformLayout();
-         this.tabTracking.ResumeLayout(false);
-         this.tabTracking.PerformLayout();
-         this.tabGeneral.ResumeLayout(false);
-         this.tabGeneral.PerformLayout();
          this.ResumeLayout(false);
+
       }
 
       #endregion
 
       private System.Windows.Forms.TabPage tabApp;
-      private System.Windows.Forms.Label label3;
-      private System.Windows.Forms.NumericUpDown numHeartbeat;
       private System.Windows.Forms.Label label11;
       private System.Windows.Forms.NumericUpDown numTimeSync;
       private System.Windows.Forms.Label label12;
@@ -463,5 +606,8 @@ namespace WindowsFormsApp1.Forms
       private System.Windows.Forms.TextBox txtUnloadingRobotAddr;
       private System.Windows.Forms.Label label17;
       private System.Windows.Forms.TextBox txtUnloadingStationAddr;
+      private GRT.SDK.Framework.Component.ParamTextUserControl paramHeartbeatRequestAddress;
+      private GRT.SDK.Framework.Component.ParamTextUserControl paramHeartbeatResponseAddress;
+      private GRT.SDK.Framework.Component.ParamNumericUpDownUserControl paramHeartbeatInterval;
    }
 }

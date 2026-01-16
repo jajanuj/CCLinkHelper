@@ -27,8 +27,7 @@ namespace WindowsFormsApp1.Models
             Endian = loaded.Endian;
             Isx64 = loaded.Isx64;
             ScanRanges = loaded.ScanRanges;
-
-            HeartbeatIntervalMs = loaded.HeartbeatIntervalMs;
+            Heartbeat = loaded.Heartbeat ?? new HeartbeatSettings();
             TimeSyncIntervalMs = loaded.TimeSyncIntervalMs;
             TimeSync = loaded.TimeSync ?? new TimeSyncSettings();
             Tracking = loaded.Tracking ?? new TrackingSettings();
@@ -53,11 +52,10 @@ namespace WindowsFormsApp1.Models
       /// </summary>
       public int LogicalStationNumber { get; set; } = 1;
 
-      /// <summary>心跳間隔毫秒（狀態監測）。</summary>
-      public int HeartbeatIntervalMs { get; set; } = 300;
-
       /// <summary>對時監控間隔毫秒。</summary>
       public int TimeSyncIntervalMs { get; set; } = 1000;
+
+      public HeartbeatSettings Heartbeat { get; set; } = new HeartbeatSettings();
 
       /// <summary>對時位址設定。</summary>
       public TimeSyncSettings TimeSync { get; set; } = new TimeSyncSettings();
@@ -73,19 +71,19 @@ namespace WindowsFormsApp1.Models
       {
          // 根據驅動類型顯示對應的設定表單
          System.Windows.Forms.Form form;
-         
+
          if (DriverType == MelsecDriverType.MxComponent)
          {
-             form = new Forms.MxComponentSettingForm(this);
+            form = new Forms.MxComponentSettingForm(this);
          }
          else
          {
-             // Default to Board for Board and Simulator (Simulator shares Board settings usually, or separate?)
-             // Actually Simulator uses MelsecBoardSettingForm for IP/Port mocking essentially.
-             form = new Forms.MelsecBoardSettingForm(this);
+            // Default to Board for Board and Simulator (Simulator shares Board settings usually, or separate?)
+            // Actually Simulator uses MelsecBoardSettingForm for IP/Port mocking essentially.
+            form = new Forms.MelsecBoardSettingForm(this);
          }
 
-         using (form) 
+         using (form)
          {
             var result = form.ShowDialog();
             if (result == System.Windows.Forms.DialogResult.OK)

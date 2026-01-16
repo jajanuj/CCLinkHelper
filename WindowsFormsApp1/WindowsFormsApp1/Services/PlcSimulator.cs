@@ -488,29 +488,6 @@ namespace WindowsFormsApp1.Services
       }
 
       /// <summary>
-      /// 解析 Recipe Check 使用的地址字串。
-      /// 特別處理 LW 為十進位，其他則依據 LinkDeviceAddress.Parse 的邏輯（優先十六進位）。
-      /// </summary>
-      private LinkDeviceAddress ParseRecipeAddress(string address, int length)
-      {
-         if (string.IsNullOrEmpty(address) || address.Length < 3)
-            return LinkDeviceAddress.Parse(address, length);
-
-         string prefix = address.Substring(0, 2).ToUpperInvariant();
-         string numPart = address.Substring(2);
-
-         if (prefix == "LW")
-         {
-            if (int.TryParse(numPart, out int decValue))
-            {
-               return new LinkDeviceAddress("LW", decValue, length);
-            }
-         }
-
-         return LinkDeviceAddress.Parse(address, length);
-      }
-
-      /// <summary>
       /// 啟動追蹤資料維護監聽模式：監控裝置端的 Request (LB0506) 並自動回應 (LB0107)。
       /// 模擬 LCS 端的行為。
       /// </summary>
@@ -752,6 +729,31 @@ namespace WindowsFormsApp1.Services
       #endregion
 
       #region Private Methods
+
+      /// <summary>
+      /// 解析 Recipe Check 使用的地址字串。
+      /// 特別處理 LW 為十進位，其他則依據 LinkDeviceAddress.Parse 的邏輯（優先十六進位）。
+      /// </summary>
+      private LinkDeviceAddress ParseRecipeAddress(string address, int length)
+      {
+         if (string.IsNullOrEmpty(address) || address.Length < 3)
+         {
+            return LinkDeviceAddress.Parse(address, length);
+         }
+
+         string prefix = address.Substring(0, 2).ToUpperInvariant();
+         string numPart = address.Substring(2);
+
+         if (prefix == "LW")
+         {
+            if (int.TryParse(numPart, out int decValue))
+            {
+               return new LinkDeviceAddress("LW", decValue, length);
+            }
+         }
+
+         return LinkDeviceAddress.Parse(address, length);
+      }
 
       /// <summary>
       /// 輔助方法：指定位址設定 Response (因為 SetResponse 唯讀 _responseAddr)

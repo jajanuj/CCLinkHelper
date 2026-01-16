@@ -23,15 +23,10 @@ namespace WindowsFormsApp1.CCLink.Forms
          this.colStart = new System.Windows.Forms.DataGridViewTextBoxColumn();
          this.colEnd = new System.Windows.Forms.DataGridViewTextBoxColumn();
          this.btnSave = new System.Windows.Forms.Button();
-
          this.tabControl1.SuspendLayout();
          this.tabGeneral.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.dgvRanges)).BeginInit();
          this.SuspendLayout();
-
-         // 
-         // tabControl1
-         // 
          // 
          // tabControl1
          // 
@@ -53,39 +48,53 @@ namespace WindowsFormsApp1.CCLink.Forms
          this.tabGeneral.TabIndex = 0;
          this.tabGeneral.Text = "基本設定";
          this.tabGeneral.UseVisualStyleBackColor = true;
-
-         // label4 (Scan Ranges)
+         // 
+         // label4
+         // 
          this.label4.AutoSize = true;
-         this.label4.Location = new System.Drawing.Point(10, 15);
+         this.label4.Location = new System.Drawing.Point(8, 227);
          this.label4.Name = "label4";
-         this.label4.Size = new System.Drawing.Size(89, 12);
+         this.label4.Size = new System.Drawing.Size(97, 12);
          this.label4.TabIndex = 15;
          this.label4.Text = "Scan Ranges (Hex):";
-
+         // 
          // dgvRanges
+         // 
          this.dgvRanges.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
          this.dgvRanges.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colKind,
             this.colStart,
             this.colEnd});
-         this.dgvRanges.Location = new System.Drawing.Point(10, 30);
+         this.dgvRanges.Location = new System.Drawing.Point(10, 242);
          this.dgvRanges.Name = "dgvRanges";
          this.dgvRanges.RowTemplate.Height = 24;
-         this.dgvRanges.Size = new System.Drawing.Size(350, 350);
+         this.dgvRanges.Size = new System.Drawing.Size(350, 138);
          this.dgvRanges.TabIndex = 16;
-
+         // 
          // colKind
+         // 
          this.colKind.HeaderText = "Kind";
-         this.colKind.Items.AddRange(new object[] { "LB", "LW", "M", "D", "X", "Y" });
+         this.colKind.Items.AddRange(new object[] {
+            "LB",
+            "LW",
+            "M",
+            "D",
+            "X",
+            "Y"});
          this.colKind.Name = "colKind";
+         // 
          // colStart
+         // 
          this.colStart.HeaderText = "Start (Hex)";
          this.colStart.Name = "colStart";
+         // 
          // colEnd
+         // 
          this.colEnd.HeaderText = "End (Hex)";
          this.colEnd.Name = "colEnd";
-
+         // 
          // btnSave
+         // 
          this.btnSave.Location = new System.Drawing.Point(307, 446);
          this.btnSave.Name = "btnSave";
          this.btnSave.Size = new System.Drawing.Size(75, 25);
@@ -93,8 +102,9 @@ namespace WindowsFormsApp1.CCLink.Forms
          this.btnSave.Text = "Save";
          this.btnSave.UseVisualStyleBackColor = true;
          this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
-
+         // 
          // SettingsForm
+         // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.ClientSize = new System.Drawing.Size(400, 480);
@@ -106,12 +116,12 @@ namespace WindowsFormsApp1.CCLink.Forms
          this.Name = "SettingsForm";
          this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
          this.Text = "連線與通訊設定";
-
          this.tabControl1.ResumeLayout(false);
          this.tabGeneral.ResumeLayout(false);
          this.tabGeneral.PerformLayout();
          ((System.ComponentModel.ISupportInitialize)(this.dgvRanges)).EndInit();
          this.ResumeLayout(false);
+
       }
 
       protected System.Windows.Forms.TabControl tabControl1;
