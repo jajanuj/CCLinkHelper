@@ -529,6 +529,7 @@ namespace WindowsFormsApp1
             await _appPlcService.SetAlarmStatus(AlarmStatus.NoAlarm);
             await _appPlcService.SetMachineStatus(MachineStatus.Init);
             await _appPlcService.SetActionStatus(ActionStatus.Other);
+            await _appPlcService.SetControlStatus(ControlStatus.Prepare);
 
             // 啟動 Maintenance Monitor (Device Logic)
             _appPlcService.StartTrackingDataMaintenanceMonitor(TimeSpan.FromMilliseconds(200));
@@ -1273,6 +1274,16 @@ namespace WindowsFormsApp1
       private async void btnAlarmReset_Click(object sender, EventArgs e)
       {
          await AlarmHelper.ClearAllAlarmsAsync(_appPlcService);
+      }
+
+      private async void btnAutoRun_Click(object sender, EventArgs e)
+      {
+         await _appPlcService.SetControlStatus(ControlStatus.AutoRun);
+      }
+
+      private async void btnManualRun_Click(object sender, EventArgs e)
+      {
+         await _appPlcService.SetControlStatus(ControlStatus.ManualRun);
       }
 
       #endregion

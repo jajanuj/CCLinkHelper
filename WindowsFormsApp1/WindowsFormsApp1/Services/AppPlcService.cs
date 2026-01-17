@@ -9,6 +9,15 @@ using WindowsFormsApp1.Models;
 
 namespace WindowsFormsApp1.Services
 {
+   public enum ControlStatus
+   {
+      AutoRun = 1,
+      ManualRun = 2,
+      DryRun = 3,
+      Prepare = 4,
+      Other = 99,
+   }
+
    public enum AlarmStatus
    {
       Critical = 1,
@@ -154,9 +163,14 @@ namespace WindowsFormsApp1.Services
 
       #region Public Methods
 
+      public async Task SetControlStatus(ControlStatus status)
+      {
+         await _controller.WriteWordsAsync("LW34EA", [(short)status]);
+      }
+
       public async Task SetAlarmStatus(AlarmStatus status)
       {
-         await _controller.WriteWordsAsync("LW1146", [(short)status]);
+         await _controller.WriteWordsAsync("LW34E6", [(short)status]);
       }
 
       public async Task SetMachineStatus(MachineStatus status)
@@ -170,7 +184,7 @@ namespace WindowsFormsApp1.Services
             MachineStatus.Stopped => 5,
             _ => 0,
          };
-         await _controller.WriteWordsAsync("LW1147", [(short)statusValue]);
+         await _controller.WriteWordsAsync("LW34E7", [(short)statusValue]);
       }
 
       public async Task SetActionStatus(ActionStatus status)
@@ -182,7 +196,7 @@ namespace WindowsFormsApp1.Services
             ActionStatus.Other => 99,
             _ => 0,
          };
-         await _controller.WriteWordsAsync("LW1148", [(short)statusValue]);
+         await _controller.WriteWordsAsync("LW34E8", [(short)statusValue]);
       }
 
       #endregion

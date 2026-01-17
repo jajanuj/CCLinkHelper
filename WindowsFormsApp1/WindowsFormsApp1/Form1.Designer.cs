@@ -73,6 +73,8 @@
          this.panel1 = new System.Windows.Forms.Panel();
          this.ltbErrorCodes = new System.Windows.Forms.ListBox();
          this.tmrScan = new System.Windows.Forms.Timer(this.components);
+         this.btnAutoRun = new System.Windows.Forms.Button();
+         this.btnManualRun = new System.Windows.Forms.Button();
          this.grpConnectionMode.SuspendLayout();
          this.grpManualTime.SuspendLayout();
          this.grpLinkReport.SuspendLayout();
@@ -247,6 +249,7 @@
          // 
          // btnStartCommonReporting
          // 
+         this.btnStartCommonReporting.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
          this.btnStartCommonReporting.Location = new System.Drawing.Point(15, 200);
          this.btnStartCommonReporting.Margin = new System.Windows.Forms.Padding(10);
          this.btnStartCommonReporting.Name = "btnStartCommonReporting";
@@ -258,6 +261,7 @@
          // 
          // btnSetCommonReporting
          // 
+         this.btnSetCommonReporting.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
          this.btnSetCommonReporting.Location = new System.Drawing.Point(212, 200);
          this.btnSetCommonReporting.Margin = new System.Windows.Forms.Padding(10);
          this.btnSetCommonReporting.Name = "btnSetCommonReporting";
@@ -269,6 +273,7 @@
          // 
          // btnStartLinkReport
          // 
+         this.btnStartLinkReport.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
          this.btnStartLinkReport.Location = new System.Drawing.Point(15, 235);
          this.btnStartLinkReport.Margin = new System.Windows.Forms.Padding(10);
          this.btnStartLinkReport.Name = "btnStartLinkReport";
@@ -280,6 +285,7 @@
          // 
          // btnStopLinkReport
          // 
+         this.btnStopLinkReport.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
          this.btnStopLinkReport.Location = new System.Drawing.Point(212, 235);
          this.btnStopLinkReport.Margin = new System.Windows.Forms.Padding(10);
          this.btnStopLinkReport.Name = "btnStopLinkReport";
@@ -291,6 +297,7 @@
          // 
          // btnSendLinkData
          // 
+         this.btnSendLinkData.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
          this.btnSendLinkData.Location = new System.Drawing.Point(413, 235);
          this.btnSendLinkData.Margin = new System.Windows.Forms.Padding(10);
          this.btnSendLinkData.Name = "btnSendLinkData";
@@ -422,6 +429,7 @@
          // 
          // btnStartMaintMonitor
          // 
+         this.btnStartMaintMonitor.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
          this.btnStartMaintMonitor.Location = new System.Drawing.Point(15, 266);
          this.btnStartMaintMonitor.Margin = new System.Windows.Forms.Padding(10);
          this.btnStartMaintMonitor.Name = "btnStartMaintMonitor";
@@ -434,6 +442,7 @@
          // btnStopMaintMonitor
          // 
          this.btnStopMaintMonitor.Enabled = false;
+         this.btnStopMaintMonitor.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
          this.btnStopMaintMonitor.Location = new System.Drawing.Point(212, 266);
          this.btnStopMaintMonitor.Margin = new System.Windows.Forms.Padding(10);
          this.btnStopMaintMonitor.Name = "btnStopMaintMonitor";
@@ -507,6 +516,8 @@
          // 
          // panel1
          // 
+         this.panel1.Controls.Add(this.btnManualRun);
+         this.panel1.Controls.Add(this.btnAutoRun);
          this.panel1.Controls.Add(this.btnOpen);
          this.panel1.Controls.Add(this.btnRead);
          this.panel1.Controls.Add(this.btnWrite);
@@ -529,7 +540,7 @@
          this.panel1.Controls.Add(this.btnTrackingControl);
          this.panel1.Location = new System.Drawing.Point(584, 12);
          this.panel1.Name = "panel1";
-         this.panel1.Size = new System.Drawing.Size(631, 308);
+         this.panel1.Size = new System.Drawing.Size(631, 371);
          this.panel1.TabIndex = 27;
          // 
          // ltbErrorCodes
@@ -547,6 +558,30 @@
          this.tmrScan.Enabled = true;
          this.tmrScan.Interval = 500;
          this.tmrScan.Tick += new System.EventHandler(this.tmrScan_Tick);
+         // 
+         // btnAutoRun
+         // 
+         this.btnAutoRun.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.btnAutoRun.Location = new System.Drawing.Point(15, 302);
+         this.btnAutoRun.Margin = new System.Windows.Forms.Padding(10);
+         this.btnAutoRun.Name = "btnAutoRun";
+         this.btnAutoRun.Size = new System.Drawing.Size(186, 26);
+         this.btnAutoRun.TabIndex = 26;
+         this.btnAutoRun.Text = "Auto Run";
+         this.btnAutoRun.UseVisualStyleBackColor = true;
+         this.btnAutoRun.Click += new System.EventHandler(this.btnAutoRun_Click);
+         // 
+         // btnManualRun
+         // 
+         this.btnManualRun.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.btnManualRun.Location = new System.Drawing.Point(212, 302);
+         this.btnManualRun.Margin = new System.Windows.Forms.Padding(10);
+         this.btnManualRun.Name = "btnManualRun";
+         this.btnManualRun.Size = new System.Drawing.Size(186, 26);
+         this.btnManualRun.TabIndex = 27;
+         this.btnManualRun.Text = "Manual Run";
+         this.btnManualRun.UseVisualStyleBackColor = true;
+         this.btnManualRun.Click += new System.EventHandler(this.btnManualRun_Click);
          // 
          // Form1
          // 
@@ -633,6 +668,8 @@
       private System.Windows.Forms.ListBox ltbErrorCodes;
       private System.Windows.Forms.Timer tmrScan;
       private System.Windows.Forms.Button btnAlarmReset;
+      private System.Windows.Forms.Button btnManualRun;
+      private System.Windows.Forms.Button btnAutoRun;
    }
 }
 
