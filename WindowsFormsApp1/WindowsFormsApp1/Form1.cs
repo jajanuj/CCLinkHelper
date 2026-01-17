@@ -1258,7 +1258,7 @@ namespace WindowsFormsApp1
             ltbErrorCodes.Items.Clear();
             for (int i = 0; i < 12; i++)
             {
-               string address = $"LW{0x113A + i:X4}"; // LW113A, LW113B, LW113C, ...
+               string address = $"LW{0x34DA + i:X4}"; // LW113A, LW113B, LW113C, ...
                short value = _appPlcService.Controller.GetWord(address);
                // 轉換為 ushort 並格式化為十六進制顯示
                ushort uValue = unchecked((ushort)value);
@@ -1269,6 +1269,12 @@ namespace WindowsFormsApp1
          {
             Log($"[tmrScan] 錯誤代碼掃描失敗 | Error code scan failed (Error: {ex.Message})");
          }
+      }
+
+      private async void btnDeleteAlarm_Click(object sender, EventArgs e)
+      {
+         var removeCode = Convert.ToUInt16(txtAlarmCode.Text, 16);
+         await AlarmHelper.RemoveAlarmCodeAsync(_appPlcService.Controller, removeCode);
       }
 
       private async void btnAlarmReset_Click(object sender, EventArgs e)

@@ -21,7 +21,7 @@ namespace WindowsFormsApp1.Services
       /// <summary>
       /// 預設的警報起始位址
       /// </summary>
-      private const string DefaultAlarmAddress = "LW113A";
+      private const string DefaultAlarmAddress = "LW34DA";
 
       #endregion
 

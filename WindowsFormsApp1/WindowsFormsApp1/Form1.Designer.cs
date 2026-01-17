@@ -75,6 +75,7 @@
          this.tmrScan = new System.Windows.Forms.Timer(this.components);
          this.btnAutoRun = new System.Windows.Forms.Button();
          this.btnManualRun = new System.Windows.Forms.Button();
+         this.btnDeleteAlarm = new System.Windows.Forms.Button();
          this.grpConnectionMode.SuspendLayout();
          this.grpManualTime.SuspendLayout();
          this.grpLinkReport.SuspendLayout();
@@ -313,7 +314,7 @@
          this.grpManualTime.Controls.Add(this.dtpTime);
          this.grpManualTime.Controls.Add(this.btnSyncFromPc);
          this.grpManualTime.Controls.Add(this.btnSetTimeToPlc);
-         this.grpManualTime.Location = new System.Drawing.Point(155, 112);
+         this.grpManualTime.Location = new System.Drawing.Point(19, 322);
          this.grpManualTime.Margin = new System.Windows.Forms.Padding(10);
          this.grpManualTime.Name = "grpManualTime";
          this.grpManualTime.Size = new System.Drawing.Size(300, 80);
@@ -475,19 +476,20 @@
          // 
          // grpAlarm
          // 
+         this.grpAlarm.Controls.Add(this.btnDeleteAlarm);
          this.grpAlarm.Controls.Add(this.btnAlarmReset);
          this.grpAlarm.Controls.Add(this.txtAlarmCode);
          this.grpAlarm.Controls.Add(this.btnAddAlarm);
          this.grpAlarm.Location = new System.Drawing.Point(14, 112);
          this.grpAlarm.Name = "grpAlarm";
-         this.grpAlarm.Size = new System.Drawing.Size(112, 119);
+         this.grpAlarm.Size = new System.Drawing.Size(112, 172);
          this.grpAlarm.TabIndex = 26;
          this.grpAlarm.TabStop = false;
          this.grpAlarm.Text = "警報測試";
          // 
          // btnAlarmReset
          // 
-         this.btnAlarmReset.Location = new System.Drawing.Point(7, 88);
+         this.btnAlarmReset.Location = new System.Drawing.Point(11, 133);
          this.btnAlarmReset.Margin = new System.Windows.Forms.Padding(10);
          this.btnAlarmReset.Name = "btnAlarmReset";
          this.btnAlarmReset.Size = new System.Drawing.Size(92, 26);
@@ -498,7 +500,7 @@
          // 
          // txtAlarmCode
          // 
-         this.txtAlarmCode.Location = new System.Drawing.Point(7, 53);
+         this.txtAlarmCode.Location = new System.Drawing.Point(7, 98);
          this.txtAlarmCode.Name = "txtAlarmCode";
          this.txtAlarmCode.Size = new System.Drawing.Size(92, 22);
          this.txtAlarmCode.TabIndex = 23;
@@ -548,7 +550,7 @@
          this.ltbErrorCodes.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.ltbErrorCodes.FormattingEnabled = true;
          this.ltbErrorCodes.ItemHeight = 14;
-         this.ltbErrorCodes.Location = new System.Drawing.Point(12, 237);
+         this.ltbErrorCodes.Location = new System.Drawing.Point(147, 112);
          this.ltbErrorCodes.Name = "ltbErrorCodes";
          this.ltbErrorCodes.Size = new System.Drawing.Size(194, 172);
          this.ltbErrorCodes.TabIndex = 28;
@@ -582,6 +584,17 @@
          this.btnManualRun.Text = "Manual Run";
          this.btnManualRun.UseVisualStyleBackColor = true;
          this.btnManualRun.Click += new System.EventHandler(this.btnManualRun_Click);
+         // 
+         // btnDeleteAlarm
+         // 
+         this.btnDeleteAlarm.Location = new System.Drawing.Point(7, 59);
+         this.btnDeleteAlarm.Margin = new System.Windows.Forms.Padding(10);
+         this.btnDeleteAlarm.Name = "btnDeleteAlarm";
+         this.btnDeleteAlarm.Size = new System.Drawing.Size(92, 26);
+         this.btnDeleteAlarm.TabIndex = 25;
+         this.btnDeleteAlarm.Text = "Delete Alarm";
+         this.btnDeleteAlarm.UseVisualStyleBackColor = true;
+         this.btnDeleteAlarm.Click += new System.EventHandler(this.btnDeleteAlarm_Click);
          // 
          // Form1
          // 
@@ -670,6 +683,7 @@
       private System.Windows.Forms.Button btnAlarmReset;
       private System.Windows.Forms.Button btnManualRun;
       private System.Windows.Forms.Button btnAutoRun;
+      private System.Windows.Forms.Button btnDeleteAlarm;
    }
 }
 
