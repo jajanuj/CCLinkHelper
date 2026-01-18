@@ -125,7 +125,7 @@ namespace WindowsFormsApp1.CCLink.Controllers
             int size = 1;
             short[] buffer = new short[1];
 
-            var rc = _api.ReceiveEx(_pathHandle, 0, 0, deviceCode, alignedStart, ref size, buffer);
+            var rc = _api.ReceiveEx(_pathHandle, 0, 255, deviceCode, alignedStart, ref size, buffer);
             if (rc != 0)
             {
                throw MelsecException.FromCode(rc, nameof(_api.ReceiveEx));
@@ -153,7 +153,7 @@ namespace WindowsFormsApp1.CCLink.Controllers
             short[] src = vals.Select(v => (short)(v ? 1 : 0)).ToArray();
             int deviceCode = MapDevice(parsed.Kind);
             int size = src.Length * 2;
-            var rc = _api.SendEx(_pathHandle, 0, 0, deviceCode, parsed.Start, ref size, src);
+            var rc = _api.SendEx(_pathHandle, 0, 255, deviceCode, parsed.Start, ref size, src);
             if (rc != 0)
             {
                throw MelsecException.FromCode(rc, nameof(_api.SendEx));

@@ -78,7 +78,7 @@ namespace WindowsFormsApp1.Services
 
       // Heartbeat State Machine Fields
       private int _heartbeatStep = 0;
-      private uint _heartbeatT1Timeout = 2000;
+      private uint _heartbeatT1Timeout = 5000;
       private CTimer _heartbeatT1Timer = new CTimer();
       private Task _heartbeatTask;
       private CTimer _heartbeatTimeoutTimer = new CTimer();
@@ -165,12 +165,12 @@ namespace WindowsFormsApp1.Services
 
       public async Task SetControlStatus(ControlStatus status)
       {
-         await _controller.WriteWordsAsync("LW34EA", [(short)status]);
+         await _controller.WriteWordsAsync("LW114A", [(short)status]);
       }
 
       public async Task SetAlarmStatus(AlarmStatus status)
       {
-         await _controller.WriteWordsAsync("LW34E6", [(short)status]);
+         await _controller.WriteWordsAsync("LW1146", [(short)status]);
       }
 
       public async Task SetMachineStatus(MachineStatus status)
@@ -184,7 +184,7 @@ namespace WindowsFormsApp1.Services
             MachineStatus.Stopped => 5,
             _ => 0,
          };
-         await _controller.WriteWordsAsync("LW34E7", [(short)statusValue]);
+         await _controller.WriteWordsAsync("LW1147", [(short)statusValue]);
       }
 
       public async Task SetActionStatus(ActionStatus status)
@@ -196,7 +196,7 @@ namespace WindowsFormsApp1.Services
             ActionStatus.Other => 99,
             _ => 0,
          };
-         await _controller.WriteWordsAsync("LW34E8", [(short)statusValue]);
+         await _controller.WriteWordsAsync("LW1148", [(short)statusValue]);
       }
 
       #endregion
@@ -562,7 +562,6 @@ namespace WindowsFormsApp1.Services
 
       #region Heartbeat Methods
 
-      [Obsolete]
       public void StartHeartbeat(int failThreshold = 3)
       {
          StopHeartbeat();
@@ -600,7 +599,6 @@ namespace WindowsFormsApp1.Services
          ConsecutiveHeartbeatFailuresCount = 0;
       }
 
-      [Obsolete]
       private async Task HeartbeatLoopAsync(CancellationToken ct)
       {
          while (!ct.IsCancellationRequested && !_disposed)
@@ -622,7 +620,6 @@ namespace WindowsFormsApp1.Services
          }
       }
 
-      [Obsolete]
       private async Task RunHeartbeatAsync(CancellationToken ct)
       {
          // 檢查 OnlineMode 狀態
@@ -700,33 +697,33 @@ namespace WindowsFormsApp1.Services
                   _logger?.Invoke("[Heartbeat] 異常狀態：Request 和 Response 都是 OFF");
                   _heartbeatStep = 0; // → Idle
                }
-               else if (_heartbeatT1Timer.On(_heartbeatT1Timeout))
-               {
-                  // T1 逾時：PLC 未在時限內清除 Request
-                  _logger?.Invoke($"[Heartbeat] T1 Timeout - PLC 未在 {_heartbeatT1Timeout}ms 內清除 Request");
-
-                  try
+                  else if (_heartbeatT1Timer.On(_heartbeatT1Timeout))
                   {
-                     await AlarmHelper.AddAlarmCodeAsync(this, "0xC000");
-                     await _controller.WriteBitsAsync(_heartbeatResponseAddr, [false], ct);
-                  }
-                  catch (Exception ex)
-                  {
-                     _logger?.Invoke($"[Heartbeat] T1 Timeout處理失敗: {ex.Message}");
-                  }
+                     // T1 逾時：PLC 未在時限內清除 Request
+                     _logger?.Invoke($"[Heartbeat] T1 Timeout - PLC 未在 {_heartbeatT1Timeout}ms 內清除 Request");
 
-                  HandleHeartbeatFailure();
-                  _heartbeatStep = 0; // → Idle
-               }
-               else if (_heartbeatTimeoutTimer.On(_heartbeatGlobalTimeout))
-               {
-                  // 全局逾時
-                  _logger?.Invoke($"[Heartbeat] Global Timeout - 超過 {_heartbeatGlobalTimeout}ms");
-                  HandleHeartbeatFailure();
-                  _heartbeatStep = 0; // → Idle
-               }
+                     try
+                     {
+                        await AlarmHelper.AddAlarmCodeAsync(this, "0xC000");
+                        await _controller.WriteBitsAsync(_heartbeatResponseAddr, [false], ct);
+                     }
+                     catch (Exception ex)
+                     {
+                        _logger?.Invoke($"[Heartbeat] T1 Timeout處理失敗: {ex.Message}");
+                     }
 
-               break;
+                     HandleHeartbeatFailure();
+                     _heartbeatStep = 0; // → Idle
+                  }
+                  //else if (_heartbeatTimeoutTimer.On(_heartbeatGlobalTimeout))
+                  //{
+                  //   // 全局逾時
+                  //   _logger?.Invoke($"[Heartbeat] Global Timeout - 超過 {_heartbeatGlobalTimeout}ms");
+                  //   HandleHeartbeatFailure();
+                  //   _heartbeatStep = 0; // → Idle
+                  //}
+
+                  break;
             }
          }
       }
@@ -856,7 +853,7 @@ namespace WindowsFormsApp1.Services
       private readonly string AddrMaintenanceRequestPos = "LW05C8";
       private readonly string AddrMaintenanceResponseOk = "LB0304";
       private readonly string AddrMaintenanceResponseNg = "LB0305";
-      private readonly string AddrTrackingDataBase = "LW3BEA"; // Base address for 540 words (54 positions?)
+      private readonly string AddrTrackingDataBase = "LW184A"; // Base address for 540 words (54 positions?)
       private const int TrackingDataSize = 10;
       private const int MaxPositions = 54; // 540 words / 10 words per pos = 54
 
@@ -1070,7 +1067,7 @@ namespace WindowsFormsApp1.Services
 
                         // 3. Update Device Memory (Write to LW Base + Offset)
                         int baseAddr = Convert.ToInt32(AddrTrackingDataBase.Substring(2), 16);
-                        int targetAddr = baseAddr + pos * TrackingDataSize;
+                        int targetAddr = baseAddr + (pos-1) * TrackingDataSize;
                         string targetAddrStr = $"LW{targetAddr:X4}";
 
                         await _controller.WriteWordsAsync(targetAddrStr, trackWords.ToArray(), ct);
@@ -1106,8 +1103,8 @@ namespace WindowsFormsApp1.Services
                   _logger?.Invoke("[Maintenance] Request OFF detected, Clearing Responses");
 
                   // 6. Clear Response Flags
-                  await _controller.WriteBitsAsync(AddrMaintenanceResponseOk, new[] { false }, ct);
-                  await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { false }, ct);
+                  //await _controller.WriteBitsAsync(AddrMaintenanceResponseOk, new[] { false }, ct);
+                  //await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { false }, ct);
 
                   // 握手完成：觸發事件通知 UI
                   if (_receivedMaintenanceData != null)

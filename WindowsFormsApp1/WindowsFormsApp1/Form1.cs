@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GRT.SDK.Framework.Common;
+using System;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -556,6 +557,7 @@ namespace WindowsFormsApp1
          }
          catch (Exception ex)
          {
+            //btnOpen.SafeInvoke(x => x.Enabled = true);
             BeginInvoke((Action)(() => MessageBox.Show(ex.Message, "Open Failed")));
          }
          finally
@@ -794,7 +796,6 @@ namespace WindowsFormsApp1
       // PLC 模擬器相關
       // -------------------
 
-      [Obsolete]
       private void btnStartHeartbeat_Click(object sender, EventArgs e)
       {
          try
@@ -1258,7 +1259,7 @@ namespace WindowsFormsApp1
             ltbErrorCodes.Items.Clear();
             for (int i = 0; i < 12; i++)
             {
-               string address = $"LW{0x34DA + i:X4}"; // LW113A, LW113B, LW113C, ...
+               string address = $"LW{0x113A + i:X4}"; // LW113A, LW113B, LW113C, ...
                short value = _appPlcService.Controller.GetWord(address);
                // 轉換為 ushort 並格式化為十六進制顯示
                ushort uValue = unchecked((ushort)value);
