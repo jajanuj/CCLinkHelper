@@ -60,8 +60,6 @@ namespace WindowsFormsApp1.Forms
             new ComboBoxItem(2, "2: 下游等待"),
             new ComboBoxItem(3, "3: 上游等待"),
             new ComboBoxItem(4, "4: 上下游等待"),
-            new ComboBoxItem(5, "5: 特殊等待"),
-            new ComboBoxItem(99, "99: 其他")
          });
 
          InitComboBox(cboControlStatus, s1.ControlStatus, new[]
@@ -91,11 +89,12 @@ namespace WindowsFormsApp1.Forms
             new ComboBoxItem(0, "0: 無等待"),
             new ComboBoxItem(1, "1: 等待中")
          };
-         InitComboBox(cmbUpstreamWaiting, s2.UpstreamWaitingStatus, waitItems);
-         InitComboBox(cmbDownstreamWaiting, s2.DownstreamWaitingStatus, waitItems);
+
+         nudUpstreamWaiting.Value = s2.UpstreamWaitingStatus/10;
+         nudDownstreamWaiting.Value = s2.DownstreamWaitingStatus/10;
 
          nudDischargeRate.Value = s2.DischargeRate;
-         nudStopTime.Value = s2.StopTime;
+         nudStopTime.Value = s2.StopTime / 10;
          nudProcessingCounter.Value = s2.ProcessingCounter;
          nudRetainedBoardCount.Value = s2.RetainedBoardCount;
          nudCurrentRecipeNo.Value = s2.CurrentRecipeNo;
@@ -134,8 +133,8 @@ namespace WindowsFormsApp1.Forms
             GetComboValue(cmbRedLight),
             GetComboValue(cmbYellowLight),
             GetComboValue(cmbGreenLight),
-            GetComboValue(cmbUpstreamWaiting),
-            GetComboValue(cmbDownstreamWaiting),
+            (ushort)nudUpstreamWaiting.Value,
+                        (ushort)nudDownstreamWaiting.Value,
             (ushort)nudDischargeRate.Value,
             (ushort)nudStopTime.Value,
             (uint)nudProcessingCounter.Value,

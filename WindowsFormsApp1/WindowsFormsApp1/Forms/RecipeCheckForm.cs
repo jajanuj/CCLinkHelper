@@ -69,7 +69,7 @@ namespace WindowsFormsApp1.Forms
             if (_simulator != null)
             {
                Log("[模擬模式] 自動啟動模擬器流程...");
-               _simulator.StartRecipeCheckMode(_settings);
+               //_simulator.StartRecipeCheckMode(_settings);
             }
 
             // 準備追蹤資料
@@ -127,11 +127,12 @@ namespace WindowsFormsApp1.Forms
 
             for (int i = 0; i < 10 && i < parts.Length; i++)
             {
-               if (short.TryParse(parts[i], out short val))
-               {
-                  data[i] = val;
-               }
-               else if (int.TryParse(parts[i], System.Globalization.NumberStyles.HexNumber, null, out int hexVal))
+               //if (short.TryParse(parts[i], out short val))
+               //{
+               //   data[i] = val;
+               //}
+               //else 
+               if (int.TryParse(parts[i], System.Globalization.NumberStyles.Number, null, out int hexVal))
                {
                   // 支援十六進位輸入 (如 0xFFFF)
                   data[i] = (short)hexVal;

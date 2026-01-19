@@ -11,13 +11,13 @@ namespace WindowsFormsApp1.Models
       public RecipeCheckMode Mode { get; set; } = RecipeCheckMode.Numeric;
 
       /// <summary>Request Flag 地址</summary>
-      public string RequestFlagAddress { get; set; } = "LB0503";
+      public string RequestFlagAddress { get; set; } = "LB0303";
 
       /// <summary>Request Data 起始地址（追蹤資料）</summary>
-      public string RequestDataAddress { get; set; } = "LW3B67";
+      public string RequestDataAddress { get; set; } = "LW17C7";
 
       /// <summary>Request Data Recipe No. 地址（數值模式）</summary>
-      public string RequestRecipeNoAddress { get; set; } = "LW34F5";
+      public string RequestRecipeNoAddress { get; set; } = "LW1155";
 
       /// <summary>Request Data Recipe Name 地址（字串模式）</summary>
       public string RequestRecipeNameAddress { get; set; } = "LW34F8";

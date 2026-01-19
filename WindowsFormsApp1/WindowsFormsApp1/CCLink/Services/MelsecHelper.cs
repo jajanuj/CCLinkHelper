@@ -594,23 +594,89 @@ namespace WindowsFormsApp1.CCLink.Services
          var vals = values?.ToArray() ?? Array.Empty<bool>();
          var parsed = LinkDeviceAddress.Parse(address, vals.Length);
          int deviceCode = MapDeviceCode(parsed.Kind);
-         int size = vals.Length * 2;
-         short[] src = vals.Select(v => (short)(v ? 1 : 0)).ToArray();
 
-         await Task.Run(() =>
+         // 判断是否为bit设备
+         if (IsBitDevice(parsed.Kind))
          {
-            lock (_apiLock)
+            // 对每个要写入的bit进行处理
+            for (int i = 0; i < vals.Length; i++)
             {
-               int rc = _api.SendEx(_resolvedPath, NetworkNo, StationNo, deviceCode, parsed.Start, ref size, src);
-               if (rc != 0)
+               int targetBit = parsed.Start + i;
+               int alignedStart = targetBit / 16 * 16;  // 16位对齐
+
+               // 读取16位区块
+               int readSize = 16;
+               short[] readBuffer = new short[1]; // API以word形式读取16个bit
+
+               await Task.Run(() =>
                {
-                  throw MelsecException.FromCode(rc, nameof(_api.SendEx));
+                  lock (_apiLock)
+                  {
+                     int rc = _api.ReceiveEx(_resolvedPath, NetworkNo, StationNo, 
+                                           deviceCode, alignedStart, ref readSize, readBuffer);
+                     if (rc != 0)
+                     {
+                        throw MelsecException.FromCode(rc, nameof(_api.ReceiveEx));
+                     }
+                  }
+               }, ct).ConfigureAwait(false);
+
+               // 修改目标bit
+               int bitOffset = targetBit - alignedStart;
+               if (vals[i])
+               {
+                  readBuffer[0] |= (short)(1 << bitOffset);
+               }
+               else
+               {
+                  readBuffer[0] &= (short)~(1 << bitOffset);
                }
 
-               // Update Cache
-               UpdateCache(parsed.Kind, parsed.Start, src);
+               // 写回16位区块
+               int writeSize = 16;
+               await Task.Run(() =>
+               {
+                  lock (_apiLock)
+                  {
+                     int rc = _api.SendEx(_resolvedPath, NetworkNo, StationNo, 
+                                        deviceCode, alignedStart, ref writeSize, readBuffer);
+                     if (rc != 0)
+                     {
+                        throw MelsecException.FromCode(rc, nameof(_api.SendEx));
+                     }
+
+                     // 更新缓存：将16位数据扩展为16个short
+                     short[] expandedData = new short[16];
+                     for (int b = 0; b < 16; b++)
+                     {
+                        expandedData[b] = (short)((readBuffer[0] >> b) & 1);
+                     }
+                     UpdateCache(parsed.Kind, alignedStart, expandedData);
+                  }
+               }, ct).ConfigureAwait(false);
             }
-         }, ct).ConfigureAwait(false);
+         }
+         else
+         {
+            // Word设备保持原有逻辑
+            int size = vals.Length * 2;
+            short[] src = vals.Select(v => (short)(v ? 1 : 0)).ToArray();
+
+            await Task.Run(() =>
+            {
+               lock (_apiLock)
+               {
+                  int rc = _api.SendEx(_resolvedPath, NetworkNo, StationNo, 
+                                     deviceCode, parsed.Start, ref size, src);
+                  if (rc != 0)
+                  {
+                     throw MelsecException.FromCode(rc, nameof(_api.SendEx));
+                  }
+
+                  UpdateCache(parsed.Kind, parsed.Start, src);
+               }
+            }, ct).ConfigureAwait(false);
+         }
       }
 
       public async Task<IReadOnlyList<short>> ReadWordsAsync(string address, int count, CancellationToken ct = default)

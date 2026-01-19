@@ -24,37 +24,37 @@ namespace WindowsFormsApp1.Models
       /// <summary>
       /// STB Pin 1: 起動中
       /// </summary>
-      public string StbIsRunning { get; set; } = "LB1000";
+      public string StbIsRunning { get; set; } = "LB0330";
 
       /// <summary>
       /// STB Pin 2: 停止中
       /// </summary>
-      public string StbIsStopped { get; set; } = "LB1001";
+      public string StbIsStopped { get; set; } = "LB0331";
 
       /// <summary>
       /// STB Pin 3: 排出予告
       /// </summary>
-      public string StbDischargeNotice { get; set; } = "LB1002";
+      public string StbDischargeNotice { get; set; } = "LB0332";
 
       /// <summary>
       /// STB Pin 4: 排出要求
       /// </summary>
-      public string StbDischargeRequest { get; set; } = "LB1003";
+      public string StbDischargeRequest { get; set; } = "LB0333";
 
       /// <summary>
       /// STB Pin 5: 基板受取位置 (Word類型)
       /// </summary>
-      public string StbBoardReceivePosition { get; set; } = "LW1004";
+      public string StbBoardReceivePosition { get; set; } = "LW0334";
 
       /// <summary>
       /// STB Pin 6: 基板受取完了
       /// </summary>
-      public string StbBoardReceiveComplete { get; set; } = "LB1006";
+      public string StbBoardReceiveComplete { get; set; } = "LB0335";
 
       /// <summary>
       /// STB Pin 7: LastFlag
       /// </summary>
-      public string StbLastFlag { get; set; } = "LB1007";
+      public string StbLastFlag { get; set; } = "LB0336";
 
       /// <summary>
       /// STB Pin 16: 非常停止

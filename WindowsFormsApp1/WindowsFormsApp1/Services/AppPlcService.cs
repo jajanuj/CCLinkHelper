@@ -1,6 +1,7 @@
 using GRT.SDK.Framework.Timer;
 using System;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -222,6 +223,28 @@ namespace WindowsFormsApp1.Services
       #endregion
 
       #region Common Report Methods
+      public void UpdatRouteData(string ovenStatus)
+      {
+         lock (_commonReportLock)
+         {
+
+            try
+            {
+               short[] values = new short[1];
+               if (int.TryParse(ovenStatus, System.Globalization.NumberStyles.Number, null, out int hexVal))
+               {
+                  values[0] = (short)hexVal;
+
+               }
+              
+               _controller.WriteWordsAsync("LW119E", values);
+            }
+            catch (Exception ex)
+            {
+               _logger?.Invoke($"update oven Exception: {ex.Message}");
+            }
+         }
+      }
 
       public void UpdateStatus1(ushort alarmStatus, ushort machineStatus, ushort actionStatus, ushort waitingStatus, ushort controlStatus)
       {
@@ -849,13 +872,13 @@ namespace WindowsFormsApp1.Services
       #region Tracking Data Maintenance Methods
 
       private readonly string AddrMaintenanceRequestFlag = "LB0106";
-      private readonly string AddrMaintenanceRequestData = "LW05BE"; // Length 10
-      private readonly string AddrMaintenanceRequestPos = "LW05C8";
+      private readonly string AddrMaintenanceRequestData = "LW17D1"; // Length 10
+      private readonly string AddrMaintenanceRequestPos = "LW17DB";
       private readonly string AddrMaintenanceResponseOk = "LB0304";
       private readonly string AddrMaintenanceResponseNg = "LB0305";
       private readonly string AddrTrackingDataBase = "LW184A"; // Base address for 540 words (54 positions?)
       private const int TrackingDataSize = 10;
-      private const int MaxPositions = 54; // 540 words / 10 words per pos = 54
+      private const int MaxPositions = 540; // 540 words / 10 words per pos = 54
 
       private CancellationTokenSource _maintenanceMonitorCts;
       private Task _maintenanceMonitorTask;
@@ -869,7 +892,7 @@ namespace WindowsFormsApp1.Services
       private int _receivedMaintenancePos;
 
       // Tracking Maintenance Request (Sender Side) Addresses
-      private readonly string AddrMaintenanceSenderRequestFlag = "LB0506";
+      private readonly string AddrMaintenanceSenderRequestFlag = "LB0306";
       private readonly string AddrMaintenanceSenderResponseFlag = "LB0107";
       private readonly string AddrMaintenanceSenderData = "LW05BE";
       private readonly string AddrMaintenanceSenderPos = "LW05C8";
@@ -1033,7 +1056,7 @@ namespace WindowsFormsApp1.Services
       }
 
       /// <summary>
-      /// 發送追蹤資料維護請求 (Device -> LCS)
+      /// 發送追蹤資料維護請求 (LCS -> DEVICE)
       /// </summary>
       /// <param name="data">追蹤資料 (10 words)</param>
       /// <param name="positionNo">位置編號</param>
@@ -1051,15 +1074,17 @@ namespace WindowsFormsApp1.Services
                   _logger?.Invoke("[Maintenance] Request ON detected, processing...");
 
                   // 2. Read Request Data (Tracking Data 10 words + Position 1 word)
-                  var trackWords = await _controller.ReadWordsAsync(AddrMaintenanceRequestData, TrackingDataSize, ct);
-                  var posWords = await _controller.ReadWordsAsync(AddrMaintenanceRequestPos, 1, ct);
+                  //var trackWords = await _controller.ReadWordsAsync(AddrMaintenanceRequestData, TrackingDataSize, ct);
+                  //var posWords = await _controller.ReadWordsAsync(AddrMaintenanceRequestPos, 1, ct);
+                  var trackWords = await _controller.ReadWordsAsync("LW05BE", TrackingDataSize, ct);
+                  var posWords = await _controller.ReadWordsAsync("LW05C8", 1, ct);
 
                   if (trackWords.Count == TrackingDataSize && posWords.Count == 1)
                   {
                      int pos = (ushort)posWords[0];
 
                      // Validate Position
-                     if (pos >= 0 && pos < MaxPositions)
+                     if (pos > 0 && pos < MaxPositions)
                      {
                         // 將 trackWords 轉換為 TrackingData 並保存
                         _receivedMaintenanceData = TrackingData.FromWords(trackWords.Select(w => (ushort)w).ToArray());
@@ -1082,6 +1107,7 @@ namespace WindowsFormsApp1.Services
                         _logger?.Invoke($"[Maintenance] Invalid Position: {pos}");
                         // Response NG
                         await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { true }, ct);
+                        await AlarmHelper.AddAlarmCodeAsync(this, "C00B");
                      }
                   }
                   else
@@ -1089,6 +1115,7 @@ namespace WindowsFormsApp1.Services
                      _logger?.Invoke("[Maintenance] Read Data Failed");
                      // Response NG
                      await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { true }, ct);
+                     await AlarmHelper.AddAlarmCodeAsync(this, "C00B");
                   }
 
                   _maintenanceTimer.Reset();
@@ -1103,8 +1130,8 @@ namespace WindowsFormsApp1.Services
                   _logger?.Invoke("[Maintenance] Request OFF detected, Clearing Responses");
 
                   // 6. Clear Response Flags
-                  //await _controller.WriteBitsAsync(AddrMaintenanceResponseOk, new[] { false }, ct);
-                  //await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { false }, ct);
+                  await _controller.WriteBitsAsync(AddrMaintenanceResponseOk, new[] { false }, ct);
+                  await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { false }, ct);
 
                   // 握手完成：觸發事件通知 UI
                   if (_receivedMaintenanceData != null)
@@ -1143,12 +1170,47 @@ namespace WindowsFormsApp1.Services
                {
                   try
                   {
+                     await _controller.WriteBitsAsync(AddrMaintenanceResponseOk, new[] { false }, ct);
+                     await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { false }, ct);
                      _logger?.Invoke($"[MaintenanceSync] 開始發送維護請求... Pos:{_pendingMaintenancePos}");
 
                      // 1. 寫入資料
                      short[] trackWords = _pendingMaintenanceData.ToRawData(); // 10 words
-                     await _controller.WriteWordsAsync(AddrMaintenanceSenderData, trackWords, ct);
-                     await _controller.WriteWordsAsync(AddrMaintenanceSenderPos, new short[] { (short)_pendingMaintenancePos }, ct);
+
+
+                     int pos = _pendingMaintenancePos;
+
+                     // Validate Position
+                     if (pos > 0 && pos < MaxPositions)
+                     {
+                        // 將 trackWords 轉換為 TrackingData 並保存
+                        _receivedMaintenanceData = TrackingData.FromWords(trackWords.Select(w => (ushort)w).ToArray());
+                        _receivedMaintenancePos = pos;
+
+                        // 3. Update Device Memory (Write to LW Base + Offset)
+                        int baseAddr = Convert.ToInt32(AddrTrackingDataBase.Substring(2), 16);
+                        int targetAddr = baseAddr + (pos-1) * TrackingDataSize;
+                        string targetAddrStr = $"LW{targetAddr:X4}";
+
+                        await _controller.WriteWordsAsync(targetAddrStr, trackWords.ToArray(), ct);
+                        _logger?.Invoke($"[Maintenance] Updated Position {pos} at {targetAddrStr}");
+
+                        // 4. Response OK (LB 0x0304)
+                        await _controller.WriteBitsAsync(AddrMaintenanceResponseOk, new[] { true }, ct);
+                        _logger?.Invoke("[Maintenance] Response OK Set");
+                     }
+                     else
+                     {
+                        _logger?.Invoke($"[Maintenance] Invalid Position: {pos}");
+                        // Response NG
+                        await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { true }, ct);
+                        await AlarmHelper.AddAlarmCodeAsync(this, "C00B");
+                     }
+
+                     //await _controller.WriteWordsAsync(AddrMaintenanceSenderData, trackWords, ct);
+                     //await _controller.WriteWordsAsync(AddrMaintenanceSenderPos, new short[] { (short)_pendingMaintenancePos }, ct);
+                     await _controller.WriteWordsAsync(AddrMaintenanceRequestData, trackWords, ct);
+                     await _controller.WriteWordsAsync(AddrMaintenanceRequestPos, new short[] { (short)_pendingMaintenancePos }, ct);
 
                      // 2. 設定 Request Flag ON
                      await _controller.WriteBitsAsync(AddrMaintenanceSenderRequestFlag, new[] { true }, ct);
@@ -1184,6 +1246,7 @@ namespace WindowsFormsApp1.Services
 
                   // 異常處理：清除 Request Flag
                   await _controller.WriteBitsAsync(AddrMaintenanceSenderRequestFlag, new[] { false }, ct);
+                  await AlarmHelper.AddAlarmCodeAsync(this, "C00C");
                   CompleteMaintenanceRequest(false);
                }
 
@@ -1192,6 +1255,8 @@ namespace WindowsFormsApp1.Services
             case 20: // Waiting for Response OFF (T2)
                if (!responseOn)
                {
+                        // Response OK (LB 0x0304)
+                        await _controller.WriteBitsAsync(AddrMaintenanceResponseOk, new[] { true }, ct);
                   _logger?.Invoke($"[MaintenanceSync] Response Flag ({AddrMaintenanceSenderResponseFlag}) OFF Confirmed - 完成");
                   CompleteMaintenanceRequest(true);
                }
@@ -1200,6 +1265,8 @@ namespace WindowsFormsApp1.Services
                   _logger?.Invoke($"[MaintenanceSync] T2 Alarm: LCS 未能在 {_maintenanceRequestT2Timeout}ms 內清除 Response");
                   // T2 逾時通常發出警報，但通訊本身可視為成功（若定義為 Request 被接受）
                   // 依指示：送信端發出警報。
+                                          // Response NG (LB 0x0305)
+                        await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { true }, ct);
                   CompleteMaintenanceRequest(true); // 完成流程，但已記錄警報
                }
 
@@ -1288,13 +1355,15 @@ namespace WindowsFormsApp1.Services
       /// <summary>
       /// 清除指定站點的排出資料（寫入 0，包含 11 words）
       /// </summary>
-      public async Task ClearMoveOutDataAsync(TrackingStation station, CancellationToken ct = default)
+      public async Task ClearMoveOutDataAsync(TrackingStation station, TrackingData trackingData, CancellationToken ct = default)
       {
          string address = _settings.Tracking.GetAddress(station);
          if (string.IsNullOrWhiteSpace(address))
          {
             throw new InvalidOperationException($"站點 {station} 的位址未設定");
          }
+
+         await _controller.WriteWordsAsync("LW17B2", trackingData.ToRawData(), ct);
 
          short[] zeroData = new short[11];
          await _controller.WriteWordsAsync(address, zeroData, ct);
@@ -1304,9 +1373,9 @@ namespace WindowsFormsApp1.Services
       /// <summary>
       /// 清除指定站點的追蹤資料（寫入 0，僅 10 words，向下相容）
       /// </summary>
-      public async Task ClearTrackingDataAsync(TrackingStation station, CancellationToken ct = default)
+      public async Task ClearTrackingDataAsync(TrackingStation station, TrackingData trackingData, CancellationToken ct = default)
       {
-         await ClearMoveOutDataAsync(station, ct);
+         await ClearMoveOutDataAsync(station, trackingData, ct);
       }
 
       /// <summary>

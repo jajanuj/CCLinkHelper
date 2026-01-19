@@ -219,7 +219,24 @@ namespace WindowsFormsApp1.Forms
          try
          {
             btnClear.Enabled = false;
-            await _service.ClearMoveOutDataAsync(station, _cts.Token);
+
+            var data = new TrackingData
+            {
+               BoardId = new ushort[]
+               {
+                  (ushort)nudBoardId1.Value,
+                  (ushort)nudBoardId2.Value,
+                  (ushort)nudBoardId3.Value
+               },
+               LayerCount = (ushort)nudLayerCount.Value,
+               LotNoChar = string.IsNullOrEmpty(txtLotChar.Text) ? (ushort)0 : (ushort)txtLotChar.Text[0],
+               LotNoNum = (uint)nudLotNum.Value,
+               JudgeFlag1 = (ushort)nudJudge1.Value,
+               JudgeFlag2 = (ushort)nudJudge2.Value,
+               JudgeFlag3 = (ushort)nudJudge3.Value
+            };
+
+            await _service.ClearMoveOutDataAsync(station, data, _cts.Token);
             Log($"已清除站點 {station} 的排出資料");
             await RefreshDataAsync();
          }

@@ -36,43 +36,43 @@ namespace WindowsFormsApp1.Forms
          this.btnToggleDischargeNotice = new System.Windows.Forms.Button();
          this.btnToggleStopped = new System.Windows.Forms.Button();
          this.btnToggleRunning = new System.Windows.Forms.Button();
+         this.label7 = new System.Windows.Forms.Label();
+         this.label6 = new System.Windows.Forms.Label();
+         this.label5 = new System.Windows.Forms.Label();
+         this.label4 = new System.Windows.Forms.Label();
+         this.label3 = new System.Windows.Forms.Label();
+         this.label2 = new System.Windows.Forms.Label();
+         this.label1 = new System.Windows.Forms.Label();
+         this.txtStbBoardPosition = new System.Windows.Forms.TextBox();
          this.lblStbLastFlag = new System.Windows.Forms.Label();
          this.lblStbBoardReceiveComplete = new System.Windows.Forms.Label();
          this.lblStbDischargeRequest = new System.Windows.Forms.Label();
          this.lblStbDischargeNotice = new System.Windows.Forms.Label();
          this.lblStbIsStopped = new System.Windows.Forms.Label();
          this.lblStbIsRunning = new System.Windows.Forms.Label();
-         this.txtStbBoardPosition = new System.Windows.Forms.TextBox();
-         this.label1 = new System.Windows.Forms.Label();
-         this.label2 = new System.Windows.Forms.Label();
-         this.label3 = new System.Windows.Forms.Label();
-         this.label4 = new System.Windows.Forms.Label();
-         this.label5 = new System.Windows.Forms.Label();
-         this.label6 = new System.Windows.Forms.Label();
-         this.label7 = new System.Windows.Forms.Label();
          this.grpRbSignals = new System.Windows.Forms.GroupBox();
+         this.label13 = new System.Windows.Forms.Label();
+         this.label12 = new System.Windows.Forms.Label();
+         this.label11 = new System.Windows.Forms.Label();
+         this.label10 = new System.Windows.Forms.Label();
+         this.label9 = new System.Windows.Forms.Label();
+         this.label8 = new System.Windows.Forms.Label();
          this.lblRbCannotReceive = new System.Windows.Forms.Label();
          this.lblRbBoardReceiveComplete1 = new System.Windows.Forms.Label();
          this.lblRbDischargeRequest = new System.Windows.Forms.Label();
          this.lblRbReadyToReceiveNotice1 = new System.Windows.Forms.Label();
          this.lblRbIsStopped = new System.Windows.Forms.Label();
          this.lblRbIsRunning = new System.Windows.Forms.Label();
-         this.label8 = new System.Windows.Forms.Label();
-         this.label9 = new System.Windows.Forms.Label();
-         this.label10 = new System.Windows.Forms.Label();
-         this.label11 = new System.Windows.Forms.Label();
-         this.label12 = new System.Windows.Forms.Label();
-         this.label13 = new System.Windows.Forms.Label();
          this.grpStatus = new System.Windows.Forms.GroupBox();
-         this.txtCurrentState = new System.Windows.Forms.TextBox();
          this.label14 = new System.Windows.Forms.Label();
+         this.txtCurrentState = new System.Windows.Forms.TextBox();
          this.grpControl = new System.Windows.Forms.GroupBox();
          this.btnReset = new System.Windows.Forms.Button();
          this.btnStop = new System.Windows.Forms.Button();
          this.btnStart = new System.Windows.Forms.Button();
          this.grpLog = new System.Windows.Forms.GroupBox();
-         this.rtbLog = new System.Windows.Forms.RichTextBox();
          this.btnClearLog = new System.Windows.Forms.Button();
+         this.rtbLog = new System.Windows.Forms.RichTextBox();
          this.grpStbSignals.SuspendLayout();
          this.grpRbSignals.SuspendLayout();
          this.grpStatus.SuspendLayout();
@@ -110,144 +110,27 @@ namespace WindowsFormsApp1.Forms
          this.grpStbSignals.TabStop = false;
          this.grpStbSignals.Text = "STB信號 (上游滑台)";
          // 
-         // label1
+         // btnToggleLastFlag
          // 
-         this.label1.AutoSize = true;
-         this.label1.Location = new System.Drawing.Point(20, 30);
-         this.label1.Name = "label1";
-         this.label1.Size = new System.Drawing.Size(65, 12);
-         this.label1.TabIndex = 0;
-         this.label1.Text = "起動中:";
+         this.btnToggleLastFlag.Location = new System.Drawing.Point(310, 205);
+         this.btnToggleLastFlag.Name = "btnToggleLastFlag";
+         this.btnToggleLastFlag.Size = new System.Drawing.Size(70, 23);
+         this.btnToggleLastFlag.TabIndex = 20;
+         this.btnToggleLastFlag.Tag = "LB0336";
+         this.btnToggleLastFlag.Text = "切換";
+         this.btnToggleLastFlag.UseVisualStyleBackColor = true;
+         this.btnToggleLastFlag.Click += new System.EventHandler(this.btnToggleStbSignal_Click);
          // 
-         // lblStbIsRunning
+         // btnTogglePosition
          // 
-         this.lblStbIsRunning.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.lblStbIsRunning.Location = new System.Drawing.Point(150, 25);
-         this.lblStbIsRunning.Name = "lblStbIsRunning";
-         this.lblStbIsRunning.Size = new System.Drawing.Size(150, 23);
-         this.lblStbIsRunning.TabIndex = 1;
-         this.lblStbIsRunning.Text = "OFF";
-         this.lblStbIsRunning.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-         // 
-         // btnToggleRunning
-         // 
-         this.btnToggleRunning.Location = new System.Drawing.Point(310, 25);
-         this.btnToggleRunning.Name = "btnToggleRunning";
-         this.btnToggleRunning.Size = new System.Drawing.Size(70, 23);
-         this.btnToggleRunning.TabIndex = 2;
-         this.btnToggleRunning.Tag = "LB1000";
-         this.btnToggleRunning.Text = "切換";
-         this.btnToggleRunning.UseVisualStyleBackColor = true;
-         this.btnToggleRunning.Click += new System.EventHandler(this.btnToggleStbSignal_Click);
-         // 
-         // label2
-         // 
-         this.label2.AutoSize = true;
-         this.label2.Location = new System.Drawing.Point(20, 60);
-         this.label2.Name = "label2";
-         this.label2.Size = new System.Drawing.Size(65, 12);
-         this.label2.TabIndex = 3;
-         this.label2.Text = "停止中:";
-         // 
-         // lblStbIsStopped
-         // 
-         this.lblStbIsStopped.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.lblStbIsStopped.Location = new System.Drawing.Point(150, 55);
-         this.lblStbIsStopped.Name = "lblStbIsStopped";
-         this.lblStbIsStopped.Size = new System.Drawing.Size(150, 23);
-         this.lblStbIsStopped.TabIndex = 4;
-         this.lblStbIsStopped.Text = "OFF";
-         this.lblStbIsStopped.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-         // 
-         // btnToggleStopped
-         // 
-         this.btnToggleStopped.Location = new System.Drawing.Point(310, 55);
-         this.btnToggleStopped.Name = "btnToggleStopped";
-         this.btnToggleStopped.Size = new System.Drawing.Size(70, 23);
-         this.btnToggleStopped.TabIndex = 5;
-         this.btnToggleStopped.Tag = "LB1001";
-         this.btnToggleStopped.Text = "切換";
-         this.btnToggleStopped.UseVisualStyleBackColor = true;
-         this.btnToggleStopped.Click += new System.EventHandler(this.btnToggleStbSignal_Click);
-         // 
-         // label3
-         // 
-         this.label3.AutoSize = true;
-         this.label3.Location = new System.Drawing.Point(20, 90);
-         this.label3.Name = "label3";
-         this.label3.Size = new System.Drawing.Size(77, 12);
-         this.label3.TabIndex = 6;
-         this.label3.Text = "排出予告:";
-         // 
-         // lblStbDischargeNotice
-         // 
-         this.lblStbDischargeNotice.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.lblStbDischargeNotice.Location = new System.Drawing.Point(150, 85);
-         this.lblStbDischargeNotice.Name = "lblStbDischargeNotice";
-         this.lblStbDischargeNotice.Size = new System.Drawing.Size(150, 23);
-         this.lblStbDischargeNotice.TabIndex = 7;
-         this.lblStbDischargeNotice.Text = "OFF";
-         this.lblStbDischargeNotice.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-         // 
-         // btnToggleDischargeNotice
-         // 
-         this.btnToggleDischargeNotice.Location = new System.Drawing.Point(310, 85);
-         this.btnToggleDischargeNotice.Name = "btnToggleDischargeNotice";
-         this.btnToggleDischargeNotice.Size = new System.Drawing.Size(70, 23);
-         this.btnToggleDischargeNotice.TabIndex = 8;
-         this.btnToggleDischargeNotice.Tag = "LB1002";
-         this.btnToggleDischargeNotice.Text = "切換";
-         this.btnToggleDischargeNotice.UseVisualStyleBackColor = true;
-         this.btnToggleDischargeNotice.Click += new System.EventHandler(this.btnToggleStbSignal_Click);
-         // 
-         // label4
-         // 
-         this.label4.AutoSize = true;
-         this.label4.Location = new System.Drawing.Point(20, 120);
-         this.label4.Name = "label4";
-         this.label4.Size = new System.Drawing.Size(77, 12);
-         this.label4.TabIndex = 9;
-         this.label4.Text = "排出要求:";
-         // 
-         // lblStbDischargeRequest
-         // 
-         this.lblStbDischargeRequest.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.lblStbDischargeRequest.Location = new System.Drawing.Point(150, 115);
-         this.lblStbDischargeRequest.Name = "lblStbDischargeRequest";
-         this.lblStbDischargeRequest.Size = new System.Drawing.Size(150, 23);
-         this.lblStbDischargeRequest.TabIndex = 10;
-         this.lblStbDischargeRequest.Text = "OFF";
-         this.lblStbDischargeRequest.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-         // 
-         // btnToggleDischargeRequest
-         // 
-         this.btnToggleDischargeRequest.Location = new System.Drawing.Point(310, 115);
-         this.btnToggleDischargeRequest.Name = "btnToggleDischargeRequest";
-         this.btnToggleDischargeRequest.Size = new System.Drawing.Size(70, 23);
-         this.btnToggleDischargeRequest.TabIndex = 11;
-         this.btnToggleDischargeRequest.Tag = "LB1003";
-         this.btnToggleDischargeRequest.Text = "切換";
-         this.btnToggleDischargeRequest.UseVisualStyleBackColor = true;
-         this.btnToggleDischargeRequest.Click += new System.EventHandler(this.btnToggleStbSignal_Click);
-         // 
-         // label5
-         // 
-         this.label5.AutoSize = true;
-         this.label5.Location = new System.Drawing.Point(20, 150);
-         this.label5.Name = "label5";
-         this.label5.Size = new System.Drawing.Size(113, 12);
-         this.label5.TabIndex = 12;
-         this.label5.Text = "基板受取完了:";
-         // 
-         // lblStbBoardReceiveComplete
-         // 
-         this.lblStbBoardReceiveComplete.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.lblStbBoardReceiveComplete.Location = new System.Drawing.Point(150, 145);
-         this.lblStbBoardReceiveComplete.Name = "lblStbBoardReceiveComplete";
-         this.lblStbBoardReceiveComplete.Size = new System.Drawing.Size(150, 23);
-         this.lblStbBoardReceiveComplete.TabIndex = 13;
-         this.lblStbBoardReceiveComplete.Text = "OFF";
-         this.lblStbBoardReceiveComplete.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+         this.btnTogglePosition.Location = new System.Drawing.Point(310, 175);
+         this.btnTogglePosition.Name = "btnTogglePosition";
+         this.btnTogglePosition.Size = new System.Drawing.Size(70, 23);
+         this.btnTogglePosition.TabIndex = 17;
+         this.btnTogglePosition.Tag = "LW0335";
+         this.btnTogglePosition.Text = "設定";
+         this.btnTogglePosition.UseVisualStyleBackColor = true;
+         this.btnTogglePosition.Click += new System.EventHandler(this.btnToggleStbSignal_Click);
          // 
          // btnToggleBoardReceiveComplete
          // 
@@ -255,19 +138,117 @@ namespace WindowsFormsApp1.Forms
          this.btnToggleBoardReceiveComplete.Name = "btnToggleBoardReceiveComplete";
          this.btnToggleBoardReceiveComplete.Size = new System.Drawing.Size(70, 23);
          this.btnToggleBoardReceiveComplete.TabIndex = 14;
-         this.btnToggleBoardReceiveComplete.Tag = "LB1006";
+         this.btnToggleBoardReceiveComplete.Tag = "LB0334";
          this.btnToggleBoardReceiveComplete.Text = "切換";
          this.btnToggleBoardReceiveComplete.UseVisualStyleBackColor = true;
          this.btnToggleBoardReceiveComplete.Click += new System.EventHandler(this.btnToggleStbSignal_Click);
+         // 
+         // btnToggleDischargeRequest
+         // 
+         this.btnToggleDischargeRequest.Location = new System.Drawing.Point(310, 115);
+         this.btnToggleDischargeRequest.Name = "btnToggleDischargeRequest";
+         this.btnToggleDischargeRequest.Size = new System.Drawing.Size(70, 23);
+         this.btnToggleDischargeRequest.TabIndex = 11;
+         this.btnToggleDischargeRequest.Tag = "LB0333";
+         this.btnToggleDischargeRequest.Text = "切換";
+         this.btnToggleDischargeRequest.UseVisualStyleBackColor = true;
+         this.btnToggleDischargeRequest.Click += new System.EventHandler(this.btnToggleStbSignal_Click);
+         // 
+         // btnToggleDischargeNotice
+         // 
+         this.btnToggleDischargeNotice.Location = new System.Drawing.Point(310, 85);
+         this.btnToggleDischargeNotice.Name = "btnToggleDischargeNotice";
+         this.btnToggleDischargeNotice.Size = new System.Drawing.Size(70, 23);
+         this.btnToggleDischargeNotice.TabIndex = 8;
+         this.btnToggleDischargeNotice.Tag = "LB0332";
+         this.btnToggleDischargeNotice.Text = "切換";
+         this.btnToggleDischargeNotice.UseVisualStyleBackColor = true;
+         this.btnToggleDischargeNotice.Click += new System.EventHandler(this.btnToggleStbSignal_Click);
+         // 
+         // btnToggleStopped
+         // 
+         this.btnToggleStopped.Location = new System.Drawing.Point(310, 55);
+         this.btnToggleStopped.Name = "btnToggleStopped";
+         this.btnToggleStopped.Size = new System.Drawing.Size(70, 23);
+         this.btnToggleStopped.TabIndex = 5;
+         this.btnToggleStopped.Tag = "LB0331";
+         this.btnToggleStopped.Text = "切換";
+         this.btnToggleStopped.UseVisualStyleBackColor = true;
+         this.btnToggleStopped.Click += new System.EventHandler(this.btnToggleStbSignal_Click);
+         // 
+         // btnToggleRunning
+         // 
+         this.btnToggleRunning.Location = new System.Drawing.Point(310, 25);
+         this.btnToggleRunning.Name = "btnToggleRunning";
+         this.btnToggleRunning.Size = new System.Drawing.Size(70, 23);
+         this.btnToggleRunning.TabIndex = 2;
+         this.btnToggleRunning.Tag = "LB0330";
+         this.btnToggleRunning.Text = "切換";
+         this.btnToggleRunning.UseVisualStyleBackColor = true;
+         this.btnToggleRunning.Click += new System.EventHandler(this.btnToggleStbSignal_Click);
+         // 
+         // label7
+         // 
+         this.label7.AutoSize = true;
+         this.label7.Location = new System.Drawing.Point(20, 210);
+         this.label7.Name = "label7";
+         this.label7.Size = new System.Drawing.Size(47, 12);
+         this.label7.TabIndex = 18;
+         this.label7.Text = "LastFlag:";
          // 
          // label6
          // 
          this.label6.AutoSize = true;
          this.label6.Location = new System.Drawing.Point(20, 180);
          this.label6.Name = "label6";
-         this.label6.Size = new System.Drawing.Size(125, 12);
+         this.label6.Size = new System.Drawing.Size(80, 12);
          this.label6.TabIndex = 15;
          this.label6.Text = "基板受取位置:";
+         // 
+         // label5
+         // 
+         this.label5.AutoSize = true;
+         this.label5.Location = new System.Drawing.Point(20, 150);
+         this.label5.Name = "label5";
+         this.label5.Size = new System.Drawing.Size(80, 12);
+         this.label5.TabIndex = 12;
+         this.label5.Text = "基板受取完了:";
+         // 
+         // label4
+         // 
+         this.label4.AutoSize = true;
+         this.label4.Location = new System.Drawing.Point(20, 120);
+         this.label4.Name = "label4";
+         this.label4.Size = new System.Drawing.Size(56, 12);
+         this.label4.TabIndex = 9;
+         this.label4.Text = "排出要求:";
+         // 
+         // label3
+         // 
+         this.label3.AutoSize = true;
+         this.label3.Location = new System.Drawing.Point(20, 90);
+         this.label3.Name = "label3";
+         this.label3.Size = new System.Drawing.Size(56, 12);
+         this.label3.TabIndex = 6;
+         this.label3.Text = "排出予告:";
+         // 
+         // label2
+         // 
+         this.label2.AutoSize = true;
+         this.label2.Location = new System.Drawing.Point(20, 60);
+         this.label2.Name = "label2";
+         this.label2.Size = new System.Drawing.Size(44, 12);
+         this.label2.TabIndex = 3;
+         this.label2.Text = "停止中:";
+         // 
+         // label1
+         // 
+         this.label1.AutoSize = true;
+         this.label1.Location = new System.Drawing.Point(20, 30);
+         this.label1.Name = "label1";
+         this.label1.Size = new System.Drawing.Size(44, 12);
+         this.label1.TabIndex = 0;
+         this.label1.Text = "起動中:";
          // 
          // txtStbBoardPosition
          // 
@@ -277,26 +258,6 @@ namespace WindowsFormsApp1.Forms
          this.txtStbBoardPosition.Size = new System.Drawing.Size(150, 22);
          this.txtStbBoardPosition.TabIndex = 16;
          this.txtStbBoardPosition.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-         // 
-         // btnTogglePosition
-         // 
-         this.btnTogglePosition.Location = new System.Drawing.Point(310, 175);
-         this.btnTogglePosition.Name = "btnTogglePosition";
-         this.btnTogglePosition.Size = new System.Drawing.Size(70, 23);
-         this.btnTogglePosition.TabIndex = 17;
-         this.btnTogglePosition.Tag = "LW1004";
-         this.btnTogglePosition.Text = "設定";
-         this.btnTogglePosition.UseVisualStyleBackColor = true;
-         this.btnTogglePosition.Click += new System.EventHandler(this.btnToggleStbSignal_Click);
-         // 
-         // label7
-         // 
-         this.label7.AutoSize = true;
-         this.label7.Location = new System.Drawing.Point(20, 210);
-         this.label7.Name = "label7";
-         this.label7.Size = new System.Drawing.Size(77, 12);
-         this.label7.TabIndex = 18;
-         this.label7.Text = "LastFlag:";
          // 
          // lblStbLastFlag
          // 
@@ -308,16 +269,55 @@ namespace WindowsFormsApp1.Forms
          this.lblStbLastFlag.Text = "OFF";
          this.lblStbLastFlag.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
          // 
-         // btnToggleLastFlag
+         // lblStbBoardReceiveComplete
          // 
-         this.btnToggleLastFlag.Location = new System.Drawing.Point(310, 205);
-         this.btnToggleLastFlag.Name = "btnToggleLastFlag";
-         this.btnToggleLastFlag.Size = new System.Drawing.Size(70, 23);
-         this.btnToggleLastFlag.TabIndex = 20;
-         this.btnToggleLastFlag.Tag = "LB1007";
-         this.btnToggleLastFlag.Text = "切換";
-         this.btnToggleLastFlag.UseVisualStyleBackColor = true;
-         this.btnToggleLastFlag.Click += new System.EventHandler(this.btnToggleStbSignal_Click);
+         this.lblStbBoardReceiveComplete.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.lblStbBoardReceiveComplete.Location = new System.Drawing.Point(150, 145);
+         this.lblStbBoardReceiveComplete.Name = "lblStbBoardReceiveComplete";
+         this.lblStbBoardReceiveComplete.Size = new System.Drawing.Size(150, 23);
+         this.lblStbBoardReceiveComplete.TabIndex = 13;
+         this.lblStbBoardReceiveComplete.Text = "OFF";
+         this.lblStbBoardReceiveComplete.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+         // 
+         // lblStbDischargeRequest
+         // 
+         this.lblStbDischargeRequest.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.lblStbDischargeRequest.Location = new System.Drawing.Point(150, 115);
+         this.lblStbDischargeRequest.Name = "lblStbDischargeRequest";
+         this.lblStbDischargeRequest.Size = new System.Drawing.Size(150, 23);
+         this.lblStbDischargeRequest.TabIndex = 10;
+         this.lblStbDischargeRequest.Text = "OFF";
+         this.lblStbDischargeRequest.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+         // 
+         // lblStbDischargeNotice
+         // 
+         this.lblStbDischargeNotice.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.lblStbDischargeNotice.Location = new System.Drawing.Point(150, 85);
+         this.lblStbDischargeNotice.Name = "lblStbDischargeNotice";
+         this.lblStbDischargeNotice.Size = new System.Drawing.Size(150, 23);
+         this.lblStbDischargeNotice.TabIndex = 7;
+         this.lblStbDischargeNotice.Text = "OFF";
+         this.lblStbDischargeNotice.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+         // 
+         // lblStbIsStopped
+         // 
+         this.lblStbIsStopped.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.lblStbIsStopped.Location = new System.Drawing.Point(150, 55);
+         this.lblStbIsStopped.Name = "lblStbIsStopped";
+         this.lblStbIsStopped.Size = new System.Drawing.Size(150, 23);
+         this.lblStbIsStopped.TabIndex = 4;
+         this.lblStbIsStopped.Text = "OFF";
+         this.lblStbIsStopped.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+         // 
+         // lblStbIsRunning
+         // 
+         this.lblStbIsRunning.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.lblStbIsRunning.Location = new System.Drawing.Point(150, 25);
+         this.lblStbIsRunning.Name = "lblStbIsRunning";
+         this.lblStbIsRunning.Size = new System.Drawing.Size(150, 23);
+         this.lblStbIsRunning.TabIndex = 1;
+         this.lblStbIsRunning.Text = "OFF";
+         this.lblStbIsRunning.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
          // 
          // grpRbSignals
          // 
@@ -340,90 +340,69 @@ namespace WindowsFormsApp1.Forms
          this.grpRbSignals.TabStop = false;
          this.grpRbSignals.Text = "RB信號 (下游機械手臂)";
          // 
-         // label8
+         // label13
          // 
-         this.label8.AutoSize = true;
-         this.label8.Location = new System.Drawing.Point(20, 30);
-         this.label8.Name = "label8";
-         this.label8.Size = new System.Drawing.Size(65, 12);
-         this.label8.TabIndex = 0;
-         this.label8.Text = "起動中:";
-         // 
-         // lblRbIsRunning
-         // 
-         this.lblRbIsRunning.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.lblRbIsRunning.Location = new System.Drawing.Point(150, 25);
-         this.lblRbIsRunning.Name = "lblRbIsRunning";
-         this.lblRbIsRunning.Size = new System.Drawing.Size(180, 23);
-         this.lblRbIsRunning.TabIndex = 1;
-         this.lblRbIsRunning.Text = "OFF";
-         this.lblRbIsRunning.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-         // 
-         // label9
-         // 
-         this.label9.AutoSize = true;
-         this.label9.Location = new System.Drawing.Point(20, 60);
-         this.label9.Name = "label9";
-         this.label9.Size = new System.Drawing.Size( 65, 12);
-         this.label9.TabIndex = 2;
-         this.label9.Text = "停止中:";
-         // 
-         // lblRbIsStopped
-         // 
-         this.lblRbIsStopped.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.lblRbIsStopped.Location = new System.Drawing.Point(150, 55);
-         this.lblRbIsStopped.Name = "lblRbIsStopped";
-         this.lblRbIsStopped.Size = new System.Drawing.Size(180, 23);
-         this.lblRbIsStopped.TabIndex = 3;
-         this.lblRbIsStopped.Text = "OFF";
-         this.lblRbIsStopped.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-         // 
-         // label10
-         // 
-         this.label10.AutoSize = true;
-         this.label10.Location = new System.Drawing.Point(20, 90);
-         this.label10.Name = "label10";
-         this.label10.Size = new System.Drawing.Size(125, 12);
-         this.label10.TabIndex = 4;
-         this.label10.Text = "收料可能予告:";
-         // 
-         // lblRbReadyToReceiveNotice1
-         // 
-         this.lblRbReadyToReceiveNotice1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.lblRbReadyToReceiveNotice1.Location = new System.Drawing.Point(150, 85);
-         this.lblRbReadyToReceiveNotice1.Name = "lblRbReadyToReceiveNotice1";
-         this.lblRbReadyToReceiveNotice1.Size = new System.Drawing.Size(180, 23);
-         this.lblRbReadyToReceiveNotice1.TabIndex = 5;
-         this.lblRbReadyToReceiveNotice1.Text = "OFF";
-         this.lblRbReadyToReceiveNotice1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-         // 
-         // label11
-         // 
-         this.label11.AutoSize = true;
-         this.label11.Location = new System.Drawing.Point(20, 120);
-         this.label11.Name = "label11";
-         this.label11.Size = new System.Drawing.Size(77, 12);
-         this.label11.TabIndex = 6;
-         this.label11.Text = "排出要求:";
-         // 
-         // lblRbDischargeRequest
-         // 
-         this.lblRbDischargeRequest.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.lblRbDischargeRequest.Location = new System.Drawing.Point(150, 115);
-         this.lblRbDischargeRequest.Name = "lblRbDischargeRequest";
-         this.lblRbDischargeRequest.Size = new System.Drawing.Size(180, 23);
-         this.lblRbDischargeRequest.TabIndex = 7;
-         this.lblRbDischargeRequest.Text = "OFF";
-         this.lblRbDischargeRequest.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+         this.label13.AutoSize = true;
+         this.label13.Location = new System.Drawing.Point(20, 180);
+         this.label13.Name = "label13";
+         this.label13.Size = new System.Drawing.Size(56, 12);
+         this.label13.TabIndex = 10;
+         this.label13.Text = "受取不可:";
          // 
          // label12
          // 
          this.label12.AutoSize = true;
          this.label12.Location = new System.Drawing.Point(20, 150);
          this.label12.Name = "label12";
-         this.label12.Size = new System.Drawing.Size(113, 12);
+         this.label12.Size = new System.Drawing.Size(80, 12);
          this.label12.TabIndex = 8;
          this.label12.Text = "基板受取完了:";
+         // 
+         // label11
+         // 
+         this.label11.AutoSize = true;
+         this.label11.Location = new System.Drawing.Point(20, 120);
+         this.label11.Name = "label11";
+         this.label11.Size = new System.Drawing.Size(56, 12);
+         this.label11.TabIndex = 6;
+         this.label11.Text = "排出要求:";
+         // 
+         // label10
+         // 
+         this.label10.AutoSize = true;
+         this.label10.Location = new System.Drawing.Point(20, 90);
+         this.label10.Name = "label10";
+         this.label10.Size = new System.Drawing.Size(80, 12);
+         this.label10.TabIndex = 4;
+         this.label10.Text = "收料可能予告:";
+         // 
+         // label9
+         // 
+         this.label9.AutoSize = true;
+         this.label9.Location = new System.Drawing.Point(20, 60);
+         this.label9.Name = "label9";
+         this.label9.Size = new System.Drawing.Size(44, 12);
+         this.label9.TabIndex = 2;
+         this.label9.Text = "停止中:";
+         // 
+         // label8
+         // 
+         this.label8.AutoSize = true;
+         this.label8.Location = new System.Drawing.Point(20, 30);
+         this.label8.Name = "label8";
+         this.label8.Size = new System.Drawing.Size(44, 12);
+         this.label8.TabIndex = 0;
+         this.label8.Text = "起動中:";
+         // 
+         // lblRbCannotReceive
+         // 
+         this.lblRbCannotReceive.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.lblRbCannotReceive.Location = new System.Drawing.Point(150, 175);
+         this.lblRbCannotReceive.Name = "lblRbCannotReceive";
+         this.lblRbCannotReceive.Size = new System.Drawing.Size(180, 23);
+         this.lblRbCannotReceive.TabIndex = 11;
+         this.lblRbCannotReceive.Text = "OFF";
+         this.lblRbCannotReceive.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
          // 
          // lblRbBoardReceiveComplete1
          // 
@@ -435,24 +414,45 @@ namespace WindowsFormsApp1.Forms
          this.lblRbBoardReceiveComplete1.Text = "OFF";
          this.lblRbBoardReceiveComplete1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
          // 
-         // label13
+         // lblRbDischargeRequest
          // 
-         this.label13.AutoSize = true;
-         this.label13.Location = new System.Drawing.Point(20, 180);
-         this.label13.Name = "label13";
-         this.label13.Size = new System.Drawing.Size(77, 12);
-         this.label13.TabIndex = 10;
-         this.label13.Text = "受取不可:";
+         this.lblRbDischargeRequest.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.lblRbDischargeRequest.Location = new System.Drawing.Point(150, 115);
+         this.lblRbDischargeRequest.Name = "lblRbDischargeRequest";
+         this.lblRbDischargeRequest.Size = new System.Drawing.Size(180, 23);
+         this.lblRbDischargeRequest.TabIndex = 7;
+         this.lblRbDischargeRequest.Text = "OFF";
+         this.lblRbDischargeRequest.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
          // 
-         // lblRbCannotReceive
+         // lblRbReadyToReceiveNotice1
          // 
-         this.lblRbCannotReceive.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.lblRbCannotReceive.Location = new System.Drawing.Point(150, 175);
-         this.lblRbCannotReceive.Name = "lblRbCannotReceive";
-         this.lblRbCannotReceive.Size = new System.Drawing.Size(180, 23);
-         this.lblRbCannotReceive.TabIndex = 11;
-         this.lblRbCannotReceive.Text = "OFF";
-         this.lblRbCannotReceive.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+         this.lblRbReadyToReceiveNotice1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.lblRbReadyToReceiveNotice1.Location = new System.Drawing.Point(150, 85);
+         this.lblRbReadyToReceiveNotice1.Name = "lblRbReadyToReceiveNotice1";
+         this.lblRbReadyToReceiveNotice1.Size = new System.Drawing.Size(180, 23);
+         this.lblRbReadyToReceiveNotice1.TabIndex = 5;
+         this.lblRbReadyToReceiveNotice1.Text = "OFF";
+         this.lblRbReadyToReceiveNotice1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+         // 
+         // lblRbIsStopped
+         // 
+         this.lblRbIsStopped.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.lblRbIsStopped.Location = new System.Drawing.Point(150, 55);
+         this.lblRbIsStopped.Name = "lblRbIsStopped";
+         this.lblRbIsStopped.Size = new System.Drawing.Size(180, 23);
+         this.lblRbIsStopped.TabIndex = 3;
+         this.lblRbIsStopped.Text = "OFF";
+         this.lblRbIsStopped.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+         // 
+         // lblRbIsRunning
+         // 
+         this.lblRbIsRunning.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.lblRbIsRunning.Location = new System.Drawing.Point(150, 25);
+         this.lblRbIsRunning.Name = "lblRbIsRunning";
+         this.lblRbIsRunning.Size = new System.Drawing.Size(180, 23);
+         this.lblRbIsRunning.TabIndex = 1;
+         this.lblRbIsRunning.Text = "OFF";
+         this.lblRbIsRunning.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
          // 
          // grpStatus
          // 
@@ -470,7 +470,7 @@ namespace WindowsFormsApp1.Forms
          this.label14.AutoSize = true;
          this.label14.Location = new System.Drawing.Point(20, 35);
          this.label14.Name = "label14";
-         this.label14.Size = new System.Drawing.Size(77, 12);
+         this.label14.Size = new System.Drawing.Size(56, 12);
          this.label14.TabIndex = 0;
          this.label14.Text = "當前狀態:";
          // 
@@ -496,17 +496,17 @@ namespace WindowsFormsApp1.Forms
          this.grpControl.TabStop = false;
          this.grpControl.Text = "控制按鈕";
          // 
-         // btnStart
+         // btnReset
          // 
-         this.btnStart.BackColor = System.Drawing.Color.LightGreen;
-         this.btnStart.Font = new System.Drawing.Font("新細明體", 10F);
-         this.btnStart.Location = new System.Drawing.Point(20, 30);
-         this.btnStart.Name = "btnStart";
-         this.btnStart.Size = new System.Drawing.Size(90, 35);
-         this.btnStart.TabIndex = 0;
-         this.btnStart.Text = "啟動";
-         this.btnStart.UseVisualStyleBackColor = false;
-         this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
+         this.btnReset.BackColor = System.Drawing.Color.LightSkyBlue;
+         this.btnReset.Font = new System.Drawing.Font("新細明體", 10F);
+         this.btnReset.Location = new System.Drawing.Point(240, 30);
+         this.btnReset.Name = "btnReset";
+         this.btnReset.Size = new System.Drawing.Size(90, 35);
+         this.btnReset.TabIndex = 2;
+         this.btnReset.Text = "復位";
+         this.btnReset.UseVisualStyleBackColor = false;
+         this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
          // 
          // btnStop
          // 
@@ -520,17 +520,17 @@ namespace WindowsFormsApp1.Forms
          this.btnStop.UseVisualStyleBackColor = false;
          this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
          // 
-         // btnReset
+         // btnStart
          // 
-         this.btnReset.BackColor = System.Drawing.Color.LightSkyBlue;
-         this.btnReset.Font = new System.Drawing.Font("新細明體", 10F);
-         this.btnReset.Location = new System.Drawing.Point(240, 30);
-         this.btnReset.Name = "btnReset";
-         this.btnReset.Size = new System.Drawing.Size(90, 35);
-         this.btnReset.TabIndex = 2;
-         this.btnReset.Text = "復位";
-         this.btnReset.UseVisualStyleBackColor = false;
-         this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
+         this.btnStart.BackColor = System.Drawing.Color.LightGreen;
+         this.btnStart.Font = new System.Drawing.Font("新細明體", 10F);
+         this.btnStart.Location = new System.Drawing.Point(20, 30);
+         this.btnStart.Name = "btnStart";
+         this.btnStart.Size = new System.Drawing.Size(90, 35);
+         this.btnStart.TabIndex = 0;
+         this.btnStart.Text = "啟動";
+         this.btnStart.UseVisualStyleBackColor = false;
+         this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
          // 
          // grpLog
          // 
@@ -543,15 +543,6 @@ namespace WindowsFormsApp1.Forms
          this.grpLog.TabStop = false;
          this.grpLog.Text = "日誌記錄";
          // 
-         // rtbLog
-         // 
-         this.rtbLog.Location = new System.Drawing.Point(20, 25);
-         this.rtbLog.Name = "rtbLog";
-         this.rtbLog.ReadOnly = true;
-         this.rtbLog.Size = new System.Drawing.Size(726, 180);
-         this.rtbLog.TabIndex = 0;
-         this.rtbLog.Text = "";
-         // 
          // btnClearLog
          // 
          this.btnClearLog.Location = new System.Drawing.Point(650, 212);
@@ -561,6 +552,15 @@ namespace WindowsFormsApp1.Forms
          this.btnClearLog.Text = "清除日誌";
          this.btnClearLog.UseVisualStyleBackColor = true;
          this.btnClearLog.Click += new System.EventHandler(this.btnClearLog_Click);
+         // 
+         // rtbLog
+         // 
+         this.rtbLog.Location = new System.Drawing.Point(20, 25);
+         this.rtbLog.Name = "rtbLog";
+         this.rtbLog.ReadOnly = true;
+         this.rtbLog.Size = new System.Drawing.Size(726, 180);
+         this.rtbLog.TabIndex = 0;
+         this.rtbLog.Text = "";
          // 
          // HandshakeControlForm
          // 
@@ -587,6 +587,7 @@ namespace WindowsFormsApp1.Forms
          this.grpControl.ResumeLayout(false);
          this.grpLog.ResumeLayout(false);
          this.ResumeLayout(false);
+
       }
 
       #endregion

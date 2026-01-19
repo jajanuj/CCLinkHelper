@@ -568,7 +568,7 @@ namespace WindowsFormsApp1.Forms
          this.paramMaintenanceT2Timeout.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
          this.paramMaintenanceT2Timeout.Increment = 100D;
          this.paramMaintenanceT2Timeout.Location = new System.Drawing.Point(17, 57);
-         this.paramMaintenanceT2Timeout.MaxNumber = 5000D;
+         this.paramMaintenanceT2Timeout.MaxNumber = 99000D;
          this.paramMaintenanceT2Timeout.MinimumSize = new System.Drawing.Size(150, 30);
          this.paramMaintenanceT2Timeout.MinNumber = 0D;
          this.paramMaintenanceT2Timeout.Name = "paramMaintenanceT2Timeout";
@@ -584,7 +584,7 @@ namespace WindowsFormsApp1.Forms
          this.paramMaintenanceT1Timeout.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
          this.paramMaintenanceT1Timeout.Increment = 100D;
          this.paramMaintenanceT1Timeout.Location = new System.Drawing.Point(17, 21);
-         this.paramMaintenanceT1Timeout.MaxNumber = 5000D;
+         this.paramMaintenanceT1Timeout.MaxNumber = 99000D;
          this.paramMaintenanceT1Timeout.MinimumSize = new System.Drawing.Size(150, 30);
          this.paramMaintenanceT1Timeout.MinNumber = 0D;
          this.paramMaintenanceT1Timeout.Name = "paramMaintenanceT1Timeout";

@@ -164,6 +164,20 @@ namespace WindowsFormsApp1
          }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
       }
 
+      public void StartOvenReporting()
+      {
+         // 每 2000ms 更新一次（頻率可調整）
+         _updateTimer = new Timer(_ =>
+         {
+            // 更新 Status1（機台狀態）
+            _appPlcService.UpdatRouteData(
+               textBox1.Text
+            );
+
+
+         }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(2000));
+      }
+
       public void StartLinkDataReporting()
       {
          if (_appPlcService == null)
@@ -1052,6 +1066,7 @@ namespace WindowsFormsApp1
       private void btnStartCommonReporting_Click(object sender, EventArgs e)
       {
          StartCommonReporting();
+         StartOvenReporting();
       }
 
       private void btnTrackingControl_Click(object sender, EventArgs e)

@@ -88,10 +88,10 @@ namespace WindowsFormsApp1.Models
             RedLightStatus = red;
             YellowLightStatus = yellow;
             GreenLightStatus = green;
-            UpstreamWaitingStatus = upWait;
-            DownstreamWaitingStatus = downWait;
+            UpstreamWaitingStatus = (ushort)(upWait*10);
+            DownstreamWaitingStatus = (ushort)(downWait*10);
             DischargeRate = rate;
-            StopTime = stopTime;
+            StopTime = (ushort)(stopTime* 10);
             ProcessingCounter = processing;
             RetainedBoardCount = retained;
             CurrentRecipeNo = recipeNo;

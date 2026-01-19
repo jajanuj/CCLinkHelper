@@ -67,15 +67,17 @@
          this.lstLog = new System.Windows.Forms.ListBox();
          this.lblStatus = new System.Windows.Forms.Label();
          this.grpAlarm = new System.Windows.Forms.GroupBox();
+         this.btnDeleteAlarm = new System.Windows.Forms.Button();
          this.btnAlarmReset = new System.Windows.Forms.Button();
          this.txtAlarmCode = new System.Windows.Forms.TextBox();
          this.btnAddAlarm = new System.Windows.Forms.Button();
          this.panel1 = new System.Windows.Forms.Panel();
+         this.btnManualRun = new System.Windows.Forms.Button();
+         this.btnAutoRun = new System.Windows.Forms.Button();
          this.ltbErrorCodes = new System.Windows.Forms.ListBox();
          this.tmrScan = new System.Windows.Forms.Timer(this.components);
-         this.btnAutoRun = new System.Windows.Forms.Button();
-         this.btnManualRun = new System.Windows.Forms.Button();
-         this.btnDeleteAlarm = new System.Windows.Forms.Button();
+         this.btnHandshake = new System.Windows.Forms.Button();
+         this.textBox1 = new System.Windows.Forms.TextBox();
          this.grpConnectionMode.SuspendLayout();
          this.grpManualTime.SuspendLayout();
          this.grpLinkReport.SuspendLayout();
@@ -487,6 +489,17 @@
          this.grpAlarm.TabStop = false;
          this.grpAlarm.Text = "警報測試";
          // 
+         // btnDeleteAlarm
+         // 
+         this.btnDeleteAlarm.Location = new System.Drawing.Point(7, 59);
+         this.btnDeleteAlarm.Margin = new System.Windows.Forms.Padding(10);
+         this.btnDeleteAlarm.Name = "btnDeleteAlarm";
+         this.btnDeleteAlarm.Size = new System.Drawing.Size(92, 26);
+         this.btnDeleteAlarm.TabIndex = 25;
+         this.btnDeleteAlarm.Text = "Delete Alarm";
+         this.btnDeleteAlarm.UseVisualStyleBackColor = true;
+         this.btnDeleteAlarm.Click += new System.EventHandler(this.btnDeleteAlarm_Click);
+         // 
          // btnAlarmReset
          // 
          this.btnAlarmReset.Location = new System.Drawing.Point(11, 133);
@@ -518,6 +531,8 @@
          // 
          // panel1
          // 
+         this.panel1.Controls.Add(this.textBox1);
+         this.panel1.Controls.Add(this.btnHandshake);
          this.panel1.Controls.Add(this.btnManualRun);
          this.panel1.Controls.Add(this.btnAutoRun);
          this.panel1.Controls.Add(this.btnOpen);
@@ -545,6 +560,30 @@
          this.panel1.Size = new System.Drawing.Size(631, 371);
          this.panel1.TabIndex = 27;
          // 
+         // btnManualRun
+         // 
+         this.btnManualRun.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.btnManualRun.Location = new System.Drawing.Point(212, 302);
+         this.btnManualRun.Margin = new System.Windows.Forms.Padding(10);
+         this.btnManualRun.Name = "btnManualRun";
+         this.btnManualRun.Size = new System.Drawing.Size(186, 26);
+         this.btnManualRun.TabIndex = 27;
+         this.btnManualRun.Text = "Manual Run";
+         this.btnManualRun.UseVisualStyleBackColor = true;
+         this.btnManualRun.Click += new System.EventHandler(this.btnManualRun_Click);
+         // 
+         // btnAutoRun
+         // 
+         this.btnAutoRun.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.btnAutoRun.Location = new System.Drawing.Point(15, 302);
+         this.btnAutoRun.Margin = new System.Windows.Forms.Padding(10);
+         this.btnAutoRun.Name = "btnAutoRun";
+         this.btnAutoRun.Size = new System.Drawing.Size(186, 26);
+         this.btnAutoRun.TabIndex = 26;
+         this.btnAutoRun.Text = "Auto Run";
+         this.btnAutoRun.UseVisualStyleBackColor = true;
+         this.btnAutoRun.Click += new System.EventHandler(this.btnAutoRun_Click);
+         // 
          // ltbErrorCodes
          // 
          this.ltbErrorCodes.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -561,40 +600,24 @@
          this.tmrScan.Interval = 500;
          this.tmrScan.Tick += new System.EventHandler(this.tmrScan_Tick);
          // 
-         // btnAutoRun
+         // btnHandshake
          // 
-         this.btnAutoRun.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-         this.btnAutoRun.Location = new System.Drawing.Point(15, 302);
-         this.btnAutoRun.Margin = new System.Windows.Forms.Padding(10);
-         this.btnAutoRun.Name = "btnAutoRun";
-         this.btnAutoRun.Size = new System.Drawing.Size(186, 26);
-         this.btnAutoRun.TabIndex = 26;
-         this.btnAutoRun.Text = "Auto Run";
-         this.btnAutoRun.UseVisualStyleBackColor = true;
-         this.btnAutoRun.Click += new System.EventHandler(this.btnAutoRun_Click);
+         this.btnHandshake.Location = new System.Drawing.Point(212, 166);
+         this.btnHandshake.Margin = new System.Windows.Forms.Padding(10);
+         this.btnHandshake.Name = "btnHandshake";
+         this.btnHandshake.Size = new System.Drawing.Size(181, 26);
+         this.btnHandshake.TabIndex = 28;
+         this.btnHandshake.Text = "交握資料管理";
+         this.btnHandshake.UseVisualStyleBackColor = true;
+         this.btnHandshake.Click += new System.EventHandler(this.btnHandshake_Click);
          // 
-         // btnManualRun
+         // textBox1
          // 
-         this.btnManualRun.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-         this.btnManualRun.Location = new System.Drawing.Point(212, 302);
-         this.btnManualRun.Margin = new System.Windows.Forms.Padding(10);
-         this.btnManualRun.Name = "btnManualRun";
-         this.btnManualRun.Size = new System.Drawing.Size(186, 26);
-         this.btnManualRun.TabIndex = 27;
-         this.btnManualRun.Text = "Manual Run";
-         this.btnManualRun.UseVisualStyleBackColor = true;
-         this.btnManualRun.Click += new System.EventHandler(this.btnManualRun_Click);
-         // 
-         // btnDeleteAlarm
-         // 
-         this.btnDeleteAlarm.Location = new System.Drawing.Point(7, 59);
-         this.btnDeleteAlarm.Margin = new System.Windows.Forms.Padding(10);
-         this.btnDeleteAlarm.Name = "btnDeleteAlarm";
-         this.btnDeleteAlarm.Size = new System.Drawing.Size(92, 26);
-         this.btnDeleteAlarm.TabIndex = 25;
-         this.btnDeleteAlarm.Text = "Delete Alarm";
-         this.btnDeleteAlarm.UseVisualStyleBackColor = true;
-         this.btnDeleteAlarm.Click += new System.EventHandler(this.btnDeleteAlarm_Click);
+         this.textBox1.Location = new System.Drawing.Point(15, 335);
+         this.textBox1.Name = "textBox1";
+         this.textBox1.Size = new System.Drawing.Size(100, 22);
+         this.textBox1.TabIndex = 29;
+         this.textBox1.Text = "0";
          // 
          // Form1
          // 
@@ -684,6 +707,8 @@
       private System.Windows.Forms.Button btnManualRun;
       private System.Windows.Forms.Button btnAutoRun;
       private System.Windows.Forms.Button btnDeleteAlarm;
+      private System.Windows.Forms.Button btnHandshake;
+      private System.Windows.Forms.TextBox textBox1;
    }
 }
 

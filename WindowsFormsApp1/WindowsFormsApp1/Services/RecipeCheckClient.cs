@@ -151,6 +151,8 @@ namespace WindowsFormsApp1.Services
                   // 清除 Response Flag
                   if (okFlag)
                   {
+
+                     await _controller.WriteWordsAsync("LW119F", new short[] { (short)3 });
                      await _controller.WriteBitsAsync(_settings.ResponseOkAddress, new bool[] { false });
                   }
 
@@ -172,6 +174,7 @@ namespace WindowsFormsApp1.Services
          catch (OperationCanceledException)
          {
             Log($"[Recipe Check] 等待回應超時");
+            AlarmHelper.AddAlarmCodeAsync(_controller, "C007");
             return RecipeCheckResponse.CreateTimeoutResponse();
          }
          catch (Exception ex)
