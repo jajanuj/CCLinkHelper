@@ -1,9 +1,10 @@
 using System;
+using WindowsFormsApp1.CCLink.Forms;
 using WindowsFormsApp1.Models;
 
 namespace WindowsFormsApp1.Forms
 {
-   public partial class MelsecBoardSettingForm : WindowsFormsApp1.CCLink.Forms.SettingsForm
+   public partial class MelsecBoardSettingForm : SettingsForm
    {
       #region Constructors
 
@@ -48,6 +49,8 @@ namespace WindowsFormsApp1.Forms
 
             paramMaintenanceT1Timeout.Value = appSettings.Maintenance?.MaintenanceT1Timeout ?? 1000;
             paramMaintenanceT2Timeout.Value = appSettings.Maintenance?.MaintenanceT2Timeout ?? 1000;
+            nudEqToPlcT1Timeout.Value = appSettings.Maintenance?.MaintenanceEqToPlcT1Timeout ?? 1000;
+            nudEqToPlcT2Timeout.Value = appSettings.Maintenance?.MaintenanceEqToPlcT2Timeout ?? 1000;
          }
       }
 
@@ -84,6 +87,8 @@ namespace WindowsFormsApp1.Forms
 
             appSettings.Maintenance.MaintenanceT1Timeout = (int)paramMaintenanceT1Timeout.Value;
             appSettings.Maintenance.MaintenanceT2Timeout = (int)paramMaintenanceT2Timeout.Value;
+            appSettings.Maintenance.MaintenanceEqToPlcT1Timeout = (int)nudEqToPlcT1Timeout.Value;
+            appSettings.Maintenance.MaintenanceEqToPlcT2Timeout = (int)nudEqToPlcT2Timeout.Value;
          }
       }
 

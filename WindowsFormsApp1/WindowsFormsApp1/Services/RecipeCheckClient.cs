@@ -15,6 +15,7 @@ namespace WindowsFormsApp1.Services
    {
       #region Fields
 
+      private readonly AppPlcService _appPlcService;
       private readonly ICCLinkController _controller;
       private readonly Action<string> _logger;
       private readonly RecipeCheckSettings _settings;
@@ -26,9 +27,10 @@ namespace WindowsFormsApp1.Services
       /// <summary>
       /// 建構函數
       /// </summary>
-      public RecipeCheckClient(ICCLinkController controller, RecipeCheckSettings settings, Action<string> logger = null)
+      public RecipeCheckClient(AppPlcService appPlcService, RecipeCheckSettings settings, Action<string> logger = null)
       {
-         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
+         _appPlcService = appPlcService ?? throw new ArgumentNullException(nameof(appPlcService));
+         _controller = _appPlcService.Controller;
          _settings = settings ?? throw new ArgumentNullException(nameof(settings));
          _logger = logger;
       }
@@ -111,7 +113,7 @@ namespace WindowsFormsApp1.Services
       private async Task<RecipeCheckResponse> WaitForResponseAsync()
       {
          var cts = new CancellationTokenSource(_settings.ResponseTimeoutMs);
-         var startTime = DateTime.Now;
+         _ = DateTime.Now;
 
          try
          {
@@ -151,7 +153,6 @@ namespace WindowsFormsApp1.Services
                   // 清除 Response Flag
                   if (okFlag)
                   {
-
                      await _controller.WriteWordsAsync("LW119F", new short[] { (short)3 });
                      await _controller.WriteBitsAsync(_settings.ResponseOkAddress, new bool[] { false });
                   }
@@ -174,7 +175,7 @@ namespace WindowsFormsApp1.Services
          catch (OperationCanceledException)
          {
             Log($"[Recipe Check] 等待回應超時");
-            AlarmHelper.AddAlarmCodeAsync(_controller, "C007");
+            await AlarmHelper.AddAlarmCodeAsync(_appPlcService, "C007");
             return RecipeCheckResponse.CreateTimeoutResponse();
          }
          catch (Exception ex)

@@ -65,6 +65,8 @@ namespace WindowsFormsApp1.Forms
          this.tpMaintenance = new System.Windows.Forms.TabPage();
          this.paramMaintenanceT2Timeout = new GRT.SDK.Framework.Component.ParamNumericUpDownUserControl();
          this.paramMaintenanceT1Timeout = new GRT.SDK.Framework.Component.ParamNumericUpDownUserControl();
+         this.nudEqToPlcT1Timeout = new System.Windows.Forms.NumericUpDown();
+         this.nudEqToPlcT2Timeout = new System.Windows.Forms.NumericUpDown();
          this.tabControl1.SuspendLayout();
          this.tabGeneral.SuspendLayout();
          this.tabApp.SuspendLayout();
@@ -77,6 +79,8 @@ namespace WindowsFormsApp1.Forms
          ((System.ComponentModel.ISupportInitialize)(this.numRetryBackoff)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.numStation)).BeginInit();
          this.tpMaintenance.SuspendLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.nudEqToPlcT1Timeout)).BeginInit();
+         ((System.ComponentModel.ISupportInitialize)(this.nudEqToPlcT2Timeout)).BeginInit();
          this.SuspendLayout();
          // 
          // tabControl1
@@ -550,6 +554,8 @@ namespace WindowsFormsApp1.Forms
          // 
          // tpMaintenance
          // 
+         this.tpMaintenance.Controls.Add(this.nudEqToPlcT2Timeout);
+         this.tpMaintenance.Controls.Add(this.nudEqToPlcT1Timeout);
          this.tpMaintenance.Controls.Add(this.paramMaintenanceT2Timeout);
          this.tpMaintenance.Controls.Add(this.paramMaintenanceT1Timeout);
          this.tpMaintenance.Location = new System.Drawing.Point(4, 25);
@@ -592,6 +598,20 @@ namespace WindowsFormsApp1.Forms
          this.paramMaintenanceT1Timeout.TabIndex = 13;
          this.paramMaintenanceT1Timeout.Value = 1000D;
          // 
+         // nudEqToPlcT1Timeout
+         // 
+         this.nudEqToPlcT1Timeout.Location = new System.Drawing.Point(113, 125);
+         this.nudEqToPlcT1Timeout.Name = "nudEqToPlcT1Timeout";
+         this.nudEqToPlcT1Timeout.Size = new System.Drawing.Size(120, 23);
+         this.nudEqToPlcT1Timeout.TabIndex = 15;
+         // 
+         // nudEqToPlcT2Timeout
+         // 
+         this.nudEqToPlcT2Timeout.Location = new System.Drawing.Point(113, 154);
+         this.nudEqToPlcT2Timeout.Name = "nudEqToPlcT2Timeout";
+         this.nudEqToPlcT2Timeout.Size = new System.Drawing.Size(120, 23);
+         this.nudEqToPlcT2Timeout.TabIndex = 16;
+         // 
          // MelsecBoardSettingForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 16F);
@@ -616,6 +636,8 @@ namespace WindowsFormsApp1.Forms
          ((System.ComponentModel.ISupportInitialize)(this.numRetryBackoff)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.numStation)).EndInit();
          this.tpMaintenance.ResumeLayout(false);
+         ((System.ComponentModel.ISupportInitialize)(this.nudEqToPlcT1Timeout)).EndInit();
+         ((System.ComponentModel.ISupportInitialize)(this.nudEqToPlcT2Timeout)).EndInit();
          this.ResumeLayout(false);
 
       }
@@ -663,5 +685,7 @@ namespace WindowsFormsApp1.Forms
       private System.Windows.Forms.TabPage tpMaintenance;
       private GRT.SDK.Framework.Component.ParamNumericUpDownUserControl paramMaintenanceT1Timeout;
       private GRT.SDK.Framework.Component.ParamNumericUpDownUserControl paramMaintenanceT2Timeout;
+      private System.Windows.Forms.NumericUpDown nudEqToPlcT2Timeout;
+      private System.Windows.Forms.NumericUpDown nudEqToPlcT1Timeout;
    }
 }

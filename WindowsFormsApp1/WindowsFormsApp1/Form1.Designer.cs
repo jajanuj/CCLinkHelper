@@ -72,12 +72,13 @@
          this.txtAlarmCode = new System.Windows.Forms.TextBox();
          this.btnAddAlarm = new System.Windows.Forms.Button();
          this.panel1 = new System.Windows.Forms.Panel();
+         this.textBox1 = new System.Windows.Forms.TextBox();
+         this.btnHandshake = new System.Windows.Forms.Button();
          this.btnManualRun = new System.Windows.Forms.Button();
          this.btnAutoRun = new System.Windows.Forms.Button();
          this.ltbErrorCodes = new System.Windows.Forms.ListBox();
          this.tmrScan = new System.Windows.Forms.Timer(this.components);
-         this.btnHandshake = new System.Windows.Forms.Button();
-         this.textBox1 = new System.Windows.Forms.TextBox();
+         this.btnRecipeCheck = new System.Windows.Forms.Button();
          this.grpConnectionMode.SuspendLayout();
          this.grpManualTime.SuspendLayout();
          this.grpLinkReport.SuspendLayout();
@@ -531,6 +532,7 @@
          // 
          // panel1
          // 
+         this.panel1.Controls.Add(this.btnRecipeCheck);
          this.panel1.Controls.Add(this.textBox1);
          this.panel1.Controls.Add(this.btnHandshake);
          this.panel1.Controls.Add(this.btnManualRun);
@@ -559,6 +561,25 @@
          this.panel1.Name = "panel1";
          this.panel1.Size = new System.Drawing.Size(631, 371);
          this.panel1.TabIndex = 27;
+         // 
+         // textBox1
+         // 
+         this.textBox1.Location = new System.Drawing.Point(15, 335);
+         this.textBox1.Name = "textBox1";
+         this.textBox1.Size = new System.Drawing.Size(100, 22);
+         this.textBox1.TabIndex = 29;
+         this.textBox1.Text = "0";
+         // 
+         // btnHandshake
+         // 
+         this.btnHandshake.Location = new System.Drawing.Point(212, 166);
+         this.btnHandshake.Margin = new System.Windows.Forms.Padding(10);
+         this.btnHandshake.Name = "btnHandshake";
+         this.btnHandshake.Size = new System.Drawing.Size(181, 26);
+         this.btnHandshake.TabIndex = 28;
+         this.btnHandshake.Text = "交握資料管理";
+         this.btnHandshake.UseVisualStyleBackColor = true;
+         this.btnHandshake.Click += new System.EventHandler(this.btnHandshake_Click);
          // 
          // btnManualRun
          // 
@@ -600,24 +621,17 @@
          this.tmrScan.Interval = 500;
          this.tmrScan.Tick += new System.EventHandler(this.tmrScan_Tick);
          // 
-         // btnHandshake
+         // btnRecipeCheck
          // 
-         this.btnHandshake.Location = new System.Drawing.Point(212, 166);
-         this.btnHandshake.Margin = new System.Windows.Forms.Padding(10);
-         this.btnHandshake.Name = "btnHandshake";
-         this.btnHandshake.Size = new System.Drawing.Size(181, 26);
-         this.btnHandshake.TabIndex = 28;
-         this.btnHandshake.Text = "交握資料管理";
-         this.btnHandshake.UseVisualStyleBackColor = true;
-         this.btnHandshake.Click += new System.EventHandler(this.btnHandshake_Click);
-         // 
-         // textBox1
-         // 
-         this.textBox1.Location = new System.Drawing.Point(15, 335);
-         this.textBox1.Name = "textBox1";
-         this.textBox1.Size = new System.Drawing.Size(100, 22);
-         this.textBox1.TabIndex = 29;
-         this.textBox1.Text = "0";
+         this.btnRecipeCheck.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.btnRecipeCheck.Location = new System.Drawing.Point(413, 166);
+         this.btnRecipeCheck.Margin = new System.Windows.Forms.Padding(10);
+         this.btnRecipeCheck.Name = "btnRecipeCheck";
+         this.btnRecipeCheck.Size = new System.Drawing.Size(142, 26);
+         this.btnRecipeCheck.TabIndex = 30;
+         this.btnRecipeCheck.Text = "Recipe Check";
+         this.btnRecipeCheck.UseVisualStyleBackColor = true;
+         this.btnRecipeCheck.Click += new System.EventHandler(this.btnRecipeCheck_Click);
          // 
          // Form1
          // 
@@ -709,6 +723,7 @@
       private System.Windows.Forms.Button btnDeleteAlarm;
       private System.Windows.Forms.Button btnHandshake;
       private System.Windows.Forms.TextBox textBox1;
+      private System.Windows.Forms.Button btnRecipeCheck;
    }
 }
 

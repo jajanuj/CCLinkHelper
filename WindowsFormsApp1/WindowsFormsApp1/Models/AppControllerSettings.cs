@@ -31,6 +31,7 @@ namespace WindowsFormsApp1.Models
             TimeSyncIntervalMs = loaded.TimeSyncIntervalMs;
             TimeSync = loaded.TimeSync ?? new TimeSyncSettings();
             Tracking = loaded.Tracking ?? new TrackingSettings();
+            Maintenance = loaded.Maintenance ?? new MaintenanceSettings();
          }
          else
          {

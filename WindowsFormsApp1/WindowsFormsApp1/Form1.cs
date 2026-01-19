@@ -73,8 +73,6 @@ namespace WindowsFormsApp1
       {
          InitializeComponent();
          InitializeComboBox();
-         InitializeRecipeCheckButton();
-         InitializeHandshakeButton();
 
          // 1. 加載或設定連線參數 (內建自動檢查檔名與開啟 UI 邏輯)
          _settings = new AppControllerSettings("Settings");
@@ -173,8 +171,6 @@ namespace WindowsFormsApp1
             _appPlcService.UpdatRouteData(
                textBox1.Text
             );
-
-
          }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(2000));
       }
 
@@ -280,76 +276,6 @@ namespace WindowsFormsApp1
       private void InitializeComboBox()
       {
          cboLinkReportTestMode.SelectedIndex = 0;
-      }
-
-      private void InitializeRecipeCheckButton()
-      {
-         var btnRecipeCheck = new Button();
-         btnRecipeCheck.Text = "Recipe Check";
-         btnRecipeCheck.Size = new System.Drawing.Size(100, 30);
-
-         // 嘗試定位在 btnScanMonitor 附近
-         if (btnScanMonitor != null)
-         {
-            // 如果 btnScanMonitor 有 Parent，則加到同一容器
-            if (btnScanMonitor.Parent != null)
-            {
-               btnRecipeCheck.Location = new System.Drawing.Point(btnScanMonitor.Location.X, btnScanMonitor.Location.Y + btnScanMonitor.Height + 10);
-               btnScanMonitor.Parent.Controls.Add(btnRecipeCheck);
-            }
-            else
-            {
-               // Fallback: 加在主表單右下角附近
-               btnRecipeCheck.Location = new System.Drawing.Point(20, 300);
-               Controls.Add(btnRecipeCheck);
-            }
-         }
-         else
-         {
-            btnRecipeCheck.Location = new System.Drawing.Point(20, 300);
-            Controls.Add(btnRecipeCheck);
-         }
-
-         btnRecipeCheck.Click += (s, e) =>
-         {
-            if (_appPlcService?.Controller == null)
-            {
-               MessageBox.Show("請先連接 PLC | Please connect PLC first");
-               return;
-            }
-
-            var form = new RecipeCheckForm(_appPlcService.Controller, _simulator);
-            form.Show();
-         };
-      }
-
-      private void InitializeHandshakeButton()
-      {
-         var btnHandshake = new Button();
-         btnHandshake.Text = "交握監控";
-         btnHandshake.Size = new System.Drawing.Size(100, 30);
-
-         // 嘗試定位在 btnTrackingControl 附近
-         if (btnTrackingControl != null)
-         {
-            if (btnTrackingControl.Parent != null)
-            {
-               btnHandshake.Location = new System.Drawing.Point(btnTrackingControl.Location.X, btnTrackingControl.Location.Y + btnTrackingControl.Height + 10);
-               btnTrackingControl.Parent.Controls.Add(btnHandshake);
-            }
-            else
-            {
-               btnHandshake.Location = new System.Drawing.Point(20, 400);
-               Controls.Add(btnHandshake);
-            }
-         }
-         else
-         {
-            btnHandshake.Location = new System.Drawing.Point(20, 400);
-            Controls.Add(btnHandshake);
-         }
-
-         btnHandshake.Click += btnHandshake_Click;
       }
 
       private void btnHandshake_Click(object sender, EventArgs e)
@@ -1306,6 +1232,18 @@ namespace WindowsFormsApp1
       private async void btnManualRun_Click(object sender, EventArgs e)
       {
          await _appPlcService.SetControlStatus(ControlStatus.ManualRun);
+      }
+
+      private void btnRecipeCheck_Click(object sender, EventArgs e)
+      {
+         if (_appPlcService?.Controller == null)
+         {
+            MessageBox.Show("請先連接 PLC | Please connect PLC first");
+            return;
+         }
+
+         var form = new RecipeCheckForm(_appPlcService, _simulator);
+         form.Show();
       }
 
       #endregion

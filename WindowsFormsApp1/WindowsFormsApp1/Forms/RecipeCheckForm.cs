@@ -11,6 +11,7 @@ namespace WindowsFormsApp1.Forms
    {
       #region Fields
 
+      private readonly AppPlcService _appPlcService;
       private readonly ICCLinkController _controller;
       private readonly PlcSimulator _simulator; // 新增模擬器引用
       private RecipeCheckClient _client;
@@ -20,10 +21,11 @@ namespace WindowsFormsApp1.Forms
 
       #region Constructors
 
-      public RecipeCheckForm(ICCLinkController controller, PlcSimulator simulator = null)
+      public RecipeCheckForm(AppPlcService appPlcService, PlcSimulator simulator = null)
       {
          InitializeComponent();
-         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
+         _appPlcService = appPlcService ?? throw new ArgumentNullException(nameof(appPlcService));
+         _controller = _appPlcService.Controller ?? throw new ArgumentNullException(nameof(_appPlcService.Controller));
          _simulator = simulator; // 儲存模擬器引用
 
          // 初始化設定
@@ -73,7 +75,7 @@ namespace WindowsFormsApp1.Forms
             }
 
             // 準備追蹤資料
-            short[] trackingData = ParsetrackingData(txtTrackingData.Text);
+            short[] trackingData = ParseTrackingData(txtTrackingData.Text);
 
             // 準備 Recipe 參數
             ushort? recipeNo = null;
@@ -97,7 +99,7 @@ namespace WindowsFormsApp1.Forms
             }
 
             // 建立 Client
-            _client = new RecipeCheckClient(_controller, _settings, Log);
+            _client = new RecipeCheckClient(_appPlcService, _settings, Log);
 
             // 發送請求
             var response = await _client.SendRequestAsync(trackingData, recipeNo, recipeName);
@@ -118,20 +120,15 @@ namespace WindowsFormsApp1.Forms
          }
       }
 
-      private short[] ParsetrackingData(string input)
+      private short[] ParseTrackingData(string input)
       {
          try
          {
-            var parts = input.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            var parts = input.Split([',', ' '], StringSplitOptions.RemoveEmptyEntries);
             var data = new short[10];
 
             for (int i = 0; i < 10 && i < parts.Length; i++)
             {
-               //if (short.TryParse(parts[i], out short val))
-               //{
-               //   data[i] = val;
-               //}
-               //else 
                if (int.TryParse(parts[i], System.Globalization.NumberStyles.Number, null, out int hexVal))
                {
                   // 支援十六進位輸入 (如 0xFFFF)
