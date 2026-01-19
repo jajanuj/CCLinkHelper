@@ -1059,13 +1059,11 @@ namespace WindowsFormsApp1.Services
       /// <summary>
       /// 發送追蹤資料維護請求 (LCS -> DEVICE)
       /// </summary>
-      /// <param name="data">追蹤資料 (10 words)</param>
-      /// <param name="positionNo">位置編號</param>
       /// <param name="ct">CancellationToken</param>
       /// <returns>True: 成功 (Response ON), False: 失敗或逾時</returns>
       private async Task RunMaintenanceFlow(CancellationToken ct)
       {
-         bool requestOn = _controller.GetBit(AddrMaintenanceRequestFlag);
+         bool requestOn = _controller.GetBit(_settings.Maintenance.AddrPlcToDeviceRequestFlag);
 
          switch (_maintenanceStep)
          {
@@ -1075,24 +1073,22 @@ namespace WindowsFormsApp1.Services
                   _logger?.Invoke("[Maintenance] Request ON detected, processing...");
 
                   // 2. Read Request Data (Tracking Data 10 words + Position 1 word)
-                  //var trackWords = await _controller.ReadWordsAsync(AddrMaintenanceRequestData, TrackingDataSize, ct);
-                  //var posWords = await _controller.ReadWordsAsync(AddrMaintenanceRequestPos, 1, ct);
-                  var trackWords = await _controller.ReadWordsAsync("LW05BE", TrackingDataSize, ct);
-                  var posWords = await _controller.ReadWordsAsync("LW05C8", 1, ct);
+                  var trackWords = await _controller.ReadWordsAsync(_settings.Maintenance.AddrPlcToDeviceRequestTrackingData, TrackingDataSize, ct);
+                  var posWords = await _controller.ReadWordsAsync(_settings.Maintenance.AddrPlcToDeviceRequestPosData, 1, ct);
 
                   if (trackWords.Count == TrackingDataSize && posWords.Count == 1)
                   {
                      int pos = (ushort)posWords[0];
 
                      // Validate Position
-                     if (pos > 0 && pos < MaxPositions)
+                     if (pos is > 0 and < MaxPositions)
                      {
                         // 將 trackWords 轉換為 TrackingData 並保存
                         _receivedMaintenanceData = TrackingData.FromWords(trackWords.Select(w => (ushort)w).ToArray());
                         _receivedMaintenancePos = pos;
 
                         // 3. Update Device Memory (Write to LW Base + Offset)
-                        int baseAddr = Convert.ToInt32(AddrTrackingDataBase.Substring(2), 16);
+                        int baseAddr = Convert.ToInt32(_settings.Maintenance.AddrPositionDataBase.Substring(2), 16);
                         int targetAddr = baseAddr + (pos - 1) * TrackingDataSize;
                         string targetAddrStr = $"LW{targetAddr:X4}";
 
@@ -1100,14 +1096,15 @@ namespace WindowsFormsApp1.Services
                         _logger?.Invoke($"[Maintenance] Updated Position {pos} at {targetAddrStr}");
 
                         // 4. Response OK (LB 0x0304)
-                        await _controller.WriteBitsAsync(AddrMaintenanceResponseOk, new[] { true }, ct);
+                        //await _controller.WriteBitsAsync(_settings.Maintenance.AddrPlcToDeviceResponseOk, [true], ct);
+                        await _controller.WriteBitsAsync("LB0304", [true], ct);
                         _logger?.Invoke("[Maintenance] Response OK Set");
                      }
                      else
                      {
                         _logger?.Invoke($"[Maintenance] Invalid Position: {pos}");
                         // Response NG
-                        await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { true }, ct);
+                        await _controller.WriteBitsAsync(_settings.Maintenance.AddrPlcToDeviceResponseNg, new[] { true }, ct);
                         await AlarmHelper.AddAlarmCodeAsync(this, "C00B");
                      }
                   }
@@ -1115,7 +1112,7 @@ namespace WindowsFormsApp1.Services
                   {
                      _logger?.Invoke("[Maintenance] Read Data Failed");
                      // Response NG
-                     await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { true }, ct);
+                     await _controller.WriteBitsAsync(_settings.Maintenance.AddrPlcToDeviceResponseNg, new[] { true }, ct);
                      await AlarmHelper.AddAlarmCodeAsync(this, "C00B");
                   }
 
@@ -1131,8 +1128,8 @@ namespace WindowsFormsApp1.Services
                   _logger?.Invoke("[Maintenance] Request OFF detected, Clearing Responses");
 
                   // 6. Clear Response Flags
-                  await _controller.WriteBitsAsync(AddrMaintenanceResponseOk, new[] { false }, ct);
-                  await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { false }, ct);
+                  await _controller.WriteBitsAsync(_settings.Maintenance.AddrPlcToDeviceResponseOk, new[] { false }, ct);
+                  await _controller.WriteBitsAsync(_settings.Maintenance.AddrPlcToDeviceResponseNg, new[] { false }, ct);
 
                   // 握手完成：觸發事件通知 UI
                   if (_receivedMaintenanceData != null)
@@ -1151,6 +1148,7 @@ namespace WindowsFormsApp1.Services
                {
                   _logger?.Invoke($"[Maintenance] T1 Timeout: Request did not turn OFF within {_maintenanceT1Timeout}ms");
                   _maintenanceTimer.Reset();
+                  await AlarmHelper.AddAlarmCodeAsync(this, "C00B");
                }
 
                break;

@@ -493,7 +493,7 @@ namespace WindowsFormsApp1.Services
       /// </summary>
       public void StartTrackingMaintenanceListenMode()
       {
-         const int RequestFlagAddr = 0x0506;
+         const int RequestFlagAddr = 0x0306;
          const int ResponseFlagAddr = 0x0107;
          const int TrackingDataStart = 0x05BE;
          const int PosNoAddr = 0x05C8;
@@ -704,12 +704,14 @@ namespace WindowsFormsApp1.Services
             catch (TaskCanceledException)
             {
                _logger?.Invoke($"[模擬 LCS] 等待回應逾時 | Wait for response timeout");
+               SetRequest(new LinkDeviceAddress("LB", REQUEST_FLAG, 1), false);
                return false;
             }
 
             if (TestMode == TestMode.T1Timeout)
             {
                _logger?.Invoke($"[模擬 LCS] 測試模式 T1Timeout 啟用 | Test Mode T1Timeout Enabled");
+               SetRequest(new LinkDeviceAddress("LB", REQUEST_FLAG, 1), false);
                return false;
             }
 
@@ -722,6 +724,7 @@ namespace WindowsFormsApp1.Services
          catch (Exception ex)
          {
             _logger?.Invoke($"[模擬 LCS] 發生例外 | Exception: {ex.Message}");
+            SetRequest(new LinkDeviceAddress("LB", REQUEST_FLAG, 1), false);
             return false;
          }
       }
