@@ -1092,12 +1092,12 @@ namespace WindowsFormsApp1.Services
                         int targetAddr = baseAddr + (pos - 1) * TrackingDataSize;
                         string targetAddrStr = $"LW{targetAddr:X4}";
 
+
                         await _controller.WriteWordsAsync(targetAddrStr, trackWords.ToArray(), ct);
                         _logger?.Invoke($"[Maintenance] Updated Position {pos} at {targetAddrStr}");
 
-                        // 4. Response OK (LB 0x0304)
-                        //await _controller.WriteBitsAsync(_settings.Maintenance.AddrPlcToDeviceResponseOk, [true], ct);
-                        await _controller.WriteBitsAsync("LB0304", [true], ct);
+                        // 4. Response OK
+                        await _controller.WriteBitsAsync(_settings.Maintenance.AddrPlcToDeviceResponseOk, [true], ct);
                         _logger?.Invoke("[Maintenance] Response OK Set");
                      }
                      else
