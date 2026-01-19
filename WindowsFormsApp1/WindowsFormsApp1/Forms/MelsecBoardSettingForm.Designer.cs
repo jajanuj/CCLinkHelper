@@ -63,10 +63,20 @@ namespace WindowsFormsApp1.Forms
          this.label10 = new System.Windows.Forms.Label();
          this.cmbEndian = new System.Windows.Forms.ComboBox();
          this.tpMaintenance = new System.Windows.Forms.TabPage();
-         this.paramMaintenanceT2Timeout = new GRT.SDK.Framework.Component.ParamNumericUpDownUserControl();
-         this.paramMaintenanceT1Timeout = new GRT.SDK.Framework.Component.ParamNumericUpDownUserControl();
-         this.nudEqToPlcT1Timeout = new System.Windows.Forms.NumericUpDown();
-         this.nudEqToPlcT2Timeout = new System.Windows.Forms.NumericUpDown();
+         this.paramAddrDeviceToPlcRequestPosData = new GRT.SDK.Framework.Component.ParamTextUserControl();
+         this.paramAddrDeviceToPlcRequestTrackingData = new GRT.SDK.Framework.Component.ParamTextUserControl();
+         this.paramAddrDeviceToPlcRequestFlag = new GRT.SDK.Framework.Component.ParamTextUserControl();
+         this.paramAddrPlcToDeviceResponseNg = new GRT.SDK.Framework.Component.ParamTextUserControl();
+         this.paramAddrPlcToDeviceResponseOk = new GRT.SDK.Framework.Component.ParamTextUserControl();
+         this.paramAddrPlcToDeviceRequestPosData = new GRT.SDK.Framework.Component.ParamTextUserControl();
+         this.paramAddrDeviceToPlcResponseFlag = new GRT.SDK.Framework.Component.ParamTextUserControl();
+         this.paramAddrPlcToDeviceRequestTrackingData = new GRT.SDK.Framework.Component.ParamTextUserControl();
+         this.paramAddrPlcToDeviceRequestFlag = new GRT.SDK.Framework.Component.ParamTextUserControl();
+         this.paramAddrPositionDataBase = new GRT.SDK.Framework.Component.ParamTextUserControl();
+         this.paramEqToMplcT2Timeout = new GRT.SDK.Framework.Component.ParamNumericUpDownUserControl();
+         this.paramEqToMplcT1Timeout = new GRT.SDK.Framework.Component.ParamNumericUpDownUserControl();
+         this.paramMplcToEqT2Timeout = new GRT.SDK.Framework.Component.ParamNumericUpDownUserControl();
+         this.paramMplcToEqT1Timeout = new GRT.SDK.Framework.Component.ParamNumericUpDownUserControl();
          this.tabControl1.SuspendLayout();
          this.tabGeneral.SuspendLayout();
          this.tabApp.SuspendLayout();
@@ -79,8 +89,6 @@ namespace WindowsFormsApp1.Forms
          ((System.ComponentModel.ISupportInitialize)(this.numRetryBackoff)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.numStation)).BeginInit();
          this.tpMaintenance.SuspendLayout();
-         ((System.ComponentModel.ISupportInitialize)(this.nudEqToPlcT1Timeout)).BeginInit();
-         ((System.ComponentModel.ISupportInitialize)(this.nudEqToPlcT2Timeout)).BeginInit();
          this.SuspendLayout();
          // 
          // tabControl1
@@ -90,7 +98,7 @@ namespace WindowsFormsApp1.Forms
          this.tabControl1.Controls.Add(this.tpMaintenance);
          this.tabControl1.Location = new System.Drawing.Point(14, 16);
          this.tabControl1.Margin = new System.Windows.Forms.Padding(4);
-         this.tabControl1.Size = new System.Drawing.Size(439, 560);
+         this.tabControl1.Size = new System.Drawing.Size(732, 560);
          this.tabControl1.Controls.SetChildIndex(this.tpMaintenance, 0);
          this.tabControl1.Controls.SetChildIndex(this.tabTracking, 0);
          this.tabControl1.Controls.SetChildIndex(this.tabApp, 0);
@@ -116,7 +124,7 @@ namespace WindowsFormsApp1.Forms
          this.tabGeneral.Location = new System.Drawing.Point(4, 25);
          this.tabGeneral.Margin = new System.Windows.Forms.Padding(4);
          this.tabGeneral.Padding = new System.Windows.Forms.Padding(4);
-         this.tabGeneral.Size = new System.Drawing.Size(431, 531);
+         this.tabGeneral.Size = new System.Drawing.Size(724, 531);
          this.tabGeneral.Controls.SetChildIndex(this.cmbEndian, 0);
          this.tabGeneral.Controls.SetChildIndex(this.label10, 0);
          this.tabGeneral.Controls.SetChildIndex(this.chkIsx64, 0);
@@ -161,7 +169,7 @@ namespace WindowsFormsApp1.Forms
          this.tabApp.Margin = new System.Windows.Forms.Padding(4);
          this.tabApp.Name = "tabApp";
          this.tabApp.Padding = new System.Windows.Forms.Padding(4);
-         this.tabApp.Size = new System.Drawing.Size(431, 531);
+         this.tabApp.Size = new System.Drawing.Size(724, 531);
          this.tabApp.TabIndex = 1;
          this.tabApp.Text = "進階設定";
          this.tabApp.UseVisualStyleBackColor = true;
@@ -288,7 +296,7 @@ namespace WindowsFormsApp1.Forms
          this.tabTracking.Margin = new System.Windows.Forms.Padding(4);
          this.tabTracking.Name = "tabTracking";
          this.tabTracking.Padding = new System.Windows.Forms.Padding(4);
-         this.tabTracking.Size = new System.Drawing.Size(431, 531);
+         this.tabTracking.Size = new System.Drawing.Size(724, 531);
          this.tabTracking.TabIndex = 2;
          this.tabTracking.Text = "追蹤設定";
          this.tabTracking.UseVisualStyleBackColor = true;
@@ -554,69 +562,237 @@ namespace WindowsFormsApp1.Forms
          // 
          // tpMaintenance
          // 
-         this.tpMaintenance.Controls.Add(this.nudEqToPlcT2Timeout);
-         this.tpMaintenance.Controls.Add(this.nudEqToPlcT1Timeout);
-         this.tpMaintenance.Controls.Add(this.paramMaintenanceT2Timeout);
-         this.tpMaintenance.Controls.Add(this.paramMaintenanceT1Timeout);
+         this.tpMaintenance.Controls.Add(this.paramAddrDeviceToPlcRequestPosData);
+         this.tpMaintenance.Controls.Add(this.paramAddrDeviceToPlcRequestTrackingData);
+         this.tpMaintenance.Controls.Add(this.paramAddrDeviceToPlcRequestFlag);
+         this.tpMaintenance.Controls.Add(this.paramAddrPlcToDeviceResponseNg);
+         this.tpMaintenance.Controls.Add(this.paramAddrPlcToDeviceResponseOk);
+         this.tpMaintenance.Controls.Add(this.paramAddrPlcToDeviceRequestPosData);
+         this.tpMaintenance.Controls.Add(this.paramAddrDeviceToPlcResponseFlag);
+         this.tpMaintenance.Controls.Add(this.paramAddrPlcToDeviceRequestTrackingData);
+         this.tpMaintenance.Controls.Add(this.paramAddrPlcToDeviceRequestFlag);
+         this.tpMaintenance.Controls.Add(this.paramAddrPositionDataBase);
+         this.tpMaintenance.Controls.Add(this.paramEqToMplcT2Timeout);
+         this.tpMaintenance.Controls.Add(this.paramEqToMplcT1Timeout);
+         this.tpMaintenance.Controls.Add(this.paramMplcToEqT2Timeout);
+         this.tpMaintenance.Controls.Add(this.paramMplcToEqT1Timeout);
          this.tpMaintenance.Location = new System.Drawing.Point(4, 25);
          this.tpMaintenance.Name = "tpMaintenance";
          this.tpMaintenance.Padding = new System.Windows.Forms.Padding(3);
-         this.tpMaintenance.Size = new System.Drawing.Size(431, 531);
+         this.tpMaintenance.Size = new System.Drawing.Size(724, 531);
          this.tpMaintenance.TabIndex = 3;
          this.tpMaintenance.Text = "維護設定";
          this.tpMaintenance.UseVisualStyleBackColor = true;
          // 
-         // paramMaintenanceT2Timeout
+         // paramAddrDeviceToPlcRequestPosData
          // 
-         this.paramMaintenanceT2Timeout.Caption = "Maintenance T2 Timeout(ms)";
-         this.paramMaintenanceT2Timeout.CaptionWidth = 80F;
-         this.paramMaintenanceT2Timeout.DecimalPlaces = 0;
-         this.paramMaintenanceT2Timeout.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-         this.paramMaintenanceT2Timeout.Increment = 100D;
-         this.paramMaintenanceT2Timeout.Location = new System.Drawing.Point(17, 57);
-         this.paramMaintenanceT2Timeout.MaxNumber = 99000D;
-         this.paramMaintenanceT2Timeout.MinimumSize = new System.Drawing.Size(150, 30);
-         this.paramMaintenanceT2Timeout.MinNumber = 0D;
-         this.paramMaintenanceT2Timeout.Name = "paramMaintenanceT2Timeout";
-         this.paramMaintenanceT2Timeout.Size = new System.Drawing.Size(300, 30);
-         this.paramMaintenanceT2Timeout.TabIndex = 14;
-         this.paramMaintenanceT2Timeout.Value = 1000D;
+         this.paramAddrDeviceToPlcRequestPosData.Caption = "Device To PLC Request Pos Data Address";
+         this.paramAddrDeviceToPlcRequestPosData.CaptionWidth = 80F;
+         this.paramAddrDeviceToPlcRequestPosData.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramAddrDeviceToPlcRequestPosData.Location = new System.Drawing.Point(370, 165);
+         this.paramAddrDeviceToPlcRequestPosData.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramAddrDeviceToPlcRequestPosData.Name = "paramAddrDeviceToPlcRequestPosData";
+         this.paramAddrDeviceToPlcRequestPosData.ReadOnly = false;
+         this.paramAddrDeviceToPlcRequestPosData.ShowKeyboard = false;
+         this.paramAddrDeviceToPlcRequestPosData.Size = new System.Drawing.Size(339, 30);
+         this.paramAddrDeviceToPlcRequestPosData.TabIndex = 28;
+         this.paramAddrDeviceToPlcRequestPosData.TextValue = "";
          // 
-         // paramMaintenanceT1Timeout
+         // paramAddrDeviceToPlcRequestTrackingData
          // 
-         this.paramMaintenanceT1Timeout.Caption = "Maintenance T1 Timeout(ms)";
-         this.paramMaintenanceT1Timeout.CaptionWidth = 80F;
-         this.paramMaintenanceT1Timeout.DecimalPlaces = 0;
-         this.paramMaintenanceT1Timeout.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-         this.paramMaintenanceT1Timeout.Increment = 100D;
-         this.paramMaintenanceT1Timeout.Location = new System.Drawing.Point(17, 21);
-         this.paramMaintenanceT1Timeout.MaxNumber = 99000D;
-         this.paramMaintenanceT1Timeout.MinimumSize = new System.Drawing.Size(150, 30);
-         this.paramMaintenanceT1Timeout.MinNumber = 0D;
-         this.paramMaintenanceT1Timeout.Name = "paramMaintenanceT1Timeout";
-         this.paramMaintenanceT1Timeout.Size = new System.Drawing.Size(300, 30);
-         this.paramMaintenanceT1Timeout.TabIndex = 13;
-         this.paramMaintenanceT1Timeout.Value = 1000D;
+         this.paramAddrDeviceToPlcRequestTrackingData.Caption = "Device To PLC Request Tracking Data";
+         this.paramAddrDeviceToPlcRequestTrackingData.CaptionWidth = 80F;
+         this.paramAddrDeviceToPlcRequestTrackingData.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramAddrDeviceToPlcRequestTrackingData.Location = new System.Drawing.Point(370, 129);
+         this.paramAddrDeviceToPlcRequestTrackingData.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramAddrDeviceToPlcRequestTrackingData.Name = "paramAddrDeviceToPlcRequestTrackingData";
+         this.paramAddrDeviceToPlcRequestTrackingData.ReadOnly = false;
+         this.paramAddrDeviceToPlcRequestTrackingData.ShowKeyboard = false;
+         this.paramAddrDeviceToPlcRequestTrackingData.Size = new System.Drawing.Size(339, 30);
+         this.paramAddrDeviceToPlcRequestTrackingData.TabIndex = 27;
+         this.paramAddrDeviceToPlcRequestTrackingData.TextValue = "";
          // 
-         // nudEqToPlcT1Timeout
+         // paramAddrDeviceToPlcRequestFlag
          // 
-         this.nudEqToPlcT1Timeout.Location = new System.Drawing.Point(113, 125);
-         this.nudEqToPlcT1Timeout.Name = "nudEqToPlcT1Timeout";
-         this.nudEqToPlcT1Timeout.Size = new System.Drawing.Size(120, 23);
-         this.nudEqToPlcT1Timeout.TabIndex = 15;
+         this.paramAddrDeviceToPlcRequestFlag.Caption = "Device To PLC Request Flag Address";
+         this.paramAddrDeviceToPlcRequestFlag.CaptionWidth = 80F;
+         this.paramAddrDeviceToPlcRequestFlag.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramAddrDeviceToPlcRequestFlag.Location = new System.Drawing.Point(370, 93);
+         this.paramAddrDeviceToPlcRequestFlag.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramAddrDeviceToPlcRequestFlag.Name = "paramAddrDeviceToPlcRequestFlag";
+         this.paramAddrDeviceToPlcRequestFlag.ReadOnly = false;
+         this.paramAddrDeviceToPlcRequestFlag.ShowKeyboard = false;
+         this.paramAddrDeviceToPlcRequestFlag.Size = new System.Drawing.Size(339, 30);
+         this.paramAddrDeviceToPlcRequestFlag.TabIndex = 26;
+         this.paramAddrDeviceToPlcRequestFlag.TextValue = "";
          // 
-         // nudEqToPlcT2Timeout
+         // paramAddrPlcToDeviceResponseNg
          // 
-         this.nudEqToPlcT2Timeout.Location = new System.Drawing.Point(113, 154);
-         this.nudEqToPlcT2Timeout.Name = "nudEqToPlcT2Timeout";
-         this.nudEqToPlcT2Timeout.Size = new System.Drawing.Size(120, 23);
-         this.nudEqToPlcT2Timeout.TabIndex = 16;
+         this.paramAddrPlcToDeviceResponseNg.Caption = "PLC To Device Response NG Address";
+         this.paramAddrPlcToDeviceResponseNg.CaptionWidth = 80F;
+         this.paramAddrPlcToDeviceResponseNg.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramAddrPlcToDeviceResponseNg.Location = new System.Drawing.Point(16, 273);
+         this.paramAddrPlcToDeviceResponseNg.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramAddrPlcToDeviceResponseNg.Name = "paramAddrPlcToDeviceResponseNg";
+         this.paramAddrPlcToDeviceResponseNg.ReadOnly = false;
+         this.paramAddrPlcToDeviceResponseNg.ShowKeyboard = false;
+         this.paramAddrPlcToDeviceResponseNg.Size = new System.Drawing.Size(339, 30);
+         this.paramAddrPlcToDeviceResponseNg.TabIndex = 25;
+         this.paramAddrPlcToDeviceResponseNg.TextValue = "";
+         // 
+         // paramAddrPlcToDeviceResponseOk
+         // 
+         this.paramAddrPlcToDeviceResponseOk.Caption = "PLC To Device Response OK Address";
+         this.paramAddrPlcToDeviceResponseOk.CaptionWidth = 80F;
+         this.paramAddrPlcToDeviceResponseOk.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramAddrPlcToDeviceResponseOk.Location = new System.Drawing.Point(16, 237);
+         this.paramAddrPlcToDeviceResponseOk.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramAddrPlcToDeviceResponseOk.Name = "paramAddrPlcToDeviceResponseOk";
+         this.paramAddrPlcToDeviceResponseOk.ReadOnly = false;
+         this.paramAddrPlcToDeviceResponseOk.ShowKeyboard = false;
+         this.paramAddrPlcToDeviceResponseOk.Size = new System.Drawing.Size(339, 30);
+         this.paramAddrPlcToDeviceResponseOk.TabIndex = 24;
+         this.paramAddrPlcToDeviceResponseOk.TextValue = "";
+         // 
+         // paramAddrPlcToDeviceRequestPosData
+         // 
+         this.paramAddrPlcToDeviceRequestPosData.Caption = "PLC To Device Request Pos Data Address";
+         this.paramAddrPlcToDeviceRequestPosData.CaptionWidth = 80F;
+         this.paramAddrPlcToDeviceRequestPosData.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramAddrPlcToDeviceRequestPosData.Location = new System.Drawing.Point(16, 201);
+         this.paramAddrPlcToDeviceRequestPosData.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramAddrPlcToDeviceRequestPosData.Name = "paramAddrPlcToDeviceRequestPosData";
+         this.paramAddrPlcToDeviceRequestPosData.ReadOnly = false;
+         this.paramAddrPlcToDeviceRequestPosData.ShowKeyboard = false;
+         this.paramAddrPlcToDeviceRequestPosData.Size = new System.Drawing.Size(339, 30);
+         this.paramAddrPlcToDeviceRequestPosData.TabIndex = 23;
+         this.paramAddrPlcToDeviceRequestPosData.TextValue = "";
+         // 
+         // paramAddrDeviceToPlcResponseFlag
+         // 
+         this.paramAddrDeviceToPlcResponseFlag.Caption = "Device To PLC Response Flag Address";
+         this.paramAddrDeviceToPlcResponseFlag.CaptionWidth = 80F;
+         this.paramAddrDeviceToPlcResponseFlag.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramAddrDeviceToPlcResponseFlag.Location = new System.Drawing.Point(370, 201);
+         this.paramAddrDeviceToPlcResponseFlag.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramAddrDeviceToPlcResponseFlag.Name = "paramAddrDeviceToPlcResponseFlag";
+         this.paramAddrDeviceToPlcResponseFlag.ReadOnly = false;
+         this.paramAddrDeviceToPlcResponseFlag.ShowKeyboard = false;
+         this.paramAddrDeviceToPlcResponseFlag.Size = new System.Drawing.Size(339, 30);
+         this.paramAddrDeviceToPlcResponseFlag.TabIndex = 22;
+         this.paramAddrDeviceToPlcResponseFlag.TextValue = "";
+         // 
+         // paramAddrPlcToDeviceRequestTrackingData
+         // 
+         this.paramAddrPlcToDeviceRequestTrackingData.Caption = "PLC To Device Request Tracking Data Address";
+         this.paramAddrPlcToDeviceRequestTrackingData.CaptionWidth = 80F;
+         this.paramAddrPlcToDeviceRequestTrackingData.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramAddrPlcToDeviceRequestTrackingData.Location = new System.Drawing.Point(16, 165);
+         this.paramAddrPlcToDeviceRequestTrackingData.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramAddrPlcToDeviceRequestTrackingData.Name = "paramAddrPlcToDeviceRequestTrackingData";
+         this.paramAddrPlcToDeviceRequestTrackingData.ReadOnly = false;
+         this.paramAddrPlcToDeviceRequestTrackingData.ShowKeyboard = false;
+         this.paramAddrPlcToDeviceRequestTrackingData.Size = new System.Drawing.Size(339, 30);
+         this.paramAddrPlcToDeviceRequestTrackingData.TabIndex = 21;
+         this.paramAddrPlcToDeviceRequestTrackingData.TextValue = "";
+         // 
+         // paramAddrPlcToDeviceRequestFlag
+         // 
+         this.paramAddrPlcToDeviceRequestFlag.Caption = "PLC To Device Request Flag Address";
+         this.paramAddrPlcToDeviceRequestFlag.CaptionWidth = 80F;
+         this.paramAddrPlcToDeviceRequestFlag.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramAddrPlcToDeviceRequestFlag.Location = new System.Drawing.Point(16, 129);
+         this.paramAddrPlcToDeviceRequestFlag.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramAddrPlcToDeviceRequestFlag.Name = "paramAddrPlcToDeviceRequestFlag";
+         this.paramAddrPlcToDeviceRequestFlag.ReadOnly = false;
+         this.paramAddrPlcToDeviceRequestFlag.ShowKeyboard = false;
+         this.paramAddrPlcToDeviceRequestFlag.Size = new System.Drawing.Size(339, 30);
+         this.paramAddrPlcToDeviceRequestFlag.TabIndex = 20;
+         this.paramAddrPlcToDeviceRequestFlag.TextValue = "";
+         // 
+         // paramAddrPositionDataBase
+         // 
+         this.paramAddrPositionDataBase.Caption = "Position Data Base Address";
+         this.paramAddrPositionDataBase.CaptionWidth = 80F;
+         this.paramAddrPositionDataBase.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramAddrPositionDataBase.Location = new System.Drawing.Point(16, 93);
+         this.paramAddrPositionDataBase.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramAddrPositionDataBase.Name = "paramAddrPositionDataBase";
+         this.paramAddrPositionDataBase.ReadOnly = false;
+         this.paramAddrPositionDataBase.ShowKeyboard = false;
+         this.paramAddrPositionDataBase.Size = new System.Drawing.Size(339, 30);
+         this.paramAddrPositionDataBase.TabIndex = 19;
+         this.paramAddrPositionDataBase.TextValue = "";
+         // 
+         // paramEqToMplcT2Timeout
+         // 
+         this.paramEqToMplcT2Timeout.Caption = "PLC To Device T2 Timeout(ms)";
+         this.paramEqToMplcT2Timeout.CaptionWidth = 80F;
+         this.paramEqToMplcT2Timeout.DecimalPlaces = 0;
+         this.paramEqToMplcT2Timeout.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramEqToMplcT2Timeout.Increment = 100D;
+         this.paramEqToMplcT2Timeout.Location = new System.Drawing.Point(370, 57);
+         this.paramEqToMplcT2Timeout.MaxNumber = 99000D;
+         this.paramEqToMplcT2Timeout.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramEqToMplcT2Timeout.MinNumber = 0D;
+         this.paramEqToMplcT2Timeout.Name = "paramEqToMplcT2Timeout";
+         this.paramEqToMplcT2Timeout.Size = new System.Drawing.Size(339, 30);
+         this.paramEqToMplcT2Timeout.TabIndex = 18;
+         this.paramEqToMplcT2Timeout.Value = 1000D;
+         // 
+         // paramEqToMplcT1Timeout
+         // 
+         this.paramEqToMplcT1Timeout.Caption = "Device To PLC T1 Timeout(ms)";
+         this.paramEqToMplcT1Timeout.CaptionWidth = 80F;
+         this.paramEqToMplcT1Timeout.DecimalPlaces = 0;
+         this.paramEqToMplcT1Timeout.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramEqToMplcT1Timeout.Increment = 100D;
+         this.paramEqToMplcT1Timeout.Location = new System.Drawing.Point(370, 21);
+         this.paramEqToMplcT1Timeout.MaxNumber = 99000D;
+         this.paramEqToMplcT1Timeout.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramEqToMplcT1Timeout.MinNumber = 0D;
+         this.paramEqToMplcT1Timeout.Name = "paramEqToMplcT1Timeout";
+         this.paramEqToMplcT1Timeout.Size = new System.Drawing.Size(339, 30);
+         this.paramEqToMplcT1Timeout.TabIndex = 17;
+         this.paramEqToMplcT1Timeout.Value = 1000D;
+         // 
+         // paramMplcToEqT2Timeout
+         // 
+         this.paramMplcToEqT2Timeout.Caption = "PLC To Device T2 Timeout(ms)";
+         this.paramMplcToEqT2Timeout.CaptionWidth = 80F;
+         this.paramMplcToEqT2Timeout.DecimalPlaces = 0;
+         this.paramMplcToEqT2Timeout.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramMplcToEqT2Timeout.Increment = 100D;
+         this.paramMplcToEqT2Timeout.Location = new System.Drawing.Point(16, 57);
+         this.paramMplcToEqT2Timeout.MaxNumber = 99000D;
+         this.paramMplcToEqT2Timeout.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramMplcToEqT2Timeout.MinNumber = 0D;
+         this.paramMplcToEqT2Timeout.Name = "paramMplcToEqT2Timeout";
+         this.paramMplcToEqT2Timeout.Size = new System.Drawing.Size(339, 30);
+         this.paramMplcToEqT2Timeout.TabIndex = 14;
+         this.paramMplcToEqT2Timeout.Value = 1000D;
+         // 
+         // paramMplcToEqT1Timeout
+         // 
+         this.paramMplcToEqT1Timeout.Caption = "PLC To Device T1 Timeout(ms)";
+         this.paramMplcToEqT1Timeout.CaptionWidth = 80F;
+         this.paramMplcToEqT1Timeout.DecimalPlaces = 0;
+         this.paramMplcToEqT1Timeout.Font = new System.Drawing.Font("Microsoft JhengHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+         this.paramMplcToEqT1Timeout.Increment = 100D;
+         this.paramMplcToEqT1Timeout.Location = new System.Drawing.Point(16, 21);
+         this.paramMplcToEqT1Timeout.MaxNumber = 99000D;
+         this.paramMplcToEqT1Timeout.MinimumSize = new System.Drawing.Size(150, 30);
+         this.paramMplcToEqT1Timeout.MinNumber = 0D;
+         this.paramMplcToEqT1Timeout.Name = "paramMplcToEqT1Timeout";
+         this.paramMplcToEqT1Timeout.Size = new System.Drawing.Size(339, 30);
+         this.paramMplcToEqT1Timeout.TabIndex = 13;
+         this.paramMplcToEqT1Timeout.Value = 1000D;
          // 
          // MelsecBoardSettingForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 16F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(467, 640);
+         this.ClientSize = new System.Drawing.Size(759, 640);
          this.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
          this.Margin = new System.Windows.Forms.Padding(4);
          this.Name = "MelsecBoardSettingForm";
@@ -636,8 +812,6 @@ namespace WindowsFormsApp1.Forms
          ((System.ComponentModel.ISupportInitialize)(this.numRetryBackoff)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.numStation)).EndInit();
          this.tpMaintenance.ResumeLayout(false);
-         ((System.ComponentModel.ISupportInitialize)(this.nudEqToPlcT1Timeout)).EndInit();
-         ((System.ComponentModel.ISupportInitialize)(this.nudEqToPlcT2Timeout)).EndInit();
          this.ResumeLayout(false);
 
       }
@@ -683,9 +857,19 @@ namespace WindowsFormsApp1.Forms
       private GRT.SDK.Framework.Component.ParamTextUserControl paramHeartbeatResponseAddress;
       private GRT.SDK.Framework.Component.ParamNumericUpDownUserControl paramHeartbeatInterval;
       private System.Windows.Forms.TabPage tpMaintenance;
-      private GRT.SDK.Framework.Component.ParamNumericUpDownUserControl paramMaintenanceT1Timeout;
-      private GRT.SDK.Framework.Component.ParamNumericUpDownUserControl paramMaintenanceT2Timeout;
-      private System.Windows.Forms.NumericUpDown nudEqToPlcT2Timeout;
-      private System.Windows.Forms.NumericUpDown nudEqToPlcT1Timeout;
+      private GRT.SDK.Framework.Component.ParamNumericUpDownUserControl paramMplcToEqT1Timeout;
+      private GRT.SDK.Framework.Component.ParamNumericUpDownUserControl paramMplcToEqT2Timeout;
+      private GRT.SDK.Framework.Component.ParamNumericUpDownUserControl paramEqToMplcT2Timeout;
+      private GRT.SDK.Framework.Component.ParamNumericUpDownUserControl paramEqToMplcT1Timeout;
+      private GRT.SDK.Framework.Component.ParamTextUserControl paramAddrPlcToDeviceRequestPosData;
+      private GRT.SDK.Framework.Component.ParamTextUserControl paramAddrDeviceToPlcResponseFlag;
+      private GRT.SDK.Framework.Component.ParamTextUserControl paramAddrPlcToDeviceRequestTrackingData;
+      private GRT.SDK.Framework.Component.ParamTextUserControl paramAddrPlcToDeviceRequestFlag;
+      private GRT.SDK.Framework.Component.ParamTextUserControl paramAddrPositionDataBase;
+      private GRT.SDK.Framework.Component.ParamTextUserControl paramAddrDeviceToPlcRequestPosData;
+      private GRT.SDK.Framework.Component.ParamTextUserControl paramAddrDeviceToPlcRequestTrackingData;
+      private GRT.SDK.Framework.Component.ParamTextUserControl paramAddrDeviceToPlcRequestFlag;
+      private GRT.SDK.Framework.Component.ParamTextUserControl paramAddrPlcToDeviceResponseNg;
+      private GRT.SDK.Framework.Component.ParamTextUserControl paramAddrPlcToDeviceResponseOk;
    }
 }

@@ -223,20 +223,19 @@ namespace WindowsFormsApp1.Services
       #endregion
 
       #region Common Report Methods
+
       public void UpdatRouteData(string ovenStatus)
       {
          lock (_commonReportLock)
          {
-
             try
             {
                short[] values = new short[1];
                if (int.TryParse(ovenStatus, System.Globalization.NumberStyles.Number, null, out int hexVal))
                {
                   values[0] = (short)hexVal;
-
                }
-              
+
                _controller.WriteWordsAsync("LW119E", values);
             }
             catch (Exception ex)
@@ -720,33 +719,33 @@ namespace WindowsFormsApp1.Services
                   _logger?.Invoke("[Heartbeat] 異常狀態：Request 和 Response 都是 OFF");
                   _heartbeatStep = 0; // → Idle
                }
-                  else if (_heartbeatT1Timer.On(_heartbeatT1Timeout))
+               else if (_heartbeatT1Timer.On(_heartbeatT1Timeout))
+               {
+                  // T1 逾時：PLC 未在時限內清除 Request
+                  _logger?.Invoke($"[Heartbeat] T1 Timeout - PLC 未在 {_heartbeatT1Timeout}ms 內清除 Request");
+
+                  try
                   {
-                     // T1 逾時：PLC 未在時限內清除 Request
-                     _logger?.Invoke($"[Heartbeat] T1 Timeout - PLC 未在 {_heartbeatT1Timeout}ms 內清除 Request");
-
-                     try
-                     {
-                        await AlarmHelper.AddAlarmCodeAsync(this, "0xC000");
-                        await _controller.WriteBitsAsync(_heartbeatResponseAddr, [false], ct);
-                     }
-                     catch (Exception ex)
-                     {
-                        _logger?.Invoke($"[Heartbeat] T1 Timeout處理失敗: {ex.Message}");
-                     }
-
-                     HandleHeartbeatFailure();
-                     _heartbeatStep = 0; // → Idle
+                     await AlarmHelper.AddAlarmCodeAsync(this, "0xC000");
+                     await _controller.WriteBitsAsync(_heartbeatResponseAddr, [false], ct);
                   }
-                  //else if (_heartbeatTimeoutTimer.On(_heartbeatGlobalTimeout))
-                  //{
-                  //   // 全局逾時
-                  //   _logger?.Invoke($"[Heartbeat] Global Timeout - 超過 {_heartbeatGlobalTimeout}ms");
-                  //   HandleHeartbeatFailure();
-                  //   _heartbeatStep = 0; // → Idle
-                  //}
+                  catch (Exception ex)
+                  {
+                     _logger?.Invoke($"[Heartbeat] T1 Timeout處理失敗: {ex.Message}");
+                  }
 
-                  break;
+                  HandleHeartbeatFailure();
+                  _heartbeatStep = 0; // → Idle
+               }
+               //else if (_heartbeatTimeoutTimer.On(_heartbeatGlobalTimeout))
+               //{
+               //   // 全局逾時
+               //   _logger?.Invoke($"[Heartbeat] Global Timeout - 超過 {_heartbeatGlobalTimeout}ms");
+               //   HandleHeartbeatFailure();
+               //   _heartbeatStep = 0; // → Idle
+               //}
+
+               break;
             }
          }
       }
@@ -871,12 +870,20 @@ namespace WindowsFormsApp1.Services
 
       #region Tracking Data Maintenance Methods
 
+      // Tracking Maintenance PLC To Device
       private readonly string AddrMaintenanceRequestFlag = "LB0106";
       private readonly string AddrMaintenanceRequestData = "LW17D1"; // Length 10
       private readonly string AddrMaintenanceRequestPos = "LW17DB";
+
       private readonly string AddrMaintenanceResponseOk = "LB0304";
       private readonly string AddrMaintenanceResponseNg = "LB0305";
       private readonly string AddrTrackingDataBase = "LW184A"; // Base address for 540 words (54 positions?)
+
+      // Tracking Maintenance Device To PLC
+      private readonly string AddrMaintenanceSenderRequestFlag = "LB0306";
+      private readonly string AddrMaintenanceSenderResponseFlag = "LB0107";
+      private readonly string AddrMaintenanceSenderData = "LW05BE";
+      private readonly string AddrMaintenanceSenderPos = "LW05C8";
       private const int TrackingDataSize = 10;
       private const int MaxPositions = 540; // 540 words / 10 words per pos = 54
 
@@ -891,12 +898,6 @@ namespace WindowsFormsApp1.Services
       private TrackingData _receivedMaintenanceData;
       private int _receivedMaintenancePos;
 
-      // Tracking Maintenance Request (Sender Side) Addresses
-      private readonly string AddrMaintenanceSenderRequestFlag = "LB0306";
-      private readonly string AddrMaintenanceSenderResponseFlag = "LB0107";
-      private readonly string AddrMaintenanceSenderData = "LW05BE";
-      private readonly string AddrMaintenanceSenderPos = "LW05C8";
-
       // Tracking Maintenance Request (Sender Side) Handshake Fields
       private int _maintenanceRequestStep;
       private TrackingData _pendingMaintenanceData;
@@ -909,10 +910,10 @@ namespace WindowsFormsApp1.Services
       public void StartTrackingDataMaintenanceMonitor(TimeSpan interval)
       {
          StopTrackingDataMaintenanceMonitor();
-         _maintenanceT1Timeout = (ushort)_settings.Maintenance.MaintenanceT1Timeout;
-         _maintenanceT2Timeout = (ushort)_settings.Maintenance.MaintenanceT2Timeout;
-         _maintenanceRequestT1Timeout = (ushort)_settings.Maintenance.MaintenanceT1Timeout;
-         _maintenanceRequestT2Timeout = (ushort)_settings.Maintenance.MaintenanceT2Timeout;
+         _maintenanceT1Timeout = (ushort)_settings.Maintenance.PlcToDeviceT1Timeout;
+         _maintenanceT2Timeout = (ushort)_settings.Maintenance.PlcToDeviceT2Timeout;
+         _maintenanceRequestT1Timeout = (ushort)_settings.Maintenance.PlcToDeviceT1Timeout;
+         _maintenanceRequestT2Timeout = (ushort)_settings.Maintenance.PlcToDeviceT2Timeout;
 
          _maintenanceStep = 0;
          _maintenanceRequestStep = 0;
@@ -1092,7 +1093,7 @@ namespace WindowsFormsApp1.Services
 
                         // 3. Update Device Memory (Write to LW Base + Offset)
                         int baseAddr = Convert.ToInt32(AddrTrackingDataBase.Substring(2), 16);
-                        int targetAddr = baseAddr + (pos-1) * TrackingDataSize;
+                        int targetAddr = baseAddr + (pos - 1) * TrackingDataSize;
                         string targetAddrStr = $"LW{targetAddr:X4}";
 
                         await _controller.WriteWordsAsync(targetAddrStr, trackWords.ToArray(), ct);
@@ -1177,11 +1178,10 @@ namespace WindowsFormsApp1.Services
                      // 1. 寫入資料
                      short[] trackWords = _pendingMaintenanceData.ToRawData(); // 10 words
 
-
                      int pos = _pendingMaintenancePos;
 
                      // Validate Position
-                     if (pos > 0 && pos < MaxPositions)
+                     if (pos is > 0 and < MaxPositions)
                      {
                         // 將 trackWords 轉換為 TrackingData 並保存
                         _receivedMaintenanceData = TrackingData.FromWords(trackWords.Select(w => (ushort)w).ToArray());
@@ -1189,7 +1189,7 @@ namespace WindowsFormsApp1.Services
 
                         // 3. Update Device Memory (Write to LW Base + Offset)
                         int baseAddr = Convert.ToInt32(AddrTrackingDataBase.Substring(2), 16);
-                        int targetAddr = baseAddr + (pos-1) * TrackingDataSize;
+                        int targetAddr = baseAddr + (pos - 1) * TrackingDataSize;
                         string targetAddrStr = $"LW{targetAddr:X4}";
 
                         await _controller.WriteWordsAsync(targetAddrStr, trackWords.ToArray(), ct);
@@ -1255,8 +1255,8 @@ namespace WindowsFormsApp1.Services
             case 20: // Waiting for Response OFF (T2)
                if (!responseOn)
                {
-                        // Response OK (LB 0x0304)
-                        await _controller.WriteBitsAsync(AddrMaintenanceResponseOk, new[] { true }, ct);
+                  // Response OK (LB 0x0304)
+                  await _controller.WriteBitsAsync(AddrMaintenanceResponseOk, new[] { true }, ct);
                   _logger?.Invoke($"[MaintenanceSync] Response Flag ({AddrMaintenanceSenderResponseFlag}) OFF Confirmed - 完成");
                   CompleteMaintenanceRequest(true);
                }
@@ -1265,8 +1265,8 @@ namespace WindowsFormsApp1.Services
                   _logger?.Invoke($"[MaintenanceSync] T2 Alarm: LCS 未能在 {_maintenanceRequestT2Timeout}ms 內清除 Response");
                   // T2 逾時通常發出警報，但通訊本身可視為成功（若定義為 Request 被接受）
                   // 依指示：送信端發出警報。
-                                          // Response NG (LB 0x0305)
-                        await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { true }, ct);
+                  // Response NG (LB 0x0305)
+                  await _controller.WriteBitsAsync(AddrMaintenanceResponseNg, new[] { true }, ct);
                   CompleteMaintenanceRequest(true); // 完成流程，但已記錄警報
                }
 
@@ -1290,8 +1290,9 @@ namespace WindowsFormsApp1.Services
                await RunMaintenanceRequestFlow(ct);
                await Task.Delay(interval, ct);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ex)
             {
+               _logger?.Invoke($"[MaintenanceSync] OperationCanceledException Exception: {ex.Message}");
                break;
             }
             catch (Exception ex)

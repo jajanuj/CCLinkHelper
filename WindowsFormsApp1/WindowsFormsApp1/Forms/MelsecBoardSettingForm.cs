@@ -47,10 +47,10 @@ namespace WindowsFormsApp1.Forms
             txtUnloadingRobotAddr.Text = appSettings.Tracking?.UnloadingRobotAddress ?? "LW0020";
             txtUnloadingStationAddr.Text = appSettings.Tracking?.UnloadingStationAddress ?? "LW0030";
 
-            paramMaintenanceT1Timeout.Value = appSettings.Maintenance?.MaintenanceT1Timeout ?? 1000;
-            paramMaintenanceT2Timeout.Value = appSettings.Maintenance?.MaintenanceT2Timeout ?? 1000;
-            nudEqToPlcT1Timeout.Value = appSettings.Maintenance?.MaintenanceEqToPlcT1Timeout ?? 1000;
-            nudEqToPlcT2Timeout.Value = appSettings.Maintenance?.MaintenanceEqToPlcT2Timeout ?? 1000;
+            paramMplcToEqT1Timeout.Value = appSettings.Maintenance?.PlcToDeviceT1Timeout ?? 1000;
+            paramMplcToEqT2Timeout.Value = appSettings.Maintenance?.PlcToDeviceT2Timeout ?? 1000;
+            paramEqToMplcT1Timeout.Value = appSettings.Maintenance?.DeviceToPlcT1Timeout ?? 1000;
+            paramEqToMplcT2Timeout.Value = appSettings.Maintenance?.DeviceToPlcT2Timeout ?? 1000;
          }
       }
 
@@ -85,10 +85,11 @@ namespace WindowsFormsApp1.Forms
             appSettings.Tracking.UnloadingRobotAddress = txtUnloadingRobotAddr.Text?.Trim() ?? "LW0020";
             appSettings.Tracking.UnloadingStationAddress = txtUnloadingStationAddr.Text?.Trim() ?? "LW0030";
 
-            appSettings.Maintenance.MaintenanceT1Timeout = (int)paramMaintenanceT1Timeout.Value;
-            appSettings.Maintenance.MaintenanceT2Timeout = (int)paramMaintenanceT2Timeout.Value;
-            appSettings.Maintenance.MaintenanceEqToPlcT1Timeout = (int)nudEqToPlcT1Timeout.Value;
-            appSettings.Maintenance.MaintenanceEqToPlcT2Timeout = (int)nudEqToPlcT2Timeout.Value;
+            // Maintenance Parameters
+            appSettings.Maintenance.PlcToDeviceT1Timeout = (int)paramMplcToEqT1Timeout.Value;
+            appSettings.Maintenance.PlcToDeviceT2Timeout = (int)paramMplcToEqT2Timeout.Value;
+            appSettings.Maintenance.DeviceToPlcT1Timeout = (int)paramEqToMplcT1Timeout.Value;
+            appSettings.Maintenance.DeviceToPlcT2Timeout = (int)paramEqToMplcT2Timeout.Value;
          }
       }
 
