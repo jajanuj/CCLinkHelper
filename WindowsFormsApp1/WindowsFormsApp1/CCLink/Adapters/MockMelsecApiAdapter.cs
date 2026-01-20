@@ -15,8 +15,8 @@ namespace WindowsFormsApp1.CCLink.Adapters
 
       private readonly Dictionary<int, short> _bits = new Dictionary<int, short>();
       private readonly object _lock = new object();
-      private readonly Dictionary<int, short> _words = new Dictionary<int, short>();
       private readonly System.Action<string> _logger;
+      private readonly Dictionary<int, short> _words = new Dictionary<int, short>();
 
       #endregion
 
@@ -50,20 +50,47 @@ namespace WindowsFormsApp1.CCLink.Adapters
       {
          lock (_lock)
          {
-            int count = size / 2;
+            bool isBitDevice = devType == CCLinkConstants.DEV_LB || devType == CCLinkConstants.DEV_LX || devType == CCLinkConstants.DEV_LY;
+            
+            // 對於 bit 設備，size 是 bytes，但實際 API 將 16 bits 打包成一個 short
+            // 所以實際 bit 數量 = (size / 2) * 16 = size * 8
+            // 但我們的 _bits 字典每個 key 對應一個 bit
+            int count;
+            if (isBitDevice)
+            {
+               // 每個 short 包含 16 bits，size / 2 = short 數量，* 16 = bit 數量
+               count = (size / 2) * 16;
+            }
+            else
+            {
+               count = size / 2;  // Word 設備：每個地址一個 word
+            }
+
             for (int i = 0; i < count; i++)
             {
-               if (devType == CCLinkConstants.DEV_LB)
+               int addr = devNo + i;
+               if (isBitDevice)
                {
-                  int addr = devNo + i;
-                  _bits[addr] = data[i];
-                  _logger?.Invoke($"[MockAdapter] SendEx: Bit LB{addr:X4} = {data[i]}");
+                  // 從 data 中提取 bit 值
+                  int shortIndex = i / 16;
+                  int bitOffset = i % 16;
+                  if (shortIndex < data.Length)
+                  {
+                     short bitValue = (short)((data[shortIndex] >> bitOffset) & 1);
+                     _bits[addr] = bitValue;
+                     if (bitValue != 0)
+                     {
+                        _logger?.Invoke($"[MockAdapter] SendEx: Bit LB{addr:X4} = {bitValue}");
+                     }
+                  }
                }
                else
                {
-                  int addr = devNo + i;
-                  _words[addr] = data[i];
-                  _logger?.Invoke($"[MockAdapter] SendEx: Word LW{addr:X4} = {data[i]}");
+                  if (i < data.Length)
+                  {
+                     _words[addr] = data[i];
+                     _logger?.Invoke($"[MockAdapter] SendEx: Word LW{addr:X4} = {data[i]}");
+                  }
                }
             }
 
@@ -76,52 +103,49 @@ namespace WindowsFormsApp1.CCLink.Adapters
          lock (_lock)
          {
             bool isBitDevice = devType == CCLinkConstants.DEV_LB || devType == CCLinkConstants.DEV_LX || devType == CCLinkConstants.DEV_LY;
-
-            // netNo == 1 表示 bit 模式讀取（8-bit 對齊打包）
-            if (isBitDevice && netNo == 1)
+            
+            int count;
+            if (isBitDevice)
             {
-               // Bit mode: pack 8 bits per byte, 2 bytes per short
-               for (int i = 0; i < data.Length; i++)
-               {
-                  int lowByte = 0;
-                  int highByte = 0;
-
-                  // 每個 short 包含 2 個 byte = 16 個 bit
-                  for (int bit = 0; bit < 8; bit++)
-                  {
-                     int bitAddr = devNo + i * 16 + bit;
-                     if (_bits.ContainsKey(bitAddr) && _bits[bitAddr] != 0)
-                     {
-                        lowByte |= 1 << bit;
-                     }
-                  }
-
-                  for (int bit = 0; bit < 8; bit++)
-                  {
-                     int bitAddr = devNo + i * 16 + 8 + bit;
-                     if (_bits.ContainsKey(bitAddr) && _bits[bitAddr] != 0)
-                     {
-                        highByte |= 1 << bit;
-                     }
-                  }
-
-                  data[i] = (short)(lowByte | (highByte << 8));
-               }
+               // 每個 short 包含 16 bits
+               count = (size / 2) * 16;
             }
             else
             {
-               // Word mode or non-bit device: read individual values
-               int count = size / 2;
-               for (int i = 0; i < count; i++)
+               count = size / 2;
+            }
+
+            // Initialize data array for bit devices to ensure correct packing
+            if (isBitDevice)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    data[i] = 0;
+                }
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+               int addr = devNo + i;
+               if (isBitDevice)
                {
-                  int key = devNo + i;
-                  if (isBitDevice)
+                  // 將 bit 值打包到 data 中
+                  int shortIndex = i / 16;
+                  int bitOffset = i % 16;
+                  if (shortIndex < data.Length)
                   {
-                     data[i] = _bits.ContainsKey(key) ? _bits[key] : (short)0;
+                     short bitValue = _bits.ContainsKey(addr) ? _bits[addr] : (short)0;
+                     if (bitValue != 0)
+                     {
+                        data[shortIndex] |= (short)(1 << bitOffset);
+                     }
                   }
-                  else
+               }
+               else
+               {
+                  if (i < data.Length)
                   {
-                     data[i] = _words.ContainsKey(key) ? _words[key] : (short)0;
+                     data[i] = _words.ContainsKey(addr) ? _words[addr] : (short)0;
                   }
                }
             }

@@ -26,10 +26,10 @@ namespace WindowsFormsApp1.Forms
          InitializeComponent();
          InitializeStationComboBox();
          InitializeReasonCodeComboBox();
-         
+
          // 訂閱維護資料接收事件
          _service.MaintenanceDataReceived += OnMaintenanceDataReceived;
-         
+
          if (_simulator == null)
          {
             grpLcsSimulator.Enabled = false;
@@ -404,7 +404,7 @@ namespace WindowsFormsApp1.Forms
              $"Layer: {data.LayerCount}, Lot: {(char)data.LotNoChar}{data.LotNoNum}");
 
          MessageBox.Show($"接收到維護資料 (Position {position})", "Maintenance Data Received",
-             MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBoxButtons.OK, MessageBoxIcon.Information);
       }
 
       private async Task QuickWriteAsync(TrackingStation station, ushort boardId, ushort layerCount,

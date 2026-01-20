@@ -147,7 +147,7 @@ namespace WindowsFormsApp1.Services
          }
 
          // 使用外部提供的 Adapter
-         _controller = new CCLink.Services.MelsecHelper(customAdapter, settings);
+         _controller = new CCLink.Services.MelsecHelper(customAdapter, settings, logger: logger);
       }
 
       #endregion
@@ -383,7 +383,7 @@ namespace WindowsFormsApp1.Services
          }
       }
 
-      private async Task WriteToPlcAsync(string address, short[] values, Action onSuccess, string logName)
+      public async Task WriteToPlcAsync(string address, short[] values, Action onSuccess, string logName)
       {
          try
          {
@@ -1092,13 +1092,13 @@ namespace WindowsFormsApp1.Services
                         int targetAddr = baseAddr + (pos - 1) * TrackingDataSize;
                         string targetAddrStr = $"LW{targetAddr:X4}";
 
-
                         await _controller.WriteWordsAsync(targetAddrStr, trackWords.ToArray(), ct);
                         _logger?.Invoke($"[Maintenance] Updated Position {pos} at {targetAddrStr}");
 
                         // 4. Response OK
                         await _controller.WriteBitsAsync(_settings.Maintenance.AddrPlcToDeviceResponseOk, [true], ct);
                         _logger?.Invoke("[Maintenance] Response OK Set");
+                        bool requestOn1 = _controller.GetBit(_settings.Maintenance.AddrPlcToDeviceResponseOk);
                      }
                      else
                      {

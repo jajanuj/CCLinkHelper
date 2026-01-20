@@ -90,13 +90,6 @@ namespace WindowsFormsApp1
          // 預先建立共享的 Mock Adapter（僅在 Simulator 模式使用）
          // 這樣 Simulator 和 AppPlcService 才能共享同一個記憶體狀態
          _sharedMockAdapter = new MockMelsecApiAdapter();
-
-         // 注意：連結報告流程中，Simulator 扮演 LCS 角色
-         // - Request 地址 (LB0307): EQ 發送的請求
-         // - Response 地址 (LB0108): LCS (Simulator) 回應的訊號
-         var reqAddr = new LinkDeviceAddress("LB", 0x0307, 1);  // EQ Request
-         var respAddr = new LinkDeviceAddress("LB", 0x0108, 1); // LCS Response
-         _simulator = new PlcSimulator(_sharedMockAdapter, 1, reqAddr, respAddr, msg => Log($"[Simulator] {msg}"));
       }
 
       #endregion
@@ -445,6 +438,14 @@ namespace WindowsFormsApp1
                };
 
                _appPlcService = new AppPlcService(sharedSettings, _sharedMockAdapter, logger: s => Log($"[Service] {s}"));
+
+               // 創建 PlcSimulator，使用同一個 Controller (MelsecHelper) 以共享快取
+               // 注意：連結報告流程中，Simulator 扮演 LCS 角色
+               // - Request 地址 (LB0307): EQ 發送的請求
+               // - Response 地址 (LB0108): LCS (Simulator) 回應的訊號
+               var reqAddr = new LinkDeviceAddress("LB", 0x0307, 1);  // EQ Request
+               var respAddr = new LinkDeviceAddress("LB", 0x0108, 1); // LCS Response
+               _simulator = new PlcSimulator(_appPlcService.Controller, reqAddr, respAddr, msg => Log($"[Simulator] {msg}"));
             }
             else
             {
@@ -773,7 +774,7 @@ namespace WindowsFormsApp1
                // 設定測試模式 (可在執行期間動態修改 _simulator.TestMode)
                _simulator.TestMode = (TestMode)cboLinkReportTestMode.SelectedIndex;
 
-               _simulator.StartPulse(reqAddr, respAddr, TimeSpan.FromSeconds(1), 500);
+               _simulator.StartPulse(reqAddr, respAddr, TimeSpan.FromSeconds(3), 1000);
                Log("已啟動 Simulator. | Simulator started");
             }
          }
@@ -1244,6 +1245,14 @@ namespace WindowsFormsApp1
 
          var form = new RecipeCheckForm(_appPlcService, _simulator);
          form.Show();
+      }
+
+      private void btnWrite_Click(object sender, EventArgs e)
+      {
+         if (_appPlcService.Controller is MelsecHelper helper)
+         {
+            helper.SetBitDirect("LB", 0x0100, true);
+         }
       }
 
       #endregion

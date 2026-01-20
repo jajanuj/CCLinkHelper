@@ -35,6 +35,7 @@ namespace WindowsFormsApp1.CCLink.Services
       private readonly Dictionary<string, short[]> _deviceMemory = new Dictionary<string, short[]>(StringComparer.OrdinalIgnoreCase);
 
       private readonly Action<string> _logger;
+      private readonly int _mergeGapTolerance = 4; // 合併相鄰掃描範圍的容差
       private readonly object _planLock = new object();
       private readonly ControllerSettings _settings;
 
@@ -48,18 +49,10 @@ namespace WindowsFormsApp1.CCLink.Services
       // Polling & Cache
       private TimeSpan _pollInterval;
       private int _resolvedPath = -1;
-      private readonly int _mergeGapTolerance = 4; // 合併相鄰掃描範圍的容差
 
       // Worker
       private CancellationTokenSource _workerCts;
       private Task _workerTask;
-
-      #endregion
-
-      #region Private Properties
-
-      private int NetworkNo => _settings.NetworkNo;
-      private int StationNo => _settings.StationNo;
 
       #endregion
 
@@ -78,6 +71,9 @@ namespace WindowsFormsApp1.CCLink.Services
 
       #region Properties
 
+      private int NetworkNo => _settings.NetworkNo;
+      private int StationNo => _settings.StationNo;
+
       public TimeSpan PollInterval
       {
          get => _pollInterval;
@@ -95,23 +91,6 @@ namespace WindowsFormsApp1.CCLink.Services
       #endregion
 
       #region Public Methods
-
-      public void SetScanRanges(IEnumerable<ScanRange> ranges)
-      {
-         if (ranges == null)
-         {
-            throw new ArgumentNullException(nameof(ranges));
-         }
-
-         lock (_planLock)
-         {
-            _userScanRanges.Clear();
-            _userScanRanges.AddRange(ranges);
-         }
-
-         UpdatePollingPlan();
-         EnsurePollingWorkerStarted();
-      }
 
       public bool GetBit(string kind, int address)
       {
@@ -163,8 +142,15 @@ namespace WindowsFormsApp1.CCLink.Services
 
       private void UpdateCache(string kind, int start, short[] data)
       {
-         if (_deviceMemory.ContainsKey(kind))
+         if (!string.IsNullOrEmpty(kind))
          {
+            // 如果 kind 不存在，先初始化
+            if (!_deviceMemory.ContainsKey(kind))
+            {
+               int requiredSize = start + data.Length;
+               _deviceMemory[kind] = new short[Math.Max(16384, requiredSize)];
+            }
+
             var memory = _deviceMemory[kind];
             if (start + data.Length <= memory.Length)
             {
@@ -465,6 +451,23 @@ namespace WindowsFormsApp1.CCLink.Services
 
       #endregion
 
+      public void SetScanRanges(IEnumerable<ScanRange> ranges)
+      {
+         if (ranges == null)
+         {
+            throw new ArgumentNullException(nameof(ranges));
+         }
+
+         lock (_planLock)
+         {
+            _userScanRanges.Clear();
+            _userScanRanges.AddRange(ranges);
+         }
+
+         UpdatePollingPlan();
+         EnsurePollingWorkerStarted();
+      }
+
       public bool GetBit(string address)
       {
          return GetBitFromAddressString(address);
@@ -495,6 +498,51 @@ namespace WindowsFormsApp1.CCLink.Services
             case "LX": return CCLinkConstants.DEV_LX;
             case "LY": return CCLinkConstants.DEV_LY;
             default: throw new ArgumentException($"Unknown device: {kind}");
+         }
+      }
+
+      /// <summary>
+      /// 內部方法：直接設定快取中的 bit 值（用於模擬器，避免讀-改-寫的時序問題）
+      /// </summary>
+      internal void SetBitDirect(string kind, int address, bool value)
+      {
+         if (string.IsNullOrWhiteSpace(kind))
+         {
+            return;
+         }
+
+         lock (_apiLock)
+         {
+            // 1. 先更新底層 API（MockMelsecApiAdapter），確保 Polling 不會覆蓋
+            try
+            {
+               int devCode = MapDeviceCode(kind);
+               short[] data = new short[1] { (short)(value ? 1 : 0) };
+               int size = 2; // 1 個 short = 2 bytes
+               _api.SendEx(_resolvedPath, 0, 0, devCode, address, ref size, data);
+            }
+            catch
+            {
+               // 如果寫入失敗，繼續更新快取
+            }
+
+            // 2. 更新快取
+            if (!_deviceMemory.ContainsKey(kind))
+            {
+               _deviceMemory[kind] = new short[Math.Max(16384, address + 1)];
+            }
+
+            var memory = _deviceMemory[kind];
+            if (address >= memory.Length)
+            {
+               int newSize = Math.Max(memory.Length * 2, address + 1);
+               var newMem = new short[newSize];
+               Array.Copy(memory, newMem, memory.Length);
+               _deviceMemory[kind] = newMem;
+               memory = newMem;
+            }
+
+            memory[address] = (short)(value ? 1 : 0);
          }
       }
 
@@ -602,18 +650,17 @@ namespace WindowsFormsApp1.CCLink.Services
             for (int i = 0; i < vals.Length; i++)
             {
                int targetBit = parsed.Start + i;
-               int alignedStart = targetBit / 16 * 16;  // 16位对齐
+               int alignedStart = targetBit / 16 * 16; // 16位对齐
 
-               // 读取16位区块
-               int readSize = 16;
+               // 读取16位区块（1 word = 16 bits）
+               int readSize = 1;                  // size 參數：1 = 讀取 1 個 word
                short[] readBuffer = new short[1]; // API以word形式读取16个bit
 
                await Task.Run(() =>
                {
                   lock (_apiLock)
                   {
-                     int rc = _api.ReceiveEx(_resolvedPath, NetworkNo, StationNo, 
-                                           deviceCode, alignedStart, ref readSize, readBuffer);
+                     int rc = _api.ReceiveEx(_resolvedPath, NetworkNo, StationNo, deviceCode, alignedStart, ref readSize, readBuffer);
                      if (rc != 0)
                      {
                         throw MelsecException.FromCode(rc, nameof(_api.ReceiveEx));
@@ -632,14 +679,14 @@ namespace WindowsFormsApp1.CCLink.Services
                   readBuffer[0] &= (short)~(1 << bitOffset);
                }
 
-               // 写回16位区块
-               int writeSize = 16;
+               // 写回16位区块（1 word = 16 bits）
+               int writeSize = 1; // size 參數：1 = 寫入 1 個 word
                await Task.Run(() =>
                {
                   lock (_apiLock)
                   {
-                     int rc = _api.SendEx(_resolvedPath, NetworkNo, StationNo, 
-                                        deviceCode, alignedStart, ref writeSize, readBuffer);
+                     int rc = _api.SendEx(_resolvedPath, NetworkNo, StationNo,
+                        deviceCode, alignedStart, ref writeSize, readBuffer);
                      if (rc != 0)
                      {
                         throw MelsecException.FromCode(rc, nameof(_api.SendEx));
@@ -651,6 +698,7 @@ namespace WindowsFormsApp1.CCLink.Services
                      {
                         expandedData[b] = (short)((readBuffer[0] >> b) & 1);
                      }
+
                      UpdateCache(parsed.Kind, alignedStart, expandedData);
                   }
                }, ct).ConfigureAwait(false);
@@ -666,8 +714,8 @@ namespace WindowsFormsApp1.CCLink.Services
             {
                lock (_apiLock)
                {
-                  int rc = _api.SendEx(_resolvedPath, NetworkNo, StationNo, 
-                                     deviceCode, parsed.Start, ref size, src);
+                  int rc = _api.SendEx(_resolvedPath, NetworkNo, StationNo,
+                     deviceCode, parsed.Start, ref size, src);
                   if (rc != 0)
                   {
                      throw MelsecException.FromCode(rc, nameof(_api.SendEx));

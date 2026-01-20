@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using WindowsFormsApp1.CCLink.Interfaces;
@@ -30,9 +31,8 @@ namespace WindowsFormsApp1.Services
    {
       #region Fields
 
-      private readonly IMelsecApiAdapter _api;
+      private readonly ICCLinkController _controller;
       private readonly Action<string> _logger;
-      private readonly int _path;
       private readonly LinkDeviceAddress _requestAddr;
       private readonly LinkDeviceAddress _responseAddr;
 
@@ -50,10 +50,9 @@ namespace WindowsFormsApp1.Services
 
       #region Constructors
 
-      public PlcSimulator(IMelsecApiAdapter api, int path, LinkDeviceAddress requestAddr, LinkDeviceAddress responseAddr, Action<string> logger = null)
+      public PlcSimulator(ICCLinkController controller, LinkDeviceAddress requestAddr, LinkDeviceAddress responseAddr, Action<string> logger = null)
       {
-         _api = api ?? throw new ArgumentNullException(nameof(api));
-         _path = path;
+         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
          _requestAddr = requestAddr ?? throw new ArgumentNullException(nameof(requestAddr));
          _responseAddr = responseAddr ?? throw new ArgumentNullException(nameof(responseAddr));
          _logger = logger;
@@ -100,14 +99,16 @@ namespace WindowsFormsApp1.Services
       {
          try
          {
-            int devCode = MapDeviceCode(address.Kind);
-            if (on)
+            // 直接設定快取，避免 WriteBitsAsync 的讀-改-寫延遲
+            if (_controller is CCLink.Services.MelsecHelper helper)
             {
-               _api.DevSetEx(_path, 1, 1, devCode, address.Start);
+               helper.SetBitDirect(address.Kind, address.Start, on);
             }
             else
             {
-               _api.DevRstEx(_path, 1, 1, devCode, address.Start);
+               // 降級到 WriteBitsAsync（適用於非 MelsecHelper 的情況）
+               string addr = $"{address.Kind}{address.Start:X4}";
+               _controller.WriteBitsAsync(addr, new[] { on }).Wait();
             }
 
             _logger?.Invoke($"模擬 PLC 設定請求位元 | Simulator setting request flag (Device: {address.Kind} 0x{address.Start:X4}, Value: {(on ? 1 : 0)})");
@@ -488,7 +489,7 @@ namespace WindowsFormsApp1.Services
       }
 
       /// <summary>
-      /// 啟動追蹤資料維護監聽模式：監控裝置端的 Request (LB0506) 並自動回應 (LB0107)。
+      /// 啟動追蹤資料維護監聽模式：監控裝置端的 Request (LB0306) 並自動回應 (LB0107)。
       /// 模擬 LCS 端的行為。
       /// </summary>
       public void StartTrackingMaintenanceListenMode()
@@ -513,7 +514,7 @@ namespace WindowsFormsApp1.Services
                {
                   try
                   {
-                     // 1. 監聽 Request Flag (LB0506)
+                     // 1. 監聽 Request Flag (LB0306)
                      bool requestFlag = GetBit(new LinkDeviceAddress("LB", RequestFlagAddr, 1));
 
                      if (requestFlag)
@@ -583,14 +584,15 @@ namespace WindowsFormsApp1.Services
       {
          try
          {
-            int devCode = MapDeviceCode(_responseAddr.Kind);
-            if (on)
+            // 直接設定快取，避免 WriteBitsAsync 的讀-改-寫延遲
+            if (_controller is CCLink.Services.MelsecHelper helper)
             {
-               _api.DevSetEx(_path, 1, 1, devCode, _responseAddr.Start);
+               helper.SetBitDirect(_responseAddr.Kind, _responseAddr.Start, on);
             }
             else
             {
-               _api.DevRstEx(_path, 1, 1, devCode, _responseAddr.Start);
+               string addr = $"{_responseAddr.Kind}{_responseAddr.Start:X4}";
+               _controller.WriteBitsAsync(addr, new[] { on }).Wait();
             }
 
             _logger?.Invoke(
@@ -659,7 +661,7 @@ namespace WindowsFormsApp1.Services
       /// <returns>True if Response OK (LB0304), False if Response NG (LB0305) or Timeout</returns>
       public async Task<bool> TriggerTrackingMaintenanceRequest(TrackingData data, int positionNo)
       {
-         const int TIMEOUT_MS = 3000;
+         const int TIMEOUT_MS = 5000;
          const int REQUEST_FLAG = 0x0106;
          const int REQUEST_DATA_START = 0x05BE;
          const int REQUEST_POS_ADDR = 0x05C8;
@@ -677,7 +679,7 @@ namespace WindowsFormsApp1.Services
 
             // 2. 寫入 Request Flag (LB 0x0106) ON
             SetRequest(new LinkDeviceAddress("LB", REQUEST_FLAG, 1), true);
-
+            var disOk = GetBit(new LinkDeviceAddress("LB", REQUEST_FLAG, 1));
             // 3. 等待回應 (Response OK or NG)
             var cts = new CancellationTokenSource(TIMEOUT_MS);
             bool isOk = false;
@@ -765,15 +767,15 @@ namespace WindowsFormsApp1.Services
       {
          try
          {
-            // 假設 Response 都是 LB
-            int devCode = CCLinkConstants.DEV_LB;
-            if (on)
+            // 直接設定快取
+            if (_controller is CCLink.Services.MelsecHelper helper)
             {
-               _api.DevSetEx(_path, 1, 1, devCode, address);
+               helper.SetBitDirect("LB", address, on);
             }
             else
             {
-               _api.DevRstEx(_path, 1, 1, devCode, address);
+               string addr = $"LB{address:X4}";
+               _controller.WriteBitsAsync(addr, new[] { on }).Wait();
             }
          }
          catch (Exception ex)
@@ -807,18 +809,9 @@ namespace WindowsFormsApp1.Services
       /// </summary>
       private async Task<short[]> ReadWordsAsync(int startAddress, int count)
       {
-         return await Task.Run(() =>
-         {
-            var buffer = new short[count];
-            int size = count * 2;
-            int rc = _api.ReceiveEx(_path, 0, 0, CCLinkConstants.DEV_LW, startAddress, ref size, buffer);
-            if (rc != 0)
-            {
-               throw new Exception($"Read words failed, RC={rc}");
-            }
-
-            return buffer;
-         });
+         string addr = $"LW{startAddress:X4}";
+         var result = await _controller.ReadWordsAsync(addr, count);
+         return result.ToArray();
       }
 
       /// <summary>
@@ -826,12 +819,8 @@ namespace WindowsFormsApp1.Services
       /// </summary>
       private async Task WriteWordAsync(int address, ushort value)
       {
-         await Task.Run(() =>
-         {
-            var buffer = new short[] { (short)value };
-            int size = 1 * 2;
-            _api.SendEx(_path, 0, 0, CCLinkConstants.DEV_LW, address, ref size, buffer);
-         });
+         string addr = $"LW{address:X4}";
+         await _controller.WriteWordsAsync(addr, new short[] { (short)value });
       }
 
       /// <summary>
@@ -839,11 +828,8 @@ namespace WindowsFormsApp1.Services
       /// </summary>
       private async Task WriteWordsAsync(int address, short[] values)
       {
-         await Task.Run(() =>
-         {
-            int size = values.Length * 2;
-            _api.SendEx(_path, 0, 0, CCLinkConstants.DEV_LW, address, ref size, values);
-         });
+         string addr = $"LW{address:X4}";
+         await _controller.WriteWordsAsync(addr, values);
       }
 
       /// <summary>
@@ -876,11 +862,8 @@ namespace WindowsFormsApp1.Services
       {
          try
          {
-            int devCode = MapDeviceCode(addr.Kind);
-            int size = 2;
-            var buf = new short[1];
-            int rc = _api.ReceiveEx(_path, 0, 0, devCode, addr.Start, ref size, buf);
-            return rc == 0 && buf[0] != 0;
+            string address = $"{addr.Kind}{addr.Start:X4}";
+            return _controller.GetBit(address);
          }
          catch
          {
@@ -903,11 +886,8 @@ namespace WindowsFormsApp1.Services
             {
                try
                {
-                  var dest = new short[1];
-                  int devCode = MapDeviceCode(_responseAddr.Kind);
-                  int size = 1 * 2;
-                  _api.ReceiveEx(_path, 0, 0, devCode, _responseAddr.Start, ref size, dest);
-                  bool on = dest[0] != 0;
+                  string addr = $"{_responseAddr.Kind}{_responseAddr.Start:X4}";
+                  bool on = _controller.GetBit(addr);
                   if (!last.HasValue || last.Value != on)
                   {
                      last = on;
