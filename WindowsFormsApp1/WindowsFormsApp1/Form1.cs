@@ -762,21 +762,21 @@ namespace WindowsFormsApp1
             // 但我們已經移除了直接存取 _helper。
             // _appPlcService.Controller 就是當前的 Controller。
 
-            var reqAddr = new LinkDeviceAddress("LB", CCLinkConstants.DefaultRequestFlagAddress, 1);
-            var respAddr = new LinkDeviceAddress("LB", CCLinkConstants.DefaultResponseFlagAddress, 1);
+            var reqAddr = new LinkDeviceAddress("LB", CCLinkConstants.HeartbeatRequestFlagAddress, 1);
+            var respAddr = new LinkDeviceAddress("LB", CCLinkConstants.HeartbeatResponseFlagAddress, 1);
 
             // 啟動心跳
             _appPlcService.StartHeartbeat();
 
             // 在 Simulator 模式下，自動啟動 Simulator 以模擬 LCS 回應
-            if (_settings.DriverType == MelsecDriverType.Simulator && _simulator != null)
-            {
-               // 設定測試模式 (可在執行期間動態修改 _simulator.TestMode)
-               _simulator.TestMode = (TestMode)cboLinkReportTestMode.SelectedIndex;
+            //if (_settings.DriverType == MelsecDriverType.Simulator && _simulator != null)
+            //{
+            //   // 設定測試模式 (可在執行期間動態修改 _simulator.TestMode)
+            //   _simulator.TestMode = (TestMode)cboLinkReportTestMode.SelectedIndex;
 
-               _simulator.StartPulse(reqAddr, respAddr, TimeSpan.FromSeconds(3), 1000);
-               Log("已啟動 Simulator. | Simulator started");
-            }
+            //   _simulator.StartPulse(reqAddr, respAddr, TimeSpan.FromSeconds(3), 1000);
+            //   Log("已啟動 Simulator. | Simulator started");
+            //}
          }
          catch (Exception ex)
          {
@@ -1253,6 +1253,12 @@ namespace WindowsFormsApp1
          {
             helper.SetBitDirect("LB", 0x0100, true);
          }
+      }
+
+      private void btnShowPlcSimulatorForm_Click(object sender, EventArgs e)
+      {
+         var form = new PlcSimulatorForm(_simulator);
+         form.Show();
       }
 
       #endregion

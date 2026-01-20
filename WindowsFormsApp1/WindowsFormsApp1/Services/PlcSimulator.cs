@@ -88,6 +88,8 @@ namespace WindowsFormsApp1.Services
          }
       }
 
+      public bool HeartbeatT1Timeout { get; set; }
+
       #endregion
 
       #region Public Methods
@@ -180,7 +182,7 @@ namespace WindowsFormsApp1.Services
                            break;
 
                         case 30: // 清除 Request OFF
-                           if (TestMode == TestMode.T1Timeout)
+                           if (HeartbeatT1Timeout)
                            {
                               _logger?.Invoke($"模擬 PLC T1 測試模式：保持 Request ON 不清除 | Simulator T1 Test Mode: Keeping Request ON");
                               step = 40; // 直接進入等待週期剩餘時間

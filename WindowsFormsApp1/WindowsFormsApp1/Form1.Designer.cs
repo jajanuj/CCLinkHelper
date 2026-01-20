@@ -79,6 +79,7 @@
          this.btnAutoRun = new System.Windows.Forms.Button();
          this.ltbErrorCodes = new System.Windows.Forms.ListBox();
          this.tmrScan = new System.Windows.Forms.Timer(this.components);
+         this.btnShowPlcSimulatorForm = new System.Windows.Forms.Button();
          this.grpConnectionMode.SuspendLayout();
          this.grpManualTime.SuspendLayout();
          this.grpLinkReport.SuspendLayout();
@@ -634,11 +635,22 @@
          this.tmrScan.Interval = 500;
          this.tmrScan.Tick += new System.EventHandler(this.tmrScan_Tick);
          // 
+         // btnShowPlcSimulatorForm
+         // 
+         this.btnShowPlcSimulatorForm.Location = new System.Drawing.Point(400, 298);
+         this.btnShowPlcSimulatorForm.Name = "btnShowPlcSimulatorForm";
+         this.btnShowPlcSimulatorForm.Size = new System.Drawing.Size(150, 25);
+         this.btnShowPlcSimulatorForm.TabIndex = 29;
+         this.btnShowPlcSimulatorForm.Text = "開啟PLC模擬器";
+         this.btnShowPlcSimulatorForm.UseVisualStyleBackColor = true;
+         this.btnShowPlcSimulatorForm.Click += new System.EventHandler(this.btnShowPlcSimulatorForm_Click);
+         // 
          // Form1
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
          this.ClientSize = new System.Drawing.Size(1225, 575);
+         this.Controls.Add(this.btnShowPlcSimulatorForm);
          this.Controls.Add(this.ltbErrorCodes);
          this.Controls.Add(this.panel1);
          this.Controls.Add(this.grpAlarm);
@@ -725,6 +737,7 @@
       private System.Windows.Forms.Button btnHandshake;
       private System.Windows.Forms.TextBox textBox1;
       private System.Windows.Forms.Button btnRecipeCheck;
+      private System.Windows.Forms.Button btnShowPlcSimulatorForm;
    }
 }
 

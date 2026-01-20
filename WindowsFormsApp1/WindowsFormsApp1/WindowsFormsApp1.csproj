@@ -99,6 +99,12 @@
     <Compile Include="Forms\CommonReportSettingsForm.Designer.cs">
       <DependentUpon>CommonReportSettingsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\PlcSimulatorForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PlcSimulatorForm.Designer.cs">
+      <DependentUpon>PlcSimulatorForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\TrackingControlForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -180,6 +186,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\MxComponentSettingForm.resx">
       <DependentUpon>MxComponentSettingForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\PlcSimulatorForm.resx">
+      <DependentUpon>PlcSimulatorForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\TrackingControlForm.ja.resx">
       <DependentUpon>TrackingControlForm.cs</DependentUpon>
