@@ -1251,7 +1251,7 @@ namespace WindowsFormsApp1
       {
          if (_appPlcService.Controller is MelsecHelper helper)
          {
-            helper.SetBitDirect("LB", 0x0100, true);
+            helper.SetBitDirect("LB", 0x0300, true);
          }
       }
 

@@ -519,7 +519,7 @@ namespace WindowsFormsApp1.CCLink.Services
                int devCode = MapDeviceCode(kind);
                short[] data = new short[1] { (short)(value ? 1 : 0) };
                int size = 2; // 1 個 short = 2 bytes
-               _api.SendEx(_resolvedPath, 0, 0, devCode, address, ref size, data);
+               _api.SendEx(_resolvedPath, 0, 255, devCode, address, ref size, data);
             }
             catch
             {

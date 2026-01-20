@@ -1,7 +1,6 @@
 using GRT.SDK.Framework.Timer;
 using System;
 using System.Linq;
-using System.Net;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -601,10 +600,11 @@ namespace WindowsFormsApp1.Services
          _logger?.Invoke($"[AppService] Heartbeat started (Interval: {_heartbeatInterval.TotalMilliseconds}ms)");
       }
 
-      public void StopHeartbeat()
+      public async void StopHeartbeat()
       {
          if (_heartbeatCts != null)
          {
+            await _controller.WriteBitsAsync(_heartbeatResponseAddr, [false]);
             _heartbeatCts.Cancel();
             try
             {
